@@ -5,13 +5,13 @@
 (ns leiningen.droid.compile
   (:refer-clojure :exclude (compile))
   (:require leiningen.compile leiningen.javac)
-  (:use [robert.hooke :only (add-hook)]))
+  (:use [leiningen.droid.utils :only (get-sdk-platform-path)]
+        [robert.hooke :only (add-hook)]))
 
 (defn compile-java
-  "This function compiles Java files that come with the project.
-  The paths to these files are specified by `:source-paths` in
-  project.clj. Note that the value of `:source-paths` should be a
-  vector of strings."
+  "Compiles Java files that come with the project. The paths to these
+  files are specified by `:source-paths` in project.clj. Note that the
+  value of `:source-paths` should be a vector of strings."
   [project & args]
   (apply leiningen.javac/javac project args))
 
@@ -22,13 +22,14 @@
 ;; function.
 
 (defn classpath-hook
-  "This hook takes the original `get-classpath` function f and the project map,
-instantly extracting `:android-sdk-path` and `:android-target-version` values
-from it. Then the path to the actual **android.jar** file is constructed and
-appended to the rest of the classpath list."
+  "Takes the original `get-classpath` function and the project map,
+extracting `:android-sdk-path` and `:android-target-version` values
+from it. Then the path to the actual **android.jar** file is
+constructed and appended to the rest of the classpath list."
   [f {:keys [android-sdk-path android-target-version] :as project}]
-  (let [result (cons (format "%s/platforms/android-%s/android.jar:"
-                             android-sdk-path android-target-version)
+  (let [result (cons (str (get-sdk-platform-path android-sdk-path
+                                                 android-target-version)
+                          "/android.jar")
                      (f project))]
     (println result)
     result))
