@@ -1,5 +1,5 @@
-;; This namespace covers all the points regarding the Android's
-;; project build process.
+;; This namespace covers all the points regarding the build process of
+;; an Android project.
 ;;
 (ns leiningen.droid.build
   (:use [leiningen.core.classpath :only (get-classpath resolve-dependencies)]
@@ -7,7 +7,6 @@
         [clojure.string :only (join)]
         [clojure.java.io :only (file)]))
 
-(def default-android-res-path)
 (defn sh
   "Executes the command given by `args` in a subprocess."
   [& args]
@@ -15,7 +14,7 @@
   (.exec (Runtime/getRuntime) (join (interpose " " args))))
 
 ;; Since the execution of `dx` takes a pretty lot of time we need
-;; to ensure that its subprocess will be killed if user cancells the
+;; to ensure that its subprocess will be killed if user cancels the
 ;; build (sends SIGINT to leiningen). That is why we add a hook to the
 ;; runtime that will be triggered when the leiningen is closed.
 ;;
@@ -27,9 +26,6 @@
         out-dex (str compile-path "/classes.dex")
         annotations (str android-sdk-path "/tools/support/annotations.jar")
         deps (resolve-dependencies :dependencies project)
-        all-paths (cons annotations deps)
-        command (format "%s --dex --output %s %s"
-                        dx-bin out-dex (join (interpose " " all-paths)))
         process (apply sh dx-bin "--dex" "--output" annotations deps)]
     (. (Runtime/getRuntime) addShutdownHook (Thread. #(.destroy process)))
     (. process waitFor)))
@@ -37,7 +33,7 @@
 (defn crunch-resources
   "Calls `aapt` binary with the _crunch_ task. Takes optional
   `:android-res-path` and `:android-out-res-path` from `project`
-  values or the default ones."
+  values or uses the default ones."
   [{:keys [root android-sdk-path android-res-path android-out-res-path
            target-path]}]
   (println "Crunching resources..." android-res-path android-out-res-path)

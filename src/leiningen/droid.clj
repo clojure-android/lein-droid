@@ -1,5 +1,4 @@
-;; ## Clojure development is simple. Android should also be.
-;;
+;; ## Clojure is simple. Android should also be.
 ;; This plugin is intended to make your Clojure/Android development as
 ;; seamless and efficient as when developing ordinar Clojure JVM programs.
 ;;

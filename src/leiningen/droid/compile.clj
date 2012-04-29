@@ -18,8 +18,7 @@
 ;; Now before defining the actual `compile` function we have to
 ;; manually attach Android SDK libraries to the classpath. The reason
 ;; for this is that Leiningen doesn't handle external dependencies at
-;; the high level so this is the reason why we hack `get-classpath`
-;; function.
+;; the high level, that's why we hack `get-classpath` function.
 
 (defn classpath-hook
   "Takes the original `get-classpath` function and the project map,
