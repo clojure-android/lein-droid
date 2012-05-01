@@ -35,6 +35,6 @@
        "pkg" (package-resources (proj))
        "crunch" (crunch-resources (proj))
        "dex" (create-dex (proj))
-       "cpl" (apply compile project args)
-       "foo" (apply foo project args)
+       "cpl" (apply compile (proj) _)
+       "foo" (foo (proj))
        "help" (print-subtask-list #'droid))))
