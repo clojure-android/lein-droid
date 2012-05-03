@@ -1,17 +1,18 @@
-;; This part of the plugin is responsible for compilation of the
-;; project. Generally **lein-droid** tries to reuse as much Leiningen code
-;; as possible, but there are a few exceptions.
+;; Generally **lein-droid** tries to reuse as much Leiningen code as
+;; possible. Compilation subtasks in this namespace just call their
+;; Leiningen counterparts.
 ;;
 (ns leiningen.droid.compile
+  "This part of the plugin is responsible for the project compilation."
   (:refer-clojure :exclude (compile))
   (:require leiningen.compile leiningen.javac)
-  (:use [leiningen.droid.utils :only (get-sdk-platform-path)]
+  (:use [leiningen.droid.utils :only (get-sdk-android-jar unique-jars)]
         [robert.hooke :only (add-hook)]))
 
 (defn compile-java
   "Compiles Java files that come with the project. The paths to these
-  files are specified by `:source-paths` in project.clj. Note that the
-  value of `:source-paths` should be a vector of strings."
+  files are specified by `:java-source-paths` in project.clj. Note
+  that the value of `:java-source-paths` should be a vector of strings."
   [project & args]
   (apply leiningen.javac/javac project args))
 
@@ -22,21 +23,23 @@
 
 (defn classpath-hook
   "Takes the original `get-classpath` function and the project map,
-extracting `:android-sdk-path` and `:android-target-version` values
-from it. Then the path to the actual **android.jar** file is
-constructed and appended to the rest of the classpath list."
-  [f {:keys [android-sdk-path android-target-version] :as project}]
-  (let [result (cons (str (get-sdk-platform-path android-sdk-path
-                                                 android-target-version)
-                          "/android.jar")
-                     (f project))]
+extracting the path to the Android SDK and the target version from it.
+Then the path to the actual `android.jar` file is constructed and
+appended to the rest of the classpath list. Also removes all duplicate
+jars from the classpath."
+  [f {{:keys [sdk-path target-version]} :android :as project}]
+  (let [classpath (f project)
+        [jars paths] ((juxt filter remove) #(re-matches #".+\.jar" %) classpath)
+        result (conj (concat (unique-jars jars) paths)
+                     (get-sdk-android-jar sdk-path target-version)
+                     (str sdk-path "/tools/support/annotations.jar"))]
     (println result)
     result))
 
 (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook)
 
 (defn compile-clojure
-  "Compiles Clojure files of the project."
+  "Compiles Clojure files of the project. Also compiles the dependencies."
   [project & args]
   (apply leiningen.compile/compile project args))
 

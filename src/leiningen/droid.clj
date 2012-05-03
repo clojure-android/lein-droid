@@ -6,11 +6,12 @@
   (:refer-clojure :exclude [compile])
   (:use [clojure [repl :only (doc source)]]
         [leiningen.droid.compile :only (compile)]
-        [leiningen.droid.build :only (create-dex crunch-resources package-resources)]
+        [leiningen.droid.build :only [create-dex crunch-resources
+                                      package-resources create-apk
+                                      sign-apk zipalign-apk install run]]
+        [leiningen.droid.utils :only (proj)]
         [leiningen.help :only (subtask-help-for)]
         [leiningen.core.project :only (read) :rename {read read-project}]))
-
-(defn proj [] (read-project "sample/project.clj"))
 
 (defn print-subtask-list
   "Show the list of possible lein droid subtasks."
@@ -32,6 +33,11 @@
      (print-subtask-list #'droid))
   ([project & [cmd & _ :as args]]
      (case cmd
+       "run" (run (proj))
+       "install" (install (proj))
+       "zip" (zipalign-apk (proj))
+       "sign" (sign-apk (proj))
+       "apk" (create-apk (proj))
        "pkg" (package-resources (proj))
        "crunch" (crunch-resources (proj))
        "dex" (create-dex (proj))
