@@ -1,25 +1,16 @@
 # lein-droid
 
-A Leiningen plugin to do many wonderful things.
+A Leiningen plugin to simplify Clojure development for Android platform.
 
 ## Usage
 
-FIXME: Use this for user-level plugins:
-
-Put `[lein-droid "0.1.0-SNAPSHOT"]` into the `:plugins` vector of your
-`:user` profile, or if you are on Leiningen 1.x do `lein plugin install
-lein-droid 0.1.0-SNAPSHOT`.
-
-FIXME: Use this for project-level plugins:
-
-Put `[lein-droid "0.1.0-SNAPSHOT"]` into the `:plugins` vector of your project.clj.
-
-FIXME: and add an example usage that actually makes sense:
-
-    $ lein droid
+Please **DONT USE IT** until it is explicitly declared as usable. This
+project is under heavy development. By downloading and trying to run
+this you would definitely set your hair on fire which is what
+Leiningen is all against.
 
 ## License
 
-Copyright © 2012 FIXME
+Copyright © 2012 Alexander Yakushev
 
 Distributed under the Eclipse Public License, the same as Clojure.
