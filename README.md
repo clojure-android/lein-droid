@@ -1,6 +1,7 @@
 # lein-droid
 
-A Leiningen plugin to simplify Clojure development for Android platform.
+A Leiningen plugin to simplify Clojure development for Android
+platform. See Marginalia docs [here](http://alexander-yakushev.github.com/lein-droid/).
 
 ## Usage
 
