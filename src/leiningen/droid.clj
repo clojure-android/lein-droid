@@ -3,7 +3,7 @@
 ;; seamless and efficient as when developing ordinar Clojure JVM programs.
 ;;
 (ns leiningen.droid
-  (:refer-clojure :exclude [compile])
+  (:refer-clojure :exclude [compile doall])
   (:use [clojure [repl :only (doc source)]]
         [leiningen.droid.compile :only (compile)]
         [leiningen.droid.build :only [create-dex crunch-resources
@@ -23,9 +23,19 @@
   [project & args]
   (println project))
 
+(defn doall
+  "Performs all Android tasks from compilation to the deployment."
+  [project]
+  (doto project
+    compile create-dex
+    crunch-resources package-resources
+    create-apk sign-apk zipalign-apk
+    install run))
+
 (defn ^{:no-project-needed true
-        :subtasks [#'foo #'compile]
-        :help-arglist '([foo compile])}
+        :subtasks [#'foo #'compile #'create-dex #'crunch-resources
+                   #'package-resources #'create-apk #'sign-apk #'zipalign-apk
+                   #'install #'run #'doall]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([])
@@ -33,6 +43,7 @@
      (print-subtask-list #'droid))
   ([project & [cmd & _ :as args]]
      (case cmd
+       "doall" (doall (proj))
        "run" (run (proj))
        "install" (install (proj))
        "zip" (zipalign-apk (proj))

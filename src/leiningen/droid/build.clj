@@ -87,11 +87,11 @@
 
 (defn sign-apk
   "Signs APK file with a key from the debug keystore."
-  [{{:keys [out-apk-path debug-keystore-path]} :android}]
+  [{{:keys [out-apk-path keystore-path]} :android}]
   (println "Signing APK...")
   (let [unaligned-path (append-suffix out-apk-path "debug-unaligned")]
     (.waitFor (sh "jarsigner"
-                 "-keystore" debug-keystore-path
+                 "-keystore" keystore-path
                  "-storepass" "android"
                  "-keypass" "android"
                  unaligned-path "androiddebugkey"))))

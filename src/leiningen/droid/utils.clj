@@ -42,8 +42,7 @@
    :assets-path "assets"
    :out-res-pkg-path (str target-path "/" project-name ".ap_")
    :out-apk-path (str target-path "/" project-name ".apk")
-   :debug-keystore-path (str (System/getenv "HOME")
-                             "/.android/debug.keystore")})
+   :keystore-path (str (System/getenv "HOME") "/.android/debug.keystore")})
 
 ;; This is the middleware function to be plugged into project.clj.
 (defn android-parameters
