@@ -7,6 +7,7 @@
   (:refer-clojure :exclude (compile))
   (:require leiningen.compile leiningen.javac)
   (:use [leiningen.droid.utils :only (get-sdk-android-jar unique-jars)]
+        [leiningen.core.main :only (debug info) :rename {debug print-debug}]
         [robert.hooke :only (add-hook)]))
 
 (defn compile-java
@@ -33,7 +34,7 @@ jars from the classpath."
         result (conj (concat (unique-jars jars) paths)
                      (get-sdk-android-jar sdk-path target-version)
                      (str sdk-path "/tools/support/annotations.jar"))]
-    (println result)
+    (print-debug result)
     result))
 
 (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook)
