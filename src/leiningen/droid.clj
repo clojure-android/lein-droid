@@ -3,12 +3,13 @@
 ;; seamless and efficient as when developing ordinar Clojure JVM programs.
 ;;
 (ns leiningen.droid
-  (:refer-clojure :exclude [compile doall])
+  (:refer-clojure :exclude [compile doall repl])
   (:use [clojure [repl :only (doc source)]]
         [leiningen.droid.compile :only (compile)]
         [leiningen.droid.build :only [create-dex crunch-resources
                                       package-resources create-apk
-                                      sign-apk zipalign-apk install run]]
+                                      sign-apk zipalign-apk install]]
+        [leiningen.droid.run :only [run forward-port repl]]
         [leiningen.droid.utils :only (proj)]
         [leiningen.help :only (subtask-help-for)]
         [leiningen.core.project :only (read) :rename {read read-project}]))
@@ -43,6 +44,8 @@
      (print-subtask-list #'droid))
   ([project & [cmd & _ :as args]]
      (case cmd
+       "repl" (repl (proj))
+       "forward" (forward-port (proj))
        "doall" (doall (proj))
        "run" (run (proj))
        "install" (install (proj))

@@ -2,7 +2,9 @@
 ;;
 (ns leiningen.droid.utils
   (:use [clojure.java.io :only (file)]
-        [leiningen.core.project :only (read) :rename {read read-project}]))
+        [leiningen.core.main :only (debug info) :rename {debug print-debug}]
+        [leiningen.core.project :only (read) :rename {read read-project}]
+        [clojure.string :only (join)]))
 
 ;; ### Middleware section
 
@@ -42,7 +44,9 @@
    :assets-path "assets"
    :out-res-pkg-path (str target-path "/" project-name ".ap_")
    :out-apk-path (str target-path "/" project-name ".apk")
-   :keystore-path (str (System/getenv "HOME") "/.android/debug.keystore")})
+   :keystore-path (str (System/getenv "HOME") "/.android/debug.keystore")
+   :repl-device-port 9999
+   :repl-local-port 9999})
 
 ;; This is the middleware function to be plugged into project.clj.
 (defn android-parameters
@@ -104,3 +108,9 @@ This function should be rewritten in future."
   which returns logical truth."
   [pred coll]
   (some (fn [item] (when (pred item) item)) coll))
+
+(defn sh
+  "Executes the command given by `args` in a subprocess."
+  [& args]
+  (info (join (interpose " " args)))
+  (.exec (Runtime/getRuntime) (join (interpose " " args))))

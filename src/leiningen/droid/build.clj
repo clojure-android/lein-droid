@@ -4,17 +4,9 @@
   (:use [leiningen.core.classpath :only (resolve-dependencies)]
         [leiningen.core.main :only (debug info) :rename {debug print-debug}]
         [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
-                                      first-matched proj]]
-        [leiningen.droid.manifest :only (get-launcher-activity)]
-        [clojure.string :only (join)]))
+                                      first-matched proj sh]]))
 
 ;; ### Helper functions
-
-(defn sh
-  "Executes the command given by `args` in a subprocess."
-  [& args]
-  (print-debug (join (interpose " " args)))
-  (.exec (Runtime/getRuntime) (join (interpose " " args))))
 
 (defn- append-suffix
   "Appends a suffix to a filename, e.g. transforming `sample.apk` into
@@ -117,14 +109,6 @@
     (.waitFor (sh adb-bin "-d" "install"
                   "-r" apk-debug-path))))
 
-(defn run
-  "Launches the installed APK on the connected device."
-  [{{:keys [sdk-path manifest-path]} :android}]
-  (info "Launching APK...")
-  (let [adb-bin (str sdk-path "/platform-tools/adb")]
-    (.waitFor (sh adb-bin "shell am start"
-                  "-n" (get-launcher-activity manifest-path)))))
-
 (comment
   (create-dex (leiningen.droid.utils/proj))
   (crunch-resources (leiningen.droid.utils/proj))
@@ -133,5 +117,4 @@
   (sign-apk (leiningen.droid.utils/proj))
   (zipalign-apk (leiningen.droid.utils/proj))
   (install (leiningen.droid.utils/proj))
-  (run (leiningen.droid.utils/proj))
   )
