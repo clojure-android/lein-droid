@@ -16,7 +16,7 @@
 ;; XML tag of the Internet permission.
 (def ^{:private true} internet-permission-tag
   {:tag :uses-permission
-   :attrs {:android:name internet-permission}})
+   :attrs {(keyword :android:name) internet-permission}})
 
 ;; ### Local functions
 
