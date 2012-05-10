@@ -1,13 +1,22 @@
 (ns leiningen.droid.manifest
   "Contains functions to manipulate AndroidManifest.xml file"
   (:require [clojure.xml :as xml])
-  (:use [clojure.zip :only (xml-zip up)]
-        [clojure.data.zip.xml]))
+  (:use [clojure.zip :only (xml-zip up node append-child)]
+        [clojure.data.zip.xml])
+  (:import java.io.FileWriter))
 
 ;; ### Constants
 
 ;; Name of the category for the launcher activities.
 (def ^{:private true} launcher-category "android.intent.category.LAUNCHER")
+
+;; Name of the Internet permission.
+(def ^{:private true} internet-permission "android.permission.INTERNET")
+
+;; XML tag of the Internet permission.
+(def ^{:private true} internet-permission-tag
+  {:tag :uses-permission
+   :attrs {:android:name internet-permission}})
 
 ;; ### Local functions
 
@@ -22,6 +31,18 @@
   [manifest]
   (xml-> manifest :application :activity :intent-filter :category
          (attr= :android:name launcher-category)))
+
+(defn- has-internet-permission?
+  "Checks if manifest contains Internet permission."
+  [manifest]
+  (first (xml-> manifest
+                :uses-permission (attr= :android:name internet-permission))))
+
+(defn- write-manifest
+  "Writes the manifest to the specified filename."
+  [manifest filename]
+  (binding [*out* (FileWriter. filename)]
+    (xml/emit (node manifest))))
 
 ;; ### Public functions
 
@@ -39,3 +60,11 @@
          (xml-> (attr :android:name))
          first))))
 
+(defn write-manifest-with-internet-permission
+  "Updates the manifest on disk guaranteed to have the Internet permission."
+  [manifest-path]
+  (let [manifest (load-manifest manifest-path)]
+   (write-manifest (if (has-internet-permission? manifest)
+                     manifest
+                     (append-child manifest internet-permission-tag))
+                   manifest-path)))

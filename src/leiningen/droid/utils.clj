@@ -114,3 +114,8 @@ This function should be rewritten in future."
   [& args]
   (info (join (interpose " " args)))
   (.exec (Runtime/getRuntime) (join (interpose " " args))))
+
+(defn dev-build?
+  "Checks if the current Leiningen run contains :dev profile."
+  [project]
+  (contains? (-> project meta :included-profiles set) :dev))

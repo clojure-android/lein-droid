@@ -1,10 +1,12 @@
 (ns leiningen.droid.build
   "A set of functions and subtasks responsible for building the
   Android project."
-  (:use [leiningen.core.classpath :only (resolve-dependencies)]
-        [leiningen.core.main :only (debug info) :rename {debug print-debug}]
+  (:use [leiningen.core.classpath :only [resolve-dependencies]]
+        [leiningen.core.main :only [debug info] :rename {debug print-debug}]
         [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
-                                      first-matched proj sh]]))
+                                      first-matched proj sh dev-build?]]
+        [leiningen.droid.manifest :only [write-manifest-with-internet-permission]])
+  (:require [clojure.java.io :as io]))
 
 ;; ### Helper functions
 
@@ -45,16 +47,31 @@
                   "-C" out-res-path))))
 
 (defn package-resources
-  "Calls `aapt` binary with the _package_ task."
+  "Calls `aapt` binary with the _package_ task.
+
+  If this task in run with :dev profile, then it ensures that
+  AndroidManifest.xml has Internet permission for running REPL. This
+  is achieved by backing up the original manifest file and creating a
+  new one with Internet permission appended to it. After the packaging
+  the original manifest file is restored."
   [{{:keys [sdk-path target-version manifest-path assets-path res-path
-            out-res-path out-res-pkg-path]} :android}]
+            out-res-path out-res-pkg-path]} :android :as project}]
   (info "Packaging resources...")
   (let [aapt-bin (str sdk-path "/platform-tools/aapt")
-        android-jar (get-sdk-android-jar sdk-path target-version)]
+        android-jar (get-sdk-android-jar sdk-path target-version)
+        dev-build (dev-build? project)
+        manifest-file (io/file manifest-path)
+        backup-file (io/file (str manifest-path ".backup"))]
+    (when dev-build
+      (io/copy manifest-file backup-file)
+      (write-manifest-with-internet-permission manifest-path))
     (.waitFor (sh aapt-bin "package" "--no-crunch" "-f" "--debug-mode"
                   "-M" manifest-path "-S" out-res-path "-S" res-path
                   "-A" assets-path "-I" android-jar "-F" out-res-pkg-path
-                  "--generate-dependencies"))))
+                  "--generate-dependencies"))
+    (when dev-build
+      (io/copy backup-file manifest-file)
+      (io/delete-file backup-file))))
 
 ;; Note that from all dependencies we add only the Clojure one.
 ;; Without it the application won't start.

@@ -24,6 +24,6 @@
     (.waitFor (sh adb-bin "forward" (str "tcp:" repl-local-port) (str "tcp:" repl-device-port)))))
 
 (defn repl
-  "Connects to a remote REPL server on the device using Reply."
+  "Connects to a remote nREPL server on the device using REPLy."
   [{{:keys [repl-local-port]} :android}]
   (launch-nrepl {:attach (str "localhost:" repl-local-port)}))

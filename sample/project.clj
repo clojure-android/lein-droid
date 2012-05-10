@@ -17,7 +17,7 @@
 
   :dependencies [[android/clojure "1.4.0"]
                  [neko "1.0.0-SNAPSHOT"]]
-  :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.0-beta2"]]}
+  :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.0-beta6"]]}
              :release {:android {:keystore-path "/home/unlogic/private.keystore"}}}
 
   :android {:sdk-path "/home/unlogic/Software/android-sdk-linux_x86"
