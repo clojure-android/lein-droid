@@ -12,11 +12,11 @@
   ;; target-path is "target", but you can change it to whatever you like.
   ;; :target-path "bin"
   ;; :compile-path "bin/classes"
-  :aot :all  ;; This one is necessary, please keep it
-  ;; :javac-options ["-g"]
+  :aot :all-with-unused ;; This one is necessary, please keep it
+  :aot-exclude-ns ["clojure.parallel"]
 
   :dependencies [[android/clojure "1.4.0"]
-                 [neko "1.0.0-SNAPSHOT"]]
+                 [neko/neko "1.0.1-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.0-beta6"]]}
              :release {:android {:keystore-path "/home/unlogic/private.keystore"}}}
 

@@ -4,30 +4,28 @@
 ;;
 (ns leiningen.droid.compile
   "This part of the plugin is responsible for the project compilation."
-  (:refer-clojure :exclude (compile))
-  (:require leiningen.compile leiningen.javac)
-  (:use [leiningen.droid.utils :only (get-sdk-android-jar unique-jars)]
-        [leiningen.core.main :only (debug info) :rename {debug print-debug}]
-        [robert.hooke :only (add-hook)]))
+  (:refer-clojure :exclude [compile])
+  (:require leiningen.compile leiningen.javac
+            [clojure.java.io :as io]
+            [leiningen.core.eval :as eval])
+  (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars]]
+        [leiningen.core
+         [main :only [debug info abort] :rename {debug print-debug}]
+         [classpath :only [get-classpath]]]
+        [robert.hooke :only [add-hook]]
+        [bultitude.core :only [namespaces-on-classpath]]))
 
-(defn compile-java
-  "Compiles Java files that come with the project. The paths to these
-  files are specified by `:java-source-paths` in project.clj. Note
-  that the value of `:java-source-paths` should be a vector of strings."
-  [project & args]
-  (apply leiningen.javac/javac project args))
-
-;; Now before defining the actual `compile` function we have to
-;; manually attach Android SDK libraries to the classpath. The reason
-;; for this is that Leiningen doesn't handle external dependencies at
-;; the high level, that's why we hack `get-classpath` function.
+;; Before defining actual `compile` functions we have to manually
+;; attach Android SDK libraries to the classpath. The reason for this
+;; is that Leiningen doesn't handle external dependencies at the high
+;; level, that's why we hack `get-classpath` function.
 
 (defn classpath-hook
   "Takes the original `get-classpath` function and the project map,
-extracting the path to the Android SDK and the target version from it.
-Then the path to the actual `android.jar` file is constructed and
-appended to the rest of the classpath list. Also removes all duplicate
-jars from the classpath."
+  extracting the path to the Android SDK and the target version from it.
+  Then the path to the actual `android.jar` file is constructed and
+  appended to the rest of the classpath list. Also removes all duplicate
+  jars from the classpath."
   [f {{:keys [sdk-path target-version]} :android :as project}]
   (let [classpath (f project)
         [jars paths] ((juxt filter remove) #(re-matches #".+\.jar" %) classpath)
@@ -39,13 +37,44 @@ jars from the classpath."
 
 (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook)
 
-(defn compile-clojure
-  "Compiles Clojure files of the project. Also compiles the dependencies."
+(defn compile-java
+  "Compiles Java files that come with the project. The paths to these
+  files are specified by `:java-source-paths` in project.clj. Note
+  that the value of `:java-source-paths` should be a vector of strings."
   [project & args]
-  (apply leiningen.compile/compile project args))
+  (apply leiningen.javac/javac project args))
+
+(defn compile-clojure
+  "Taken partly from Leiningen source code.
+
+  Compiles Clojure files into .class files.
+
+  If `:aot` project parameter equals `:all` then compiles the
+  necessary dependencies. If `:aot` equals `:all-with-unused` then
+  compiles all namespaces of the dependencies whether they were
+  referenced in the code or not. The latter is useful for the
+  development."
+  [{:keys [aot aot-exclude-ns] :as project}]
+  (if (= aot :all-with-unused)
+    (let [nses (namespaces-on-classpath :classpath
+                                        (map io/file (get-classpath project)))
+          nses (remove (set (map symbol aot-exclude-ns)) nses)]
+      (try
+        (let [form `(doseq [namespace# '~nses]
+                      (println "Compiling" namespace#)
+                      (clojure.core/compile namespace#))
+              project (update-in project [:prep-tasks]
+                                 (partial remove #{"compile"}))]
+          (.mkdirs (io/file (:compile-path project)))
+          (try (eval/eval-in-project project form)
+               (info "Compilation succeeded.")
+               (catch Exception e
+                 (abort "Compilation failed.")))))
+      (info "All namespaces already :aot compiled."))
+    (leiningen.compile/compile project)))
 
 (defn compile
   "Compiles both Java and Clojure source files."
   [project & args]
   (apply compile-java project args)
-  (apply compile-clojure project args))
+  (compile-clojure project))
