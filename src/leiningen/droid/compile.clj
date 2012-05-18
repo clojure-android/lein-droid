@@ -8,9 +8,10 @@
   (:require leiningen.compile leiningen.javac
             [clojure.java.io :as io]
             [leiningen.core.eval :as eval])
-  (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars]]
+  (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
+                                      ensure-paths]]
         [leiningen.core
-         [main :only [debug info abort] :rename {debug print-debug}]
+         [main :only [debug info abort]]
          [classpath :only [get-classpath]]]
         [robert.hooke :only [add-hook]]
         [bultitude.core :only [namespaces-on-classpath]]))
@@ -32,17 +33,10 @@
         result (conj (concat (unique-jars jars) paths)
                      (get-sdk-android-jar sdk-path target-version)
                      (str sdk-path "/tools/support/annotations.jar"))]
-    (print-debug result)
+    (debug result)
     result))
 
 (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook)
-
-(defn compile-java
-  "Compiles Java files that come with the project. The paths to these
-  files are specified by `:java-source-paths` in project.clj. Note
-  that the value of `:java-source-paths` should be a vector of strings."
-  [project & args]
-  (apply leiningen.javac/javac project args))
 
 (defn compile-clojure
   "Taken partly from Leiningen source code.
@@ -75,6 +69,7 @@
 
 (defn compile
   "Compiles both Java and Clojure source files."
-  [project & args]
-  (apply compile-java project args)
+  [{{:keys [sdk-path]} :android :as project} & args]
+  (ensure-paths sdk-path)
+  (apply leiningen.javac/javac project args)
   (compile-clojure project))

@@ -2,7 +2,7 @@
 ;;
 (ns leiningen.droid.utils
   (:use [clojure.java.io :only (file)]
-        [leiningen.core.main :only (debug info) :rename {debug print-debug}]
+        [leiningen.core.main :only (info abort)]
         [leiningen.core.project :only (read) :rename {read read-project}]
         [clojure.string :only (join)]))
 
@@ -46,7 +46,8 @@
    :out-apk-path (str target-path "/" project-name ".apk")
    :keystore-path (str (System/getenv "HOME") "/.android/debug.keystore")
    :repl-device-port 9999
-   :repl-local-port 9999})
+   :repl-local-port 9999
+   :target-version 10})
 
 ;; This is the middleware function to be plugged into project.clj.
 (defn android-parameters
@@ -119,3 +120,15 @@ This function should be rewritten in future."
   "Checks if the current Leiningen run contains :dev profile."
   [project]
   (contains? (-> project meta :included-profiles set) :dev))
+
+(defmacro ensure-paths
+  "Checks if the given directories or files exist. Aborts Leiningen
+  execution in case either of the doesn't or the value equals nil."
+  [& paths]
+  `(do
+     ~@(for [p paths]
+         `(cond (nil? ~p)
+                (abort "The value of" (str '~p) "is nil. Abort execution.")
+
+                (not (.exists (file ~p)))
+                (abort "The path" ~p "doesn't exist. Abort execution.")))))

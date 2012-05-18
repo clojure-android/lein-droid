@@ -1,11 +1,15 @@
 (ns leiningen.droid.build
   "A set of functions and subtasks responsible for building the
   Android project."
-  (:use [leiningen.core.classpath :only [resolve-dependencies]]
-        [leiningen.core.main :only [debug info] :rename {debug print-debug}]
-        [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
-                                      first-matched proj sh dev-build?]]
-        [leiningen.droid.manifest :only [write-manifest-with-internet-permission]])
+  (:refer-clojure :exclude [compile])
+  (:use [leiningen.core
+         [classpath :only [resolve-dependencies]]
+         [main :only [debug info]]]
+        [leiningen.droid
+         [compile :only [compile]]
+         [utils :only [get-sdk-android-jar unique-jars first-matched proj sh
+                       dev-build? ensure-paths]]
+         [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.java.io :as io]))
 
 ;; ### Helper functions
@@ -30,6 +34,7 @@
   [{{:keys [sdk-path out-dex-path]} :android,
     compile-path :compile-path :as project}]
   (info "Creating dex...")
+  (ensure-paths sdk-path)
   (let [dx-bin (str sdk-path "/platform-tools/dx")
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (unique-jars (resolve-dependencies :dependencies project))
@@ -38,10 +43,16 @@
     (. (Runtime/getRuntime) addShutdownHook (Thread. #(.destroy process)))
     (. process waitFor)))
 
+(defn build
+  "Compiles all source files and creates a DEX-file."
+  [project]
+  (doto project compile create-dex))
+
 (defn crunch-resources
   "Calls `aapt` binary with the _crunch_ task."
   [{{:keys [sdk-path res-path out-res-path]} :android}]
   (info "Crunching resources...")
+  (ensure-paths sdk-path res-path)
   (let [aapt-bin (str sdk-path "/platform-tools/aapt")]
     (.waitFor (sh aapt-bin "crunch -v -S" res-path
                   "-C" out-res-path))))
@@ -57,17 +68,20 @@
   [{{:keys [sdk-path target-version manifest-path assets-path res-path
             out-res-path out-res-pkg-path]} :android :as project}]
   (info "Packaging resources...")
+  (ensure-paths sdk-path manifest-path res-path)
   (let [aapt-bin (str sdk-path "/platform-tools/aapt")
         android-jar (get-sdk-android-jar sdk-path target-version)
         dev-build (dev-build? project)
         manifest-file (io/file manifest-path)
-        backup-file (io/file (str manifest-path ".backup"))]
+        backup-file (io/file (str manifest-path ".backup"))
+        ;; Only add `assets` directory if it is present.
+        assets (when (.exists (io/file assets-path)) (str "-A " assets-path))]
     (when dev-build
       (io/copy manifest-file backup-file)
       (write-manifest-with-internet-permission manifest-path))
     (.waitFor (sh aapt-bin "package" "--no-crunch" "-f" "--debug-mode"
                   "-M" manifest-path "-S" out-res-path "-S" res-path
-                  "-A" assets-path "-I" android-jar "-F" out-res-pkg-path
+                  assets "-I" android-jar "-F" out-res-pkg-path
                   "--generate-dependencies"))
     (when dev-build
       (io/copy backup-file manifest-file)
@@ -84,6 +98,7 @@
     source-paths :source-paths, java-source-paths :java-source-paths
     :as project}]
   (info "Creating APK...")
+  (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [apkbuilder-bin (str sdk-path "/tools/apkbuilder")
         unaligned-path (append-suffix out-apk-path "debug-unaligned")
         source-paths-args (mapcat #(vector "-rf" %) (concat source-paths
@@ -101,6 +116,7 @@
   [{{:keys [out-apk-path keystore-path]} :android}]
   (info "Signing APK...")
   (let [unaligned-path (append-suffix out-apk-path "debug-unaligned")]
+    (ensure-paths unaligned-path keystore-path)
     (.waitFor (sh "jarsigner"
                  "-keystore" keystore-path
                  "-storepass" "android"
@@ -115,7 +131,15 @@
   (let [zipalign-bin (str sdk-path "/tools/zipalign")
         unaligned-path (append-suffix out-apk-path "debug-unaligned")
         aligned-path (append-suffix out-apk-path "debug")]
+    (ensure-paths sdk-path unaligned-path)
     (.waitFor (sh zipalign-bin "4" unaligned-path aligned-path))))
+
+(defn apk
+  "Crunches and packages resources, creates an APK file, signs and zip-aligns it."
+  [project]
+  (doto project
+    crunch-resources package-resources
+    create-apk sign-apk zipalign-apk))
 
 (defn install
   "Installs the current debug APK to the connected device."
@@ -123,6 +147,7 @@
   (info "Installing APK...")
   (let [adb-bin (str sdk-path "/platform-tools/adb")
         apk-debug-path (append-suffix out-apk-path "debug")]
+    (ensure-paths sdk-path apk-debug-path)
     (.waitFor (sh adb-bin "-d" "install"
                   "-r" apk-debug-path))))
 
