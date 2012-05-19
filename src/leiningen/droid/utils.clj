@@ -1,8 +1,8 @@
 ;; Provides utilities for the plugin.
 ;;
 (ns leiningen.droid.utils
-  (:use [clojure.java.io :only (file)]
-        [leiningen.core.main :only (info abort)]
+  (:use [clojure.java.io :only (file reader)]
+        [leiningen.core.main :only (info debug abort)]
         [leiningen.core.project :only (read) :rename {read read-project}]
         [clojure.string :only (join)]))
 
@@ -110,11 +110,34 @@ This function should be rewritten in future."
   [pred coll]
   (some (fn [item] (when (pred item) item)) coll))
 
+(defmacro with-process
+  "Executes the subprocess specified in the binding list and applies
+  `body` do it while it is running. The binding list consists of a var
+  name for the process and the list of strings that represents shell
+  command.
+
+  After body is executed waits for a subprocess to finish, then checks
+  the exit code. If code is not zero then prints the subprocess'
+  output. If in DEBUG mode print both the command and it's output even
+  for the successful run."
+  [[process-name command] & body]
+  `(do
+     (apply debug ~command)
+     (let [builder# (ProcessBuilder. ~command)
+           _# (.redirectErrorStream builder# true)
+           ~process-name (.start builder#)
+           output# (line-seq (reader (.getInputStream ~process-name)))]
+       ~@body
+       (.waitFor ~process-name)
+       (if-not (= (.exitValue ~process-name) 0)
+         (apply info output#)
+         (apply debug output#)))))
+
 (defn sh
-  "Executes the command given by `args` in a subprocess."
+  "Executes the command given by `args` in a subprocess. Flattens the
+  given list."
   [& args]
-  (info (join (interpose " " args)))
-  (.exec (Runtime/getRuntime) (join (interpose " " args))))
+  (with-process [process (flatten args)]))
 
 (defn dev-build?
   "Checks if the current Leiningen run contains :dev profile."

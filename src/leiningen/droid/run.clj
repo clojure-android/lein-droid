@@ -3,16 +3,16 @@
   manage its runtime. "
   (:use [leiningen.core.main :only (debug info) :rename {debug print-debug}]
         [leiningen.droid.manifest :only (get-launcher-activity)]
-        [leiningen.droid.utils :only (sh)]
+        [leiningen.droid.utils :only (sh ensure-paths)]
         [reply.main :only (launch-nrepl)]))
 
 (defn run
   "Launches the installed APK on the connected device."
   [{{:keys [sdk-path manifest-path]} :android}]
   (info "Launching APK...")
+  (ensure-paths sdk-path manifest-path)
   (let [adb-bin (str sdk-path "/platform-tools/adb")]
-    (.waitFor (sh adb-bin "shell am start"
-                  "-n" (get-launcher-activity manifest-path)))))
+    (sh adb-bin "shell am start" "-n" (get-launcher-activity manifest-path))))
 
 (defn forward-port
   "Binds a port on the local machine to the port on the device
@@ -20,8 +20,11 @@
   [{{:keys [sdk-path repl-device-port repl-local-port]} :android}]
   (info "Binding device port" repl-device-port
         "to local port" repl-local-port "...")
+  (ensure-paths sdk-path)
   (let [adb-bin (str sdk-path "/platform-tools/adb")]
-    (.waitFor (sh adb-bin "forward" (str "tcp:" repl-local-port) (str "tcp:" repl-device-port)))))
+    (sh adb-bin "forward"
+        (str "tcp:" repl-local-port)
+        (str "tcp:" repl-device-port))))
 
 (defn repl
   "Connects to a remote nREPL server on the device using REPLy."

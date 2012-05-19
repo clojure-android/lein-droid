@@ -2,7 +2,7 @@
   (:import android.util.Log [test.leindroid.sample R$layout R$id]
            [android.view View$OnClickListener])
   (:require [neko.compilation :as neko]
-            [clojure.tools.nrepl.server :as nrepl])
+            [neko.repl :as repl])
   (:gen-class
    :main false
    :extends android.app.Activity
@@ -12,7 +12,7 @@
 
 (defn init [context]
   (neko/init context "classes")
-  (nrepl/start-server :port 9999))
+  (repl/try-start-repl :port 9999))
 
 (defn -onCreate [this bundle]
   (swap! uitems #(assoc % :activity this))
