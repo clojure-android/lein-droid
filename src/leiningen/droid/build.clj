@@ -39,8 +39,8 @@
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (unique-jars (resolve-dependencies :dependencies project))]
     (with-process [proc (map str
-                             (flatten '(dx-bin "--dex" "--output" out-dex-path
-                                               compile-path annotations deps)))]
+                             (flatten [dx-bin "--dex" "--output" out-dex-path
+                                       compile-path annotations deps]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
 
 (defn build
@@ -102,12 +102,13 @@
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [apkbuilder-bin (str sdk-path "/tools/apkbuilder")
         unaligned-path (append-suffix out-apk-path "debug-unaligned")
-        source-paths-args (mapcat #(vector "-rf" %) (concat source-paths
-                                                            java-source-paths))]
+        clojure-jar (first-matched #(re-find #"android/clojure" (str %))
+                                   (resolve-dependencies :dependencies
+                                                         project))]
     (sh apkbuilder-bin unaligned-path "-u"
         "-z" out-res-pkg-path
         "-f" out-dex-path
-        source-paths-args)))
+        "-rj" (str clojure-jar))))
 
 (defn sign-apk
   "Signs APK file with a key from the debug keystore."
@@ -130,6 +131,7 @@
         unaligned-path (append-suffix out-apk-path "debug-unaligned")
         aligned-path (append-suffix out-apk-path "debug")]
     (ensure-paths sdk-path unaligned-path)
+    (.delete (io/file aligned-path))
     (sh zipalign-bin "4" unaligned-path aligned-path)))
 
 (defn apk

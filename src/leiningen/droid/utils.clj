@@ -130,7 +130,7 @@ This function should be rewritten in future."
        ~@body
        (.waitFor ~process-name)
        (if-not (= (.exitValue ~process-name) 0)
-         (apply info output#)
+         (apply abort output#)
          (apply debug output#)))))
 
 (defn sh
@@ -155,3 +155,22 @@ This function should be rewritten in future."
 
                 (not (.exists (file ~p)))
                 (abort "The path" ~p "doesn't exist. Abort execution.")))))
+
+(defn wrong-usage
+  "Returns a string with the information about the proper function usage."
+  ([task-name function-var]
+     (wrong-usage task-name function-var 0))
+  ([task-name function-var arglist-number]
+     (let [arglist (-> function-var
+                       meta :arglists (nth arglist-number))
+           argcount (count arglist)
+           parametrify #(str "<" % ">")
+           ;; Replace the destructuring construction after & with
+           ;; [optional-args].
+           arglist (if (= (nth arglist (- argcount 2)) '&)
+                     (concat (map parametrify
+                                  (take (- argcount 2) arglist))
+                             ["[optional-args]"])
+                     (map parametrify arglist))]
+       (format "Wrong number of argumets. USAGE: %s %s"
+               task-name (join (interpose " " arglist))))))

@@ -9,7 +9,7 @@
 
 (defn init [context]
   (neko/init context "classes")
-  (repl/try-start-repl))
+  (repl/try-start-repl :port 9999))
 
 (defn -onCreate [this bundle]
   (init this)

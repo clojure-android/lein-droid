@@ -10,8 +10,9 @@
                                       package-resources create-apk
                                       sign-apk zipalign-apk install apk build]]
         [leiningen.droid.run :only [run forward-port repl]]
-        [leiningen.droid.new :only [create-project]]
-        [leiningen.droid.utils :only (proj)]
+        [leiningen.droid.new :only [new]]
+        [leiningen.core.main :only [debug info abort]]
+        [leiningen.droid.utils :only [proj wrong-usage]]
         [leiningen.help :only (subtask-help-for)]
         [leiningen.core.project :only (read) :rename {read read-project}]))
 
@@ -37,16 +38,17 @@
 (defn ^{:no-project-needed true
         :subtasks [#'compile #'create-dex #'crunch-resources #'package-resources
                    #'create-apk #'sign-apk #'zipalign-apk #'install #'run
-                   #'doall #'apk #'build]}
+                   #'doall #'apk #'build #'new]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([])
   ([project]
      (print-subtask-list #'droid))
-  ([project & [cmd & _ :as args]]
+  ([project & [cmd & args]]
      (case cmd
-       "new" (create-project "blablaproject" "org.blabla.foo")
-       "neko" (apply compile (leiningen.droid.utils/proj "/home/unlogic/clojure/android/neko/project.clj") _)
+       "new" (if (< (count args) 2)
+               (abort (wrong-usage "lein droid new" #'new))
+               (apply new args))
        "repl" (repl (proj))
        "forward" (forward-port (proj))
        "doall" (doall (proj))

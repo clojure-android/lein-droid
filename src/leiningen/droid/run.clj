@@ -12,7 +12,7 @@
   (info "Launching APK...")
   (ensure-paths sdk-path manifest-path)
   (let [adb-bin (str sdk-path "/platform-tools/adb")]
-    (sh adb-bin "shell am start" "-n" (get-launcher-activity manifest-path))))
+    (sh adb-bin "shell" "am" "start" "-n" (get-launcher-activity manifest-path))))
 
 (defn forward-port
   "Binds a port on the local machine to the port on the device
