@@ -39,11 +39,11 @@
   (let [release-project (-> project
                             (unmerge-profiles [:dev])
                             (merge-profiles [:release])
-                            android-parameters)])
-  (delete-file-recursively (:compile-path project) :silently)
-  (build project)
-  (apk project)
-  (install project))
+                            android-parameters)]
+    (delete-file-recursively (:compile-path project) :silently)
+    (build release-project)
+    (apk release-project)
+    (install release-project)))
 
 (defn ^{:no-project-needed true
         :subtasks [#'new #'compile #'create-dex #'crunch-resources
