@@ -6,4 +6,5 @@
   :dependencies [[robert/hooke "1.1.2"]
                  [org.clojure/data.zip "0.1.0"]]
   :min-lein-version "2.0.0"
+  :resource-paths ["res"]
   :eval-in-leiningen true)
