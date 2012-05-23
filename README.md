@@ -5,6 +5,10 @@ platform. See Marginalia docs [here](http://alexander-yakushev.github.com/lein-d
 
 ## Usage
 
+See the
+[Tutorial](https://github.com/alexander-yakushev/lein-droid/wiki/Tutorial)
+to start using lein-droid.
+
 Since the 0.0.1 is released you can carefully try to use this. It will
 surely crash, and burn and not work at all, but the release means that
 I managed to make it work on my machine. So, good luck
