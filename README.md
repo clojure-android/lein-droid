@@ -5,10 +5,10 @@ platform. See Marginalia docs [here](http://alexander-yakushev.github.com/lein-d
 
 ## Usage
 
-Please **DONT USE IT** until it is explicitly declared as usable. This
-project is under heavy development. By downloading and trying to run
-this you would definitely set your hair on fire which is what
-Leiningen is all against.
+Since the 0.0.1 is released you can carefully try to use this. It will
+surely crash, and burn and not work at all, but the release means that
+I managed to make it work on my machine. So, good luck
+experimenting:).
 
 ## License
 
