@@ -46,8 +46,13 @@
 
 ;; ### Public functions
 
+(defn get-package-name
+  "Returns the name of the application's package."
+  [manifest-path]
+  (first (xml-> (load-manifest manifest-path) (attr :package))))
+
 (defn get-launcher-activity
-  "Return the package name and the name of the first activity from the
+  "Returns the package name and the name of the first activity from the
   manifest that belongs to the _launcher_ category."
   [manifest-path]
   (let [manifest (load-manifest manifest-path)

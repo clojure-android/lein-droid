@@ -33,7 +33,6 @@
         result (conj (concat (unique-jars jars) paths)
                      (get-sdk-android-jar sdk-path target-version)
                      (str sdk-path "/tools/support/annotations.jar"))]
-    (debug result)
     result))
 
 (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook)
@@ -49,6 +48,7 @@
   referenced in the code or not. The latter is useful for the
   development."
   [{:keys [aot aot-exclude-ns] :as project}]
+  (debug (get-classpath project))
   (if (= aot :all-with-unused)
     (let [nses (namespaces-on-classpath :classpath
                                         (map io/file (get-classpath project)))

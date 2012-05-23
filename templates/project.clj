@@ -18,7 +18,14 @@
   :dependencies [[android/clojure "1.4.0"]
                  [neko/neko "1.0.1-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.0-beta6"]]}
-             :release {:android {:keystore-path "/home/unlogic/private.keystore"}}}
+             :release {:android
+                       {;; Specify the path to your private
+                        ;; keystore and the the alias of the
+                        ;; key you want to sign APKs with.
+                        ;; :keystore-path "/home/user/.android/private.keystore"
+                        ;; :key-alias "mykeyalias"
+                        }
+                       :aot :all}}
 
   :android {;; Specify the path to the Android SDK directory either
             ;; here or in your ~/.lein/profiles.clj file.

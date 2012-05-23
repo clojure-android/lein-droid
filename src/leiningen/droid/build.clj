@@ -8,8 +8,9 @@
         [leiningen.droid
          [compile :only [compile]]
          [utils :only [get-sdk-android-jar unique-jars first-matched proj sh
-                       dev-build? ensure-paths with-process]]
-         [manifest :only [write-manifest-with-internet-permission]]])
+                       dev-build? ensure-paths with-process read-password]]
+         [manifest :only [write-manifest-with-internet-permission
+                          get-package-name]]])
   (:require [clojure.java.io :as io]))
 
 ;; ### Helper functions
@@ -101,7 +102,8 @@
   (info "Creating APK...")
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [apkbuilder-bin (str sdk-path "/tools/apkbuilder")
-        unaligned-path (append-suffix out-apk-path "debug-unaligned")
+        suffix (if (dev-build? project) "debug-analigned" "unaligned")
+        unaligned-path (append-suffix out-apk-path suffix)
         clojure-jar (first-matched #(re-find #"android/clojure" (str %))
                                    (resolve-dependencies :dependencies
                                                          project))]
@@ -112,24 +114,33 @@
 
 (defn sign-apk
   "Signs APK file with a key from the debug keystore."
-  [{{:keys [out-apk-path keystore-path]} :android}]
+  [{{:keys [out-apk-path keystore-path key-alias]} :android :as project}]
   (info "Signing APK...")
-  (let [unaligned-path (append-suffix out-apk-path "debug-unaligned")]
+  (let [dev-build (dev-build? project)
+        suffix (if dev-build "debug-analigned" "unaligned")
+        unaligned-path (append-suffix out-apk-path suffix)
+        storepass (if dev-build "android"
+                      (read-password "Enter storepass: "))
+        keypass (if dev-build "android"
+                      (read-password "Enter keypass: "))]
     (ensure-paths unaligned-path keystore-path)
     (sh "jarsigner"
         "-keystore" keystore-path
-        "-storepass" "android"
-        "-keypass" "android"
-        unaligned-path "androiddebugkey")))
+        "-storepass" storepass
+        "-keypass" keypass
+        unaligned-path key-alias)))
 
 (defn zipalign-apk
   "Calls `zipalign` binary on APK file. The output APK file has
   _-debug_ suffix."
-  [{{:keys [sdk-path out-apk-path]} :android}]
+  [{{:keys [sdk-path out-apk-path]} :android :as project}]
   (info "Aligning APK...")
   (let [zipalign-bin (str sdk-path "/tools/zipalign")
-        unaligned-path (append-suffix out-apk-path "debug-unaligned")
-        aligned-path (append-suffix out-apk-path "debug")]
+        unaligned-suffix (if (dev-build? project) "debug-analigned" "unaligned")
+        unaligned-path (append-suffix out-apk-path unaligned-suffix)
+        aligned-path (if (dev-build? project)
+                       (append-suffix out-apk-path "debug")
+                       out-apk-path)]
     (ensure-paths sdk-path unaligned-path)
     (.delete (io/file aligned-path))
     (sh zipalign-bin "4" unaligned-path aligned-path)))
@@ -143,19 +154,13 @@
 
 (defn install
   "Installs the current debug APK to the connected device."
-  [{{:keys [sdk-path out-apk-path]} :android}]
+  [{{:keys [sdk-path out-apk-path manifest-path]} :android :as project}]
   (info "Installing APK...")
   (let [adb-bin (str sdk-path "/platform-tools/adb")
-        apk-debug-path (append-suffix out-apk-path "debug")]
-    (ensure-paths sdk-path apk-debug-path)
-    (sh adb-bin "-d" "install" "-r" apk-debug-path)))
-
-(comment
-  (create-dex (leiningen.droid.utils/proj))
-  (crunch-resources (leiningen.droid.utils/proj))
-  (package-resources (leiningen.droid.utils/proj))
-  (create-apk (leiningen.droid.utils/proj))
-  (sign-apk (leiningen.droid.utils/proj))
-  (zipalign-apk (leiningen.droid.utils/proj))
-  (install (leiningen.droid.utils/proj))
-  )
+        apk-path (if (dev-build? project)
+                   (append-suffix out-apk-path "debug")
+                   out-apk-path)]
+    (ensure-paths sdk-path apk-path)
+    ;; Uninstall old APK first.
+    (sh adb-bin "uninstall" (get-package-name manifest-path))
+    (sh adb-bin "-d" "install" "-r" apk-path)))

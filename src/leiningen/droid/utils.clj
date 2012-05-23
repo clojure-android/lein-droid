@@ -45,6 +45,7 @@
    :out-res-pkg-path (str target-path "/" project-name ".ap_")
    :out-apk-path (str target-path "/" project-name ".apk")
    :keystore-path (str (System/getenv "HOME") "/.android/debug.keystore")
+   :key-alias "androiddebugkey"
    :repl-device-port 9999
    :repl-local-port 9999
    :target-version 10})
@@ -174,3 +175,9 @@ This function should be rewritten in future."
                      (map parametrify arglist))]
        (format "Wrong number of argumets. USAGE: %s %s"
                task-name (join (interpose " " arglist))))))
+
+(defn read-password
+  "Reads the password from the standard input stream without echoing
+  the characters."
+  [prompt]
+  (join (.readPassword (System/console) prompt nil)))
