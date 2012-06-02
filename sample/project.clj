@@ -16,7 +16,7 @@
   :aot-exclude-ns ["clojure.parallel"]
 
   :dependencies [[android/clojure "1.4.0"]
-                 [neko/neko "1.0.1-SNAPSHOT"]]
+                 [neko/neko "1.1.0-SNAPSHOT"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.0-beta6"]]}
              :release {:android {;; Specify the path to your private
                                  ;; keystore and the the alias of the
