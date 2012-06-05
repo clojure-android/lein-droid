@@ -17,7 +17,7 @@
          [utils :only [proj wrong-usage android-parameters ensure-paths]]]))
 
 (defn help
-  "Show the list of possible lein droid subtasks."
+  "Shows the list of possible lein droid subtasks."
   [droid-var]
   (println (subtask-help-for "" droid-var)))
 
@@ -50,7 +50,7 @@
     (install release-project)))
 
 (defn ^{:no-project-needed true
-        :subtasks [#'new #'compile #'create-dex #'crunch-resources
+        :subtasks [#'new #'code-gen #'compile #'create-dex #'crunch-resources
                    #'package-resources #'create-apk #'sign-apk #'zipalign-apk
                    #'install #'run #'forward-port #'repl #'build #'apk #'doall
                    #'help]}

@@ -17,11 +17,13 @@
         [bultitude.core :only [namespaces-on-classpath]]))
 
 (defn code-gen
-  "Generates the R.java file from your resources. This task is
-  necessary if you define the UI in XML and also to gain access to
-  your strings and images by their ID."
-  [{{:keys [sdk-path target-version manifest-path res-path gen-path
-            out-res-path]} :android}]
+  "Generates the R.java file from the resources.
+
+  This task is necessary if you define the UI in XML and also to gain
+  access to your strings and images by their ID."
+  [{{:keys [sdk-path
+  target-version manifest-path res-path gen-path
+  out-res-path]} :android}]
   (info "Generating R.java...")
   (let [aapt-bin (str sdk-path "/platform-tools/aapt")
         android-jar (get-sdk-android-jar sdk-path target-version)
@@ -91,5 +93,6 @@
   "Compiles both Java and Clojure source files."
   [{{:keys [sdk-path]} :android :as project} & args]
   (ensure-paths sdk-path)
+  (code-gen project)
   (apply leiningen.javac/javac project args)
   (compile-clojure project))
