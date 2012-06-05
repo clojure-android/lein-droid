@@ -1,4 +1,4 @@
-(ns leiningen.droid.device
+(ns leiningen.droid.deploy
   "Functions and subtasks that install and run the application on the
   device and manage its runtime."
   (:use [leiningen.core.main :only (debug info abort)]
@@ -84,3 +84,12 @@
   "Connects to a remote nREPL server on the device using REPLy."
   [{{:keys [repl-local-port]} :android}]
   (launch-nrepl {:attach (str "localhost:" repl-local-port)}))
+
+(defn deploy
+  "Installs the APK to the device, executes it and forwards a port from
+  the device to the local machine."
+  [{{:keys [adb-bin]} :android :as project} & device-args]
+  (let [device (get-device-args adb-bin device-args)]
+    (apply install project device)
+    (apply run project device)
+    (apply forward-port project device)))

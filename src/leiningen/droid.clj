@@ -12,7 +12,7 @@
         [leiningen.droid
          [build :only [create-dex crunch-resources package-resources create-apk
                        sign-apk zipalign-apk apk build]]
-         [device :only [get-device-args install run forward-port repl]]
+         [deploy :only [install run forward-port repl deploy]]
          [new :only [new]]
          [utils :only [proj wrong-usage android-parameters ensure-paths]]]))
 
@@ -28,14 +28,10 @@
 
 (defn doall
   "Performs all Android tasks from compilation to the deployment."
-  [{{:keys [adb-bin]} :android :as project} & device-args]
-  (println device-args)
-  (doto project build apk)
-  (ensure-paths adb-bin)
-  (let [device (get-device-args adb-bin device-args)]
-    (apply install project device)
-    (apply run project device)
-    (apply forward-port project device)))
+  [project & device-args]
+  (doto project
+    build apk)
+  (apply deploy project device-args))
 
 (defn release
   "Builds, packs and deploys the release version of the project."
