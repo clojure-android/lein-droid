@@ -36,7 +36,7 @@
 
 (defn get-default-android-params
   "Returns a map of the default android-specific parameters."
-  [project-name target-path]
+  [project-name target-path sdk-path]
   {:out-dex-path (str target-path "/classes.dex")
    :manifest-path "AndroidManifest.xml"
    :res-path "res"
@@ -45,6 +45,7 @@
    :out-res-pkg-path (str target-path "/" project-name ".ap_")
    :out-apk-path (str target-path "/" project-name ".apk")
    :keystore-path (str (System/getenv "HOME") "/.android/debug.keystore")
+   :adb-bin (str sdk-path "/platform-tools/adb")
    :key-alias "androiddebugkey"
    :repl-device-port 9999
    :repl-local-port 9999
@@ -55,7 +56,8 @@
   "Merges project's `:android` map with the default parameters map and
   absolutizes paths in the `android` map."
   [{:keys [name target-path android] :as project}]
-  (let [android-params (merge (get-default-android-params name target-path)
+  (let [android-params (merge (get-default-android-params name target-path
+                                                          (:sdk-path android))
                               android)]
     (absolutize-android-paths
      (assoc project :android android-params))))
@@ -132,7 +134,8 @@ This function should be rewritten in future."
        (.waitFor ~process-name)
        (if-not (= (.exitValue ~process-name) 0)
          (apply abort output#)
-         (apply debug output#)))))
+         (apply debug output#))
+       output#)))
 
 (defn sh
   "Executes the command given by `args` in a subprocess. Flattens the
@@ -177,7 +180,14 @@ This function should be rewritten in future."
                task-name (join (interpose " " arglist))))))
 
 (defn read-password
-  "Reads the password from the standard input stream without echoing
-  the characters."
+  "Reads the password from the console without echoing the
+  characters."
   [prompt]
   (join (.readPassword (System/console) prompt nil)))
+
+(defn append-suffix
+  "Appends a suffix to a filename, e.g. transforming `sample.apk` into
+  `sample-signed.apk`"
+  [filename suffix]
+  (let [[_ without-ext ext] (re-find #"(.+)(\.\w+)" filename)]
+    (str without-ext "-" suffix ext)))

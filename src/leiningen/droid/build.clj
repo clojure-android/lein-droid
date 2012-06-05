@@ -8,19 +8,10 @@
         [leiningen.droid
          [compile :only [compile]]
          [utils :only [get-sdk-android-jar unique-jars first-matched proj sh
-                       dev-build? ensure-paths with-process read-password]]
-         [manifest :only [write-manifest-with-internet-permission
-                          get-package-name]]])
+                       dev-build? ensure-paths with-process read-password
+                       append-suffix]]
+         [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.java.io :as io]))
-
-;; ### Helper functions
-
-(defn- append-suffix
-  "Appends a suffix to a filename, e.g. transforming `sample.apk` into
-  `sample-signed.apk`"
-  [filename suffix]
-  (let [[_ without-ext ext] (re-find #"(.+)(\.\w+)" filename)]
-    (str without-ext "-" suffix ext)))
 
 ;; ### Subtasks
 
@@ -151,16 +142,3 @@
   (doto project
     crunch-resources package-resources
     create-apk sign-apk zipalign-apk))
-
-(defn install
-  "Installs the current debug APK to the connected device."
-  [{{:keys [sdk-path out-apk-path manifest-path]} :android :as project}]
-  (info "Installing APK...")
-  (let [adb-bin (str sdk-path "/platform-tools/adb")
-        apk-path (if (dev-build? project)
-                   (append-suffix out-apk-path "debug")
-                   out-apk-path)]
-    (ensure-paths sdk-path apk-path)
-    ;; Uninstall old APK first.
-    (sh adb-bin "uninstall" (get-package-name manifest-path))
-    (sh adb-bin "-d" "install" "-r" apk-path)))

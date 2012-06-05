@@ -11,11 +11,10 @@
         [leiningen.droid.compile :only (compile)]
         [leiningen.droid
          [build :only [create-dex crunch-resources package-resources create-apk
-                       sign-apk zipalign-apk install apk build]]
-         [run :only [run forward-port repl]]
+                       sign-apk zipalign-apk apk build]]
+         [device :only [get-device-args install run forward-port repl]]
          [new :only [new]]
-         [utils :only [proj wrong-usage android-parameters]]]))
-
+         [utils :only [proj wrong-usage android-parameters ensure-paths]]]))
 
 (defn help
   "Show the list of possible lein droid subtasks."
@@ -29,9 +28,14 @@
 
 (defn doall
   "Performs all Android tasks from compilation to the deployment."
-  [project]
-  (doto project
-    build apk install run))
+  [{{:keys [adb-bin]} :android :as project} & device-args]
+  (println device-args)
+  (doto project build apk)
+  (ensure-paths adb-bin)
+  (let [device (get-device-args adb-bin device-args)]
+    (apply install project device)
+    (apply run project device)
+    (apply forward-port project device)))
 
 (defn release
   "Builds, packs and deploys the release version of the project."
@@ -67,15 +71,15 @@
        "create-apk" (create-apk project)
        "sign-apk" (sign-apk project)
        "zipalign-apk" (zipalign-apk project)
-       "install" (install project)
-       "run" (run project)
-       "forward-port" (forward-port project)
+       "install" (apply install project args)
+       "run" (apply run project args)
+       "forward-port" (apply forward-port project args)
        "repl" (repl project)
 
        ;; Meta tasks
        "build" (build project)
        "apk" (apk project)
-       "doall" (doall project)
+       "doall" (apply doall project)
        "release" (release project)
 
        ;; Help tasks
