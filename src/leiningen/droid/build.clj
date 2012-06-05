@@ -75,7 +75,8 @@
     (sh aapt-bin "package" "--no-crunch" "-f" "--debug-mode"
         "-M" manifest-path
         "-S" out-res-path
-        "-S" res-path assets
+        "-S" res-path
+        assets
         "-I" android-jar
         "-F" out-res-pkg-path
         "--generate-dependencies")

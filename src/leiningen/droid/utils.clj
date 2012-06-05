@@ -40,6 +40,7 @@
   {:out-dex-path (str target-path "/classes.dex")
    :manifest-path "AndroidManifest.xml"
    :res-path "res"
+   :gen-path "gen"
    :out-res-path (str target-path "/res")
    :assets-path "assets"
    :out-res-pkg-path (str target-path "/" project-name ".ap_")

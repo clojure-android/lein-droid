@@ -9,12 +9,32 @@
             [clojure.java.io :as io]
             [leiningen.core.eval :as eval])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
-                                      ensure-paths]]
+                                      ensure-paths sh]]
         [leiningen.core
          [main :only [debug info abort]]
          [classpath :only [get-classpath]]]
         [robert.hooke :only [add-hook]]
         [bultitude.core :only [namespaces-on-classpath]]))
+
+(defn code-gen
+  "Generates the R.java file from your resources. This task is
+  necessary if you define the UI in XML and also to gain access to
+  your strings and images by their ID."
+  [{{:keys [sdk-path target-version manifest-path res-path gen-path
+            out-res-path]} :android}]
+  (info "Generating R.java...")
+  (let [aapt-bin (str sdk-path "/platform-tools/aapt")
+        android-jar (get-sdk-android-jar sdk-path target-version)
+        manifest-file (io/file manifest-path)]
+    (ensure-paths sdk-path manifest-path res-path aapt-bin android-jar)
+    (.mkdirs (io/file gen-path))
+    (sh aapt-bin "package" "-f" "-m" "--auto-add-overlay"
+        "-M" manifest-path
+        "-S" res-path
+        "-S" out-res-path
+        "-I" android-jar
+        "-J" gen-path
+        "--generate-dependencies")))
 
 ;; Before defining actual `compile` functions we have to manually
 ;; attach Android SDK libraries to the classpath. The reason for this

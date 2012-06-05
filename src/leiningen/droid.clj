@@ -8,7 +8,7 @@
         [leiningen.core.project :only [merge-profiles unmerge-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
-        [leiningen.droid.compile :only (compile)]
+        [leiningen.droid.compile :only (compile code-gen)]
         [leiningen.droid
          [build :only [create-dex crunch-resources package-resources create-apk
                        sign-apk zipalign-apk apk build]]
@@ -64,6 +64,7 @@
        "new" (if (< (count args) 2)
                (abort (wrong-usage "lein droid new" #'new))
                (apply new args))
+       "code-gen" (code-gen project)
        "compile" (compile project)
        "create-dex" (create-dex project)
        "crunch-resources" (crunch-resources project)
