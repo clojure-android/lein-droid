@@ -55,6 +55,8 @@
   ([project]
      (help #'droid))
   ([project & [cmd & args]]
+     (when (and (nil? project) (not (#{"new" "help"} cmd)))
+       (abort "This subtask requires to be run from the project folder."))
      (case cmd
        ;; Standalone tasks
        "new" (if (< (count args) 2)
