@@ -68,7 +68,7 @@
   necessary dependencies. If `:aot` equals `:all-with-unused` then
   compiles all namespaces of the dependencies whether they were
   referenced in the code or not. The latter is useful for the
-  development."
+  REPL-driven development."
   [{:keys [aot aot-exclude-ns] :as project}]
   (debug (get-classpath project))
   (if (= aot :all-with-unused)

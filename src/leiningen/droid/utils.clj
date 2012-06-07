@@ -36,15 +36,15 @@
 
 (defn get-default-android-params
   "Returns a map of the default android-specific parameters."
-  [project-name target-path sdk-path]
+  [{{sdk-path :sdk-path} :android, name :name, target-path :target-path}]
   {:out-dex-path (str target-path "/classes.dex")
    :manifest-path "AndroidManifest.xml"
    :res-path "res"
    :gen-path "gen"
    :out-res-path (str target-path "/res")
    :assets-path "assets"
-   :out-res-pkg-path (str target-path "/" project-name ".ap_")
-   :out-apk-path (str target-path "/" project-name ".apk")
+   :out-res-pkg-path (str target-path "/" name ".ap_")
+   :out-apk-path (str target-path "/" name ".apk")
    :keystore-path (str (System/getenv "HOME") "/.android/debug.keystore")
    :adb-bin (str sdk-path "/platform-tools/adb")
    :key-alias "androiddebugkey"
@@ -56,9 +56,8 @@
 (defn android-parameters
   "Merges project's `:android` map with the default parameters map and
   absolutizes paths in the `android` map."
-  [{:keys [name target-path android] :as project}]
-  (let [android-params (merge (get-default-android-params name target-path
-                                                          (:sdk-path android))
+  [{:keys [android] :as project}]
+  (let [android-params (merge (get-default-android-params project)
                               android)]
     (absolutize-android-paths
      (assoc project :android android-params))))

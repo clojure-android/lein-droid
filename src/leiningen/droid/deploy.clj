@@ -24,7 +24,7 @@
   [adb-bin]
   (let [devices (device-list adb-bin)]
     (case (count devices)
-      0 (abort "No devices are attached..")
+      0 (abort "No devices are attached.")
       1 (:serial (first devices))
       (do
         (dotimes [i (count devices)]
@@ -38,7 +38,7 @@
 
 (defn get-device-args
   "Returns a list of adb arguments that specify the device adb should be
-  working against. Calls `choose-device` if `adb-args` parameter is
+  working against. Calls `choose-device` if `device-args` parameter is
   nil."
   [adb-bin device-args]
   (or device-args

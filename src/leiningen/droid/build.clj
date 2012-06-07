@@ -53,7 +53,7 @@
 (defn package-resources
   "Calls `aapt` binary with the _package_ task.
 
-  If this task in run with :dev profile, then it ensures that
+  If this task is run with :dev profile, then it ensures that
   AndroidManifest.xml has Internet permission for running REPL. This
   is achieved by backing up the original manifest file and creating a
   new one with Internet permission appended to it. After the packaging
@@ -86,8 +86,7 @@
 
 (defn create-apk
   "Creates an APK file by running `apkbuilder` tool on the generated
-  DEX-file and resource package. The output APK file has a
-  _-debug-unaligned_ suffix."
+  DEX-file and resource package."
   [{{:keys [sdk-path out-apk-path out-res-pkg-path out-dex-path]} :android,
     source-paths :source-paths, java-source-paths :java-source-paths
     :as project}]
@@ -105,7 +104,10 @@
         "-rj" (str clojure-jar))))
 
 (defn sign-apk
-  "Signs APK file with a key from the debug keystore."
+  "Signs APK file with either a debug keystore key or a release key
+  based on whether the build type is development one.
+
+  Creates a debug keystore if it is missing."
   [{{:keys [out-apk-path keystore-path key-alias]} :android :as project}]
   (info "Signing APK...")
   (let [dev-build (dev-build? project)
@@ -126,8 +128,7 @@
         unaligned-path key-alias)))
 
 (defn zipalign-apk
-  "Calls `zipalign` binary on APK file. The output APK file has
-  _-debug_ suffix."
+  "Calls `zipalign` binary on APK file."
   [{{:keys [sdk-path out-apk-path]} :android :as project}]
   (info "Aligning APK...")
   (let [zipalign-bin (str sdk-path "/tools/zipalign")
@@ -141,7 +142,8 @@
     (sh zipalign-bin "4" unaligned-path aligned-path)))
 
 (defn apk
-  "Crunches and packages resources, creates an APK file, signs and zip-aligns it."
+  "Crunches and packages resources, creates an APK file, signs and
+  zip-aligns it."
   [project]
   (doto project
     crunch-resources package-resources
