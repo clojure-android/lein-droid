@@ -29,10 +29,10 @@
                     [key (cond (re-find #"-path$" (name key))
                                       (absolutize root val)
 
-                                      (re-find #"-paths$" (name key))
+                               (re-find #"-paths$" (name key))
                                       (map (partial absolutize root) val)
 
-                                      :else val)]))))
+                               :else val)]))))
 
 (defn get-default-android-params
   "Returns a map of the default android-specific parameters."
@@ -192,3 +192,16 @@ This function should be rewritten in future."
   [filename suffix]
   (let [[_ without-ext ext] (re-find #"(.+)(\.\w+)" filename)]
     (str without-ext "-" suffix ext)))
+
+(defn create-debug-keystore
+  "Creates a keystore for signing debug APK files."
+  [keystore-path]
+  (sh "keytool" "-genkey" "-v"
+      "-keystore" keystore-path
+      "-alias" "androiddebugkey"
+      "-keyalg" "RSA"
+      "-keysize" "1024"
+      "-validity" "365"
+      "-keypass" "android"
+      "-storepass" "android"
+      "-dname" "CN=Android Debug,O=Android,C=US"))

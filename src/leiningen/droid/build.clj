@@ -9,7 +9,7 @@
          [compile :only [compile]]
          [utils :only [get-sdk-android-jar unique-jars first-matched proj sh
                        dev-build? ensure-paths with-process read-password
-                       append-suffix]]
+                       append-suffix create-debug-keystore]]
          [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.java.io :as io]))
 
@@ -114,7 +114,10 @@
         storepass (if dev-build "android"
                       (read-password "Enter storepass: "))
         keypass (if dev-build "android"
-                      (read-password "Enter keypass: "))]
+                    (read-password "Enter keypass: "))]
+    (when (and dev-build (not (.exists (io/file keystore-path))))
+      ;; Create a debug keystore if there isn't one
+      (create-debug-keystore keystore-path))
     (ensure-paths unaligned-path keystore-path)
     (sh "jarsigner"
         "-keystore" keystore-path
