@@ -52,18 +52,19 @@
   (first (xml-> (load-manifest manifest-path) (attr :package))))
 
 (defn get-launcher-activity
-  "Returns the package name and the name of the first activity from the
+  "Returns the package-qualified name of the first activity from the
   manifest that belongs to the _launcher_ category."
   [manifest-path]
   (let [manifest (load-manifest manifest-path)
-        [package-name] (xml-> manifest (attr :package))]
-    (str package-name "/."
-     (-> manifest
-         get-all-launcher-activities
-         first
-         up up
-         (xml-> (attr :android:name))
-         first))))
+        [activity-name] (-> manifest
+                            get-all-launcher-activities
+                            first
+                            up up
+                            (xml-> (attr :android:name)))]
+    (let [[_ pkg-name simple-name] (re-matches #"(.*\.)?(.+)" activity-name)]
+      (if (and pkg-name (> (count pkg-name) 1))
+        activity-name
+        (str (first (xml-> manifest (attr :package))) "." simple-name)))))
 
 (defn write-manifest-with-internet-permission
   "Updates the manifest on disk guaranteed to have the Internet permission."
