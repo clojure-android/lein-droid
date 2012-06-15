@@ -61,10 +61,11 @@
                             first
                             up up
                             (xml-> (attr :android:name)))]
-    (let [[_ pkg-name simple-name] (re-matches #"(.*\.)?(.+)" activity-name)]
-      (if (and pkg-name (> (count pkg-name) 1))
-        activity-name
-        (str (first (xml-> manifest (attr :package))) "." simple-name)))))
+    (let [[_ pkg-name simple-name] (re-matches #"(.*\.)?(.+)" activity-name)
+          pkg-name (if (and pkg-name (> (count pkg-name) 1))
+                     pkg-name
+                     (first (xml-> manifest (attr :package))))]
+      (str pkg-name "/." simple-name))))
 
 (defn write-manifest-with-internet-permission
   "Updates the manifest on disk guaranteed to have the Internet permission."

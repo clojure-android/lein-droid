@@ -21,15 +21,15 @@
 
   This task is necessary if you define the UI in XML and also to gain
   access to your strings and images by their ID."
-  [{{:keys [sdk-path
-  target-version manifest-path res-path gen-path
-  out-res-path]} :android}]
+  [{{:keys [sdk-path target-version manifest-path res-path gen-path
+            out-res-path]} :android}]
   (info "Generating R.java...")
   (let [aapt-bin (str sdk-path "/platform-tools/aapt")
         android-jar (get-sdk-android-jar sdk-path target-version)
         manifest-file (io/file manifest-path)]
     (ensure-paths sdk-path manifest-path res-path aapt-bin android-jar)
     (.mkdirs (io/file gen-path))
+    (.mkdirs (io/file out-res-path))
     (sh aapt-bin "package" "-f" "-m" "--auto-add-overlay"
         "-M" manifest-path
         "-S" res-path

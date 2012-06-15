@@ -78,7 +78,8 @@
        ;; Meta tasks
        "build" (build project)
        "apk" (apk project)
-       "doall" (apply doall project)
+       "deploy" (apply deploy project args)
+       "doall" (apply doall project args)
        "release" (release project)
 
        ;; Help tasks
