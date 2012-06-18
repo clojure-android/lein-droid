@@ -9,7 +9,8 @@
             [clojure.java.io :as io]
             [leiningen.core.eval :as eval])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
-                                      ensure-paths sh]]
+                                      ensure-paths sh with-properties
+                                      dev-build?]]
         [leiningen.core
          [main :only [debug info abort]]
          [classpath :only [get-classpath]]]
@@ -69,25 +70,29 @@
   compiles all namespaces of the dependencies whether they were
   referenced in the code or not. The latter is useful for the
   REPL-driven development."
-  [{:keys [aot aot-exclude-ns] :as project}]
+  [{{:keys [enable-dynamic-compilation start-nrepl-server]} :android,
+    :keys [aot aot-exclude-ns] :as project}]
   (debug (get-classpath project))
-  (if (= aot :all-with-unused)
-    (let [nses (namespaces-on-classpath :classpath
-                                        (map io/file (get-classpath project)))
-          nses (remove (set (map symbol aot-exclude-ns)) nses)]
-      (try
-        (let [form `(doseq [namespace# '~nses]
-                      (println "Compiling" namespace#)
-                      (clojure.core/compile namespace#))
-              project (update-in project [:prep-tasks]
-                                 (partial remove #{"compile"}))]
-          (.mkdirs (io/file (:compile-path project)))
-          (try (eval/eval-in-project project form)
-               (info "Compilation succeeded.")
-               (catch Exception e
-                 (abort "Compilation failed.")))))
-      (info "All namespaces already :aot compiled."))
-    (leiningen.compile/compile project)))
+  (with-properties ["android_dynamic_compilation" enable-dynamic-compilation
+                    "android_start_nrepl_server" start-nrepl-server
+                    "android_release_build" (not (dev-build? project))]
+    (if (= aot :all-with-unused)
+      (let [nses (namespaces-on-classpath :classpath
+                                          (map io/file (get-classpath project)))
+            nses (remove (set (map symbol aot-exclude-ns)) nses)]
+        (try
+          (let [form `(doseq [namespace# '~nses]
+                        (println "Compiling" namespace#)
+                        (clojure.core/compile namespace#))
+                project (update-in project [:prep-tasks]
+                                   (partial remove #{"compile"}))]
+            (.mkdirs (io/file (:compile-path project)))
+            (try (eval/eval-in-project project form)
+                 (info "Compilation succeeded.")
+                 (catch Exception e
+                   (abort "Compilation failed.")))))
+        (info "All namespaces already :aot compiled."))
+      (leiningen.compile/compile project))))
 
 (defn compile
   "Compiles both Java and Clojure source files."
