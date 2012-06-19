@@ -69,8 +69,9 @@
         (get-launcher-activity manifest-path))))
 
 (defn forward-port
-  "Binds a port on the local machine to the port on the device
-  allowing to connect to the remote REPL."
+  "Binds a port on the local machine to the port on the device.
+
+  This allows to connect to the remote REPL from the current machine."
   [{{:keys [adb-bin repl-device-port repl-local-port]} :android} & device-args]
   (info "Binding device port" repl-device-port
         "to local port" repl-local-port "...")
@@ -86,8 +87,7 @@
   (launch-nrepl {:attach (str "localhost:" repl-local-port)}))
 
 (defn deploy
-  "Installs the APK to the device, executes it and forwards a port from
-  the device to the local machine."
+  "Metatask. Runs `install, `run`, `forward-port`."
   [{{:keys [adb-bin]} :android :as project} & device-args]
   (let [device (get-device-args adb-bin device-args)]
     (apply install project device)

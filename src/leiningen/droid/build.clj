@@ -21,11 +21,10 @@
 ;; runtime that will be triggered when Leiningen is closed.
 ;;
 (defn create-dex
-  "Creates the DEX file from the compiled .class files. It is done by
-  executing `dx` binary from Android SDK."
+  "Creates a DEX file from the compiled .class files."
   [{{:keys [sdk-path out-dex-path]} :android,
     compile-path :compile-path :as project}]
-  (info "Creating dex...")
+  (info "Creating DEX....")
   (ensure-paths sdk-path)
   (let [dx-bin (str sdk-path "/platform-tools/dx")
         annotations (str sdk-path "/tools/support/annotations.jar")
@@ -36,12 +35,14 @@
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
 
 (defn build
-  "Compiles all source files and creates a DEX-file."
+  "Metatask. Runs `compile`, `create-dex`."
   [project]
   (doto project compile create-dex))
 
 (defn crunch-resources
-  "Calls `aapt` binary with the _crunch_ task."
+  "Updates the pre-processed PNG cache.
+
+  Calls `aapt` binary with the _crunch_ task."
   [{{:keys [sdk-path res-path out-res-path]} :android}]
   (info "Crunching resources...")
   (ensure-paths sdk-path res-path)
@@ -51,13 +52,13 @@
         "-C" out-res-path)))
 
 (defn package-resources
-  "Calls `aapt` binary with the _package_ task.
+  "Packages application resources.
 
   If this task is run with :dev profile, then it ensures that
-  AndroidManifest.xml has Internet permission for running REPL. This
-  is achieved by backing up the original manifest file and creating a
-  new one with Internet permission appended to it. After the packaging
-  the original manifest file is restored."
+  AndroidManifest.xml has Internet permission for running the REPL
+  server. This is achieved by backing up the original manifest file
+  and creating a new one with Internet permission appended to it.
+  After the packaging the original manifest file is restored."
   [{{:keys [sdk-path target-version manifest-path assets-path res-path
             out-res-path out-res-pkg-path]} :android :as project}]
   (info "Packaging resources...")
@@ -85,8 +86,10 @@
       (io/delete-file backup-file))))
 
 (defn create-apk
-  "Creates an APK file by running `apkbuilder` tool on the generated
-  DEX-file and resource package."
+  "Creates an deployment-ready APK file.
+
+  It is done by running `apkbuilder` tool on the generated DEX-file
+  and the resource package."
   [{{:keys [sdk-path out-apk-path out-res-pkg-path out-dex-path]} :android,
     source-paths :source-paths, java-source-paths :java-source-paths
     :as project}]
@@ -104,10 +107,11 @@
         "-rj" (str clojure-jar))))
 
 (defn sign-apk
-  "Signs APK file with either a debug keystore key or a release key
-  based on whether the build type is development one.
+  "Signs APK file with the key taken from the keystore.
 
-  Creates a debug keystore if it is missing."
+  Either a debug keystore key or a release key is used based on
+  whether the build type is the debug one. Creates a debug keystore if
+  it is missing."
   [{{:keys [out-apk-path keystore-path key-alias]} :android :as project}]
   (info "Signing APK...")
   (let [dev-build (dev-build? project)
@@ -128,7 +132,9 @@
         unaligned-path key-alias)))
 
 (defn zipalign-apk
-  "Calls `zipalign` binary on APK file."
+  "Aligns resources locations on 4-byte boundaries in the APK file.
+
+  Done by calling `zipalign` binary on APK file."
   [{{:keys [sdk-path out-apk-path]} :android :as project}]
   (info "Aligning APK...")
   (let [zipalign-bin (str sdk-path "/tools/zipalign")
@@ -142,8 +148,7 @@
     (sh zipalign-bin "4" unaligned-path aligned-path)))
 
 (defn apk
-  "Crunches and packages resources, creates an APK file, signs and
-  zip-aligns it."
+  "Metatask. Crunches and packages resources, creates, signs and aligns an APK."
   [project]
   (doto project
     crunch-resources package-resources

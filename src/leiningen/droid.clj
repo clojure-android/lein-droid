@@ -17,9 +17,10 @@
          [utils :only [proj wrong-usage android-parameters ensure-paths]]]))
 
 (defn help
-  "Shows the list of possible lein droid subtasks."
-  [droid-var]
-  (println (subtask-help-for "" droid-var)))
+  "Shows the list of possible `lein droid` subtasks."
+  ([]) ([droid-var]
+          (println "lein-droid is a plugin for Clojure/Android development."
+                   (subtask-help-for nil droid-var))))
 
 (defn foo
   "This function just prints the project map."
@@ -27,14 +28,14 @@
   (println project))
 
 (defn doall
-  "Performs all Android tasks from compilation to the deployment."
+  "Metatask. Performs all Android tasks from compilation to the deployment."
   [project & device-args]
   (doto project
     build apk)
   (apply deploy project device-args))
 
 (defn release
-  "Builds, packs and deploys the release version of the project."
+  "Metatask. Builds, packs and deploys the release version of the project."
   [project]
   (let [release-project (-> project
                             (unmerge-profiles [:dev])
@@ -48,8 +49,8 @@
 (defn ^{:no-project-needed true
         :subtasks [#'new #'code-gen #'compile #'create-dex #'crunch-resources
                    #'package-resources #'create-apk #'sign-apk #'zipalign-apk
-                   #'install #'run #'forward-port #'repl #'build #'apk #'doall
-                   #'help]}
+                   #'install #'run #'forward-port #'repl #'build #'apk #'deploy
+                   #'doall #'release #'help]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([project]
