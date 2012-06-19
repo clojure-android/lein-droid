@@ -204,19 +204,3 @@ This function should be rewritten in future."
       "-keypass" "android"
       "-storepass" "android"
       "-dname" "CN=Android Debug,O=Android,C=US"))
-
-(defmacro with-properties
-  "Sets the given properties to the respective values to run the code
-  provided in `body`. At the end restore the initial property values."
-  [bindings & body]
-  (let [bindings (partition 2 bindings)
-        initial (gensym)]
-    `(let [~initial (hash-map ~@(mapcat (fn [[prop _]]
-                                          [prop `(System/getProperty ~prop)])
-                                        bindings))]
-       ~@(for [[prop newval] bindings]
-           `(System/setProperty ~prop (str ~newval)))
-       (let [result# (do ~@body)]
-         ~@(for [[prop newval] bindings]
-             `(System/setProperty ~prop (get ~initial ~prop)))
-         result#))))

@@ -9,8 +9,7 @@
             [clojure.java.io :as io]
             [leiningen.core.eval :as eval])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
-                                      ensure-paths sh with-properties
-                                      dev-build?]]
+                                      ensure-paths sh dev-build?]]
         [leiningen.core
          [main :only [debug info abort]]
          [classpath :only [get-classpath]]]
@@ -72,27 +71,37 @@
   REPL-driven development."
   [{{:keys [enable-dynamic-compilation start-nrepl-server]} :android,
     :keys [aot aot-exclude-ns] :as project}]
-  (debug (get-classpath project))
-  (with-properties ["android_dynamic_compilation" enable-dynamic-compilation
-                    "android_start_nrepl_server" start-nrepl-server
-                    "android_release_build" (not (dev-build? project))]
-    (if (= aot :all-with-unused)
-      (let [nses (namespaces-on-classpath :classpath
-                                          (map io/file (get-classpath project)))
-            nses (remove (set (map symbol aot-exclude-ns)) nses)]
-        (try
-          (let [form `(doseq [namespace# '~nses]
-                        (println "Compiling" namespace#)
-                        (clojure.core/compile namespace#))
-                project (update-in project [:prep-tasks]
-                                   (partial remove #{"compile"}))]
-            (.mkdirs (io/file (:compile-path project)))
-            (try (eval/eval-in-project project form)
-                 (info "Compilation succeeded.")
-                 (catch Exception e
-                   (abort "Compilation failed.")))))
-        (info "All namespaces already :aot compiled."))
-      (leiningen.compile/compile project))))
+  (info "Compiling Clojure files...")
+  (debug "Project classpath:" (get-classpath project))
+  (let [nses
+        (case aot
+          :all
+            (conj (seq (leiningen.compile/stale-namespaces project)) 'neko.init)
+          :all-with-unused
+            (namespaces-on-classpath :classpath
+                                     (map io/file (get-classpath project)))
+          (conj (map symbol aot) 'neko.init))
+        nses (remove (set (map symbol aot-exclude-ns)) nses)
+        dev-build (dev-build? project)]
+    (info (format "Build type: %s, dynamic compilation: %s, remote REPL: %s."
+                  (if dev-build "debug" "release")
+                  (if (or dev-build enable-dynamic-compilation)
+                    "enabled" "disabled")
+                  (if (or dev-build start-nrepl-server) "enabled" "disabled")))
+    (let [form `(neko.init/with-properties
+                  [:android-dynamic-compilation ~enable-dynamic-compilation
+                   :android-start-nrepl-server ~start-nrepl-server
+                   :android-release-build ~(not (dev-build? project))]
+                  (doseq [namespace# '~nses]
+                    (println "Compiling" namespace#)
+                    (clojure.core/compile namespace#)))
+          project (update-in project [:prep-tasks]
+                             (partial remove #{"compile"}))]
+      (.mkdirs (io/file (:compile-path project)))
+      (try (eval/eval-in-project project form '(require 'neko.init))
+           (info "Compilation succeeded.")
+           (catch Exception e
+             (abort "Compilation failed."))))))
 
 (defn compile
   "Compiles both Java and Clojure source files."
