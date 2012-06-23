@@ -76,6 +76,18 @@
   [sdk-root version]
   (str (get-sdk-platform-path sdk-root version) "/android.jar"))
 
+(defn get-sdk-google-api-paths
+  "Returns a version-specific path to the Android platform tools."
+  [sdk-root version]
+  (format "%s/add-ons/addon-google_apis-google-%s" sdk-root version))
+
+(defn get-sdk-google-api-jars
+  "Returns a version-specific paths to all SDK jars."
+  [sdk-root version]
+  (map #(.getAbsolutePath %)
+    (file-seq (clojure.java.io/file 
+              (str (get-sdk-google-api-paths sdk-root version) "/libs")))))
+
 (defn process-jar-path
   "Given a jar-file from the Maven repository parses its path and
   returns the information about it."

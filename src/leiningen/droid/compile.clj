@@ -8,7 +8,9 @@
   (:require leiningen.compile leiningen.javac
             [clojure.java.io :as io]
             [leiningen.core.eval :as eval])
-  (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
+  (:use [leiningen.droid.utils :only [get-sdk-android-jar 
+                                      get-sdk-google-api-jars
+                                      unique-jars
                                       ensure-paths sh dev-build?]]
         [leiningen.core
          [main :only [debug info abort]]
@@ -52,8 +54,11 @@
   [f {{:keys [sdk-path target-version]} :android :as project}]
   (let [classpath (f project)
         [jars paths] ((juxt filter remove) #(re-matches #".+\.jar" %) classpath)
-        result (conj (concat (unique-jars jars) paths)
+        result (conj (concat (unique-jars jars) 
+                              paths 
+                              (get-sdk-google-api-jars sdk-path target-version))
                      (get-sdk-android-jar sdk-path target-version)
+                     
                      (str sdk-path "/tools/support/annotations.jar"))]
     result))
 
