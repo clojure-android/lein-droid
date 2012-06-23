@@ -13,7 +13,7 @@
          [build :only [create-dex crunch-resources package-resources create-apk
                        sign-apk zipalign-apk apk build]]
          [deploy :only [install run forward-port repl deploy]]
-         [new :only [new]]
+         [new :only [new init]]
          [utils :only [proj wrong-usage android-parameters ensure-paths]]]))
 
 (defn help
@@ -47,24 +47,25 @@
     (install release-project)))
 
 (defn ^{:no-project-needed true
-        :subtasks [#'new #'code-gen #'compile #'create-dex #'crunch-resources
-                   #'package-resources #'create-apk #'sign-apk #'zipalign-apk
-                   #'install #'run #'forward-port #'repl #'build #'apk #'deploy
-                   #'doall #'release #'help]}
+        :subtasks [#'new #'init #'code-gen #'compile #'create-dex
+                   #'crunch-resources #'package-resources #'create-apk
+                   #'sign-apk #'zipalign-apk #'install #'run #'forward-port
+                   #'repl #'build #'apk #'deploy #'doall #'release #'help]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([project]
      (help #'droid))
   ([project & [cmd & args]]
-     (when (and (nil? project) (not (#{"new" "help"} cmd)))
+     (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
        (abort "This subtask requires to be run from the project folder."))
      (case cmd
        ;; Standalone tasks
        "new" (if (< (count args) 2)
                (abort (wrong-usage "lein droid new" #'new))
                (apply new args))
+       "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
        "code-gen" (code-gen project)
-       "compile" (compile project)
+       "compile" (compile (proj))
        "create-dex" (create-dex project)
        "crunch-resources" (crunch-resources project)
        "package-resources" (package-resources project)

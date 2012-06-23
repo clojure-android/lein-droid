@@ -1,8 +1,11 @@
 (ns leiningen.droid.new
   (:require [clojure.string :as string]
             [clojure.java.io :as io])
-  (:use [leiningen.new.templates :only [render-text slurp-resource
-                                        sanitize ->files]]))
+  (:use [leiningen.core.main :only [info abort]]
+        [leiningen.new.templates :only [render-text slurp-resource
+                                        sanitize ->files]]
+        [leiningen.droid.manifest :only [get-target-sdk-version
+                                         get-project-version]]))
 
 (defn renderer
   "Taken from lein-newnew.
@@ -20,17 +23,52 @@
 (defn package-to-path [package-name]
   (string/replace package-name #"\." "/"))
 
+(defn- load-properties
+  "Loads a properties file. Returns nil if the file doesn't exist."
+  [file]
+  (when (.exists file)
+    (with-open [rdr (io/reader file)]
+      (let [properties (java.util.Properties.)]
+        (.load properties rdr)
+        properties))))
+
+(defn init
+  "Creates project.clj file in an existing Android project folder.
+
+  Presumes default directory names (like src, res and gen) and
+  AndroidManifest.xml file to be already present in the project."
+  [current-dir]
+  (let [manifest (io/file current-dir "AndroidManifest.xml")]
+    (when-not (.exists manifest)
+      (abort "ERROR: AndroidManifest.xml not found - have to be in an existing"
+             "Android project. Use `lein droid new` to create a new project."))
+    (let [manifest-path (.getAbsolutePath manifest)
+          [_ name] (re-find #".*/(.+)/\." current-dir)
+          props (load-properties (io/file current-dir "project.properties"))
+          data {:name name
+                :version (or (get-project-version manifest-path)
+                             "0.0.1-SNAPSHOT")
+                :target-sdk (or (get-target-sdk-version manifest-path) "10")
+                :library? (if (and props
+                                   (= (.getProperty props "android.library")
+                                      "true"))
+                            ":library true" "")}
+          render (renderer "templates")]
+      (info "Creating project.clj...")
+      (io/copy (render "library.project.clj" data)
+               (io/file current-dir "project.clj")))))
+
 (defn new
   "Creates new Android project given the project's name and package name."
-  [project-name package-name & {:keys [activity min-sdk app-name],
-                                :or {activity "MainActivity", min-sdk "10",
+  [project-name package-name & {:keys [activity target-sdk app-name],
+                                :or {activity "MainActivity", target-sdk "10",
                                      app-name project-name}}]
   (let [data {:name project-name
               :package package-name
               :package-sanitized (sanitize package-name)
               :path (package-to-path (sanitize package-name))
               :activity activity
-              :min-sdk min-sdk
+              :target-sdk target-sdk
               :app-name app-name}
         render (renderer "templates")]
     (->files

@@ -30,4 +30,4 @@
   :android {;; Specify the path to the Android SDK directory either
             ;; here or in your ~/.lein/profiles.clj file.
             ;; :sdk-path "/home/user/path/to/android-sdk/"
-            :target-version "{{min-sdk}}"})
+            :target-version "{{target-sdk}}"})

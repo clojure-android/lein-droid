@@ -18,6 +18,15 @@
   {:tag :uses-permission
    :attrs {(keyword :android:name) internet-permission}})
 
+;; Attribute name for target SDK version.
+(def ^:private target-sdk-attribute (keyword :android:targetSdkVersion))
+
+;; Attribute name for minimal SDK version.
+(def ^:private min-sdk-attribute (keyword :android:minSdkVersion))
+
+;; Attribute name for project version name.
+(def ^:private version-name-attribute (keyword :android:versionName))
+
 ;; ### Local functions
 
 (defn- load-manifest
@@ -75,3 +84,17 @@
                      manifest
                      (append-child manifest internet-permission-tag))
                    manifest-path)))
+
+(defn get-target-sdk-version
+  "Extracts the target SDK version from the provided manifest file. If
+  target SDK is not specified returns minimal SDK."
+  [manifest-path]
+  (let [[uses-sdk] (xml-> (load-manifest manifest-path) :uses-sdk)
+        [target-sdk] (xml-> uses-sdk (attr target-sdk-attribute))]
+    (or target-sdk
+        (first (xml-> uses-sdk (attr min-sdk-attribute))))))
+
+(defn get-project-version
+  "Extracts the project version name from the provided manifest file."
+  [manifest-path]
+  (first (xml-> (load-manifest manifest-path) (attr version-name-attribute))))
