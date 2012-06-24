@@ -22,7 +22,7 @@
 ;;
 (defn create-dex
   "Creates a DEX file from the compiled .class files."
-  [{{:keys [sdk-path out-dex-path]} :android,
+  [{{:keys [sdk-path out-dex-path external-classes-paths]} :android,
     compile-path :compile-path :as project}]
   (info "Creating DEX....")
   (ensure-paths sdk-path)
@@ -31,7 +31,8 @@
         deps (unique-jars (resolve-dependencies :dependencies project))]
     (with-process [proc (map str
                              (flatten [dx-bin "--dex" "--output" out-dex-path
-                                       compile-path annotations deps]))]
+                                       compile-path annotations deps
+                                       external-classes-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
 
 (defn build
@@ -60,7 +61,8 @@
   and creating a new one with Internet permission appended to it.
   After the packaging the original manifest file is restored."
   [{{:keys [sdk-path target-version manifest-path assets-path res-path
-            out-res-path out-res-pkg-path]} :android :as project}]
+            out-res-path external-res-paths out-res-pkg-path]} :android
+            :as project}]
   (info "Packaging resources...")
   (ensure-paths sdk-path manifest-path res-path)
   (let [aapt-bin (str sdk-path "/platform-tools/aapt")
@@ -69,14 +71,16 @@
         manifest-file (io/file manifest-path)
         backup-file (io/file (str manifest-path ".backup"))
         ;; Only add `assets` directory if it is present.
-        assets (if (.exists (io/file assets-path)) ["-A" assets-path] [])]
+        assets (if (.exists (io/file assets-path)) ["-A" assets-path] [])
+        external-resources (for [res external-res-paths] ["-S" res])]
     (when dev-build
       (io/copy manifest-file backup-file)
       (write-manifest-with-internet-permission manifest-path))
-    (sh aapt-bin "package" "--no-crunch" "-f" "--debug-mode"
+    (sh aapt-bin "package" "--no-crunch" "-f" "--debug-mode" "--auto-add-overlay"
         "-M" manifest-path
         "-S" out-res-path
         "-S" res-path
+        external-resources
         assets
         "-I" android-jar
         "-F" out-res-pkg-path
@@ -153,3 +157,9 @@
   (doto project
     crunch-resources package-resources
     create-apk sign-apk zipalign-apk))
+
+(defn build-library
+  "Metatask. Generate resources and compile the library project."
+  [project]
+  (doto project
+    code-gen compile crunch-resources))
