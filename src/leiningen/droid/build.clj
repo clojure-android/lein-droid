@@ -9,11 +9,12 @@
          [compile :only [code-gen compile]]
          [utils :only [get-sdk-android-jar unique-jars first-matched proj sh
                        dev-build? ensure-paths with-process read-password
-                       append-suffix create-debug-keystore]]
+                       append-suffix create-debug-keystore get-project-file
+                       read-project]]
          [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.java.io :as io]))
 
-;; ### Subtasks
+;; ### Build-related subtasks
 
 ;; Since the execution of `dx` takes a pretty lot of time we need to
 ;; ensure that its subprocess will be killed if user cancels the build
@@ -35,11 +36,6 @@
                                        external-classes-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
 
-(defn build
-  "Metatask. Runs `compile`, `create-dex`."
-  [project]
-  (doto project code-gen compile create-dex))
-
 (defn crunch-resources
   "Updates the pre-processed PNG cache.
 
@@ -51,6 +47,31 @@
     (sh aapt-bin "crunch -v"
         "-S" res-path
         "-C" out-res-path)))
+
+;; We have to declare a future reference here because `build` and
+;; `build-project-dependencies` are mutually-recursive.
+;;
+(declare build)
+
+(defn build-project-dependencies
+  "Builds all project dependencies for the current project."
+  [{{:keys [project-dependencies]} :android, root :root}]
+  (doseq [dep-path project-dependencies
+          :let [dep-project (read-project (get-project-file root dep-path))]]
+    (info "Building project dependency" dep-path "...")
+    (build dep-project)
+    (info "Building dependency complete.")))
+
+(defn build
+  "Metatask. Builds dependencies, compiles and creates DEX (if not a library)."
+  [{{:keys [library]} :android :as project}]
+  (if library
+    (doto project
+      build-project-dependencies code-gen compile crunch-resources)
+    (doto project
+      build-project-dependencies code-gen compile create-dex)))
+
+;; ### APK-related subtasks
 
 (defn package-resources
   "Packages application resources.
@@ -90,7 +111,7 @@
       (io/delete-file backup-file))))
 
 (defn create-apk
-  "Creates an deployment-ready APK file.
+  "Creates a deployment-ready APK file.
 
   It is done by running `apkbuilder` tool on the generated DEX-file
   and the resource package."
@@ -157,9 +178,3 @@
   (doto project
     crunch-resources package-resources
     create-apk sign-apk zipalign-apk))
-
-(defn build-library
-  "Metatask. Generate resources and compile the library project."
-  [project]
-  (doto project
-    code-gen compile crunch-resources))

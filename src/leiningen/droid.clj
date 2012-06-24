@@ -29,10 +29,12 @@
 
 (defn doall
   "Metatask. Performs all Android tasks from compilation to the deployment."
-  [project & device-args]
-  (doto project
-    build apk)
-  (apply deploy project device-args))
+  [{{:keys [library]} :android :as project} & device-args]
+  (if library
+    (build project)
+    (do (doto project
+          build apk)
+        (apply deploy project device-args))))
 
 (defn release
   "Metatask. Builds, packs and deploys the release version of the project."
