@@ -23,18 +23,21 @@
   This task is necessary if you define the UI in XML and also to gain
   access to your strings and images by their ID."
   [{{:keys [sdk-path target-version manifest-path res-path gen-path
-            out-res-path]} :android}]
+            out-res-path external-res-paths library]} :android}]
   (info "Generating R.java...")
   (let [aapt-bin (str sdk-path "/platform-tools/aapt")
         android-jar (get-sdk-android-jar sdk-path target-version)
-        manifest-file (io/file manifest-path)]
+        manifest-file (io/file manifest-path)
+        library-specific (if library "--non-constant-id" "--auto-add-overlay")
+        external-resources (for [res external-res-paths] ["-S" res])]
     (ensure-paths sdk-path manifest-path res-path aapt-bin android-jar)
     (.mkdirs (io/file gen-path))
     (.mkdirs (io/file out-res-path))
-    (sh aapt-bin "package" "-f" "-m" "--auto-add-overlay"
+    (sh aapt-bin "package" library-specific "-f" "-m"
         "-M" manifest-path
-        "-S" res-path
         "-S" out-res-path
+        "-S" res-path
+        external-resources
         "-I" android-jar
         "-J" gen-path
         "--generate-dependencies")))
@@ -50,15 +53,15 @@
   Then the path to the actual `android.jar` file is constructed and
   appended to the rest of the classpath list. Also removes all duplicate
   jars from the classpath."
-  [f {{:keys [sdk-path target-version use-google-api]} :android :as project}]
+  [f {{:keys [sdk-path target-version external-classes-paths use-google-api]}
+      :android :as project}]
   (let [classpath (f project)
         [jars paths] ((juxt filter remove) #(re-matches #".+\.jar" %) classpath)
-        result (conj (concat (unique-jars jars) paths
+        result (conj (concat (unique-jars jars) paths external-classes-paths
                              (when use-google-api
                                (get-sdk-google-api-jars sdk-path
                                                         target-version)))
                      (get-sdk-android-jar sdk-path target-version)
-
                      (str sdk-path "/tools/support/annotations.jar"))]
     result))
 
