@@ -1,9 +1,9 @@
 ;; Provides utilities for the plugin.
 ;;
 (ns leiningen.droid.utils
+  (:require [leiningen.core.project :as pr])
   (:use [clojure.java.io :only (file reader)]
         [leiningen.core.main :only (info debug abort)]
-        [leiningen.core.project :only (read) :rename {read read-project}]
         [clojure.string :only (join)]))
 
 ;; ### Middleware section
@@ -52,15 +52,54 @@
    :repl-local-port 9999
    :target-version 10})
 
+(defn read-project
+  "Reads and initializes a Leiningen project."
+  [project-file]
+  (pr/init-project (pr/read (str project-file))))
+
+(defn get-project-file
+  "Returns the path to project.clj file in the specified project
+  directory (either absolute or relative)."
+  [root project-directory-path]
+  (let [project-directory (file project-directory-path)]
+    (if (.isAbsolute project-directory)
+      (file project-directory-path "project.clj")
+      (file root project-directory-path "project.clj"))))
+
+(defn process-project-dependencies
+  "Parses `project.clj` files from the project dependencies to extract
+  the paths to external resources and class files."
+  [{{:keys [project-dependencies]} :android, root :root :as project}]
+  (reduce (fn [project dependency-path]
+            (let [project-file (get-project-file root dependency-path)]
+              (if-not (.exists project-file)
+                (do
+                  (info "WARNING:" (str project-file) "doesn't exist.")
+                  project)
+                (let [dep (read-project project-file)
+                      {:keys [compile-path dependencies]} dep
+                      {:keys [res-path out-res-path]} (:android dep)]
+                  (-> project
+                      (update-in [:dependencies]
+                                 concat dependencies)
+                      (update-in [:android :external-classes-paths]
+                                 conj compile-path)
+                      (update-in [:android :external-res-paths]
+                                 conj res-path out-res-path))))))
+          project project-dependencies))
+
 ;; This is the middleware function to be plugged into project.clj.
 (defn android-parameters
-  "Merges project's `:android` map with the default parameters map and
-  absolutizes paths in the `android` map."
+  "Merges project's `:android` map with the default parameters map,
+  processes project dependencies and absolutizes paths in the
+  `:android` map."
   [{:keys [android] :as project}]
   (let [android-params (merge (get-default-android-params project)
                               android)]
-    (absolutize-android-paths
-     (assoc project :android android-params))))
+    (-> project
+        (assoc :android android-params)
+        process-project-dependencies
+        absolutize-android-paths)))
 
 ;; ### General utilities
 
