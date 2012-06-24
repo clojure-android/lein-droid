@@ -16,7 +16,7 @@
   :aot-exclude-ns ["clojure.parallel"]
 
   :dependencies [[android/clojure "1.4.0"]
-                 [neko/neko "1.1.1-SNAPSHOT"]]
+                 [neko/neko "1.1.3"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.0-beta6"]]}
              :release {:android {;; Specify the path to your private
                                  ;; keystore and the the alias of the
@@ -29,4 +29,10 @@
   :android {;; Specify the path to the Android SDK directory either
             ;; here or in your ~/.lein/profiles.clj file.
             ;; :sdk-path "/home/user/path/to/android-sdk/"
+
+            ;; Uncomment this line to be able to use Google API.
+            ;; :use-google-api true
+
+            ;; Use this property to add project dependencies.
+            ;; :project-dependencies [ "/path/to/library/project" ]
             :target-version "10"})

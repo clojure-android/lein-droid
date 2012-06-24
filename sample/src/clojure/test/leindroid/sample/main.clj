@@ -1,26 +1,29 @@
 (ns test.leindroid.sample.main
-  (:require [neko.repl :as repl])
-  (:use [neko.activity :only [defactivity do-ui]]
-        [neko.ui :only [defui]]))
+  (:use [neko.activity :only [defactivity do-ui set-content-view!]]
+        [neko.notify :only [toast]]
+        [neko.ui :only [defui by-id]]
+        [neko.application :only [defapplication]]))
 
-(defactivity test.leindroid.sample.MainActivity)
+;; This line defines the Application class and automatically
+;; initializies neko and nREPL.
+(defapplication test.leindroid.sample.Application)
 
-(def activity (atom nil))
+(defn notify-from-edit [_]
+  (.show
+   (toast (str "Your input: "
+               (.getText (by-id ::user-input)))
+          :long)))
 
-(defn init [context]
-  (repl/try-start-repl context :port 9999))
-
-(defn -onCreate [this bundle]
-  (init this)
-  (reset! activity this)
-  (.superOnCreate this bundle)
-  (do-ui @activity
-       (. @activity setContentView
-          (defui [:linear-layout {:id ::main-layout,
-                                  :orientation :vertical,
-                                  :layout-width :fill, :layout-height :wrap}
-                  [:button {:id ::like
-                            :text "Android",
-                            :layout-width :fill, :layout-height :wrap}]
-                  [:button {:text "Clojure",
-                            :layout-width :fill, :layout-height :wrap}]]))))
+(defactivity test.leindroid.sample.MainActivity
+  :create
+  (fn [this bundle]
+    (do-ui
+     MainActivity
+     (set-content-view!
+      (defui [:linear-layout {:orientation :vertical
+                              :layout-width :fill
+                              :layout-height :wrap}
+              [:edit {:id ::user-input
+                      :layout-width :fill}]
+              [:button {:text "Touch me"
+                        :on-click notify-from-edit}]])))))
