@@ -110,8 +110,8 @@
 
 (defn compile
   "Compiles both Java and Clojure source files."
-  [{{:keys [sdk-path]} :android :as project} & args]
+  [{{:keys [sdk-path]} :android, java-only :java-only :as project} & args]
   (ensure-paths sdk-path)
-  (code-gen project)
   (apply leiningen.javac/javac project args)
-  (compile-clojure project))
+  (when-not java-only
+   (compile-clojure project)))

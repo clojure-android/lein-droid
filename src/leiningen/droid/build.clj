@@ -6,7 +6,7 @@
          [classpath :only [resolve-dependencies]]
          [main :only [debug info]]]
         [leiningen.droid
-         [compile :only [compile]]
+         [compile :only [code-gen compile]]
          [utils :only [get-sdk-android-jar unique-jars first-matched proj sh
                        dev-build? ensure-paths with-process read-password
                        append-suffix create-debug-keystore]]
@@ -37,7 +37,7 @@
 (defn build
   "Metatask. Runs `compile`, `create-dex`."
   [project]
-  (doto project compile create-dex))
+  (doto project code-gen compile create-dex))
 
 (defn crunch-resources
   "Updates the pre-processed PNG cache.
