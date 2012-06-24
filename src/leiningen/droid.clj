@@ -67,7 +67,7 @@
                (apply new args))
        "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
        "code-gen" (code-gen project)
-       "compile" (compile (proj))
+       "compile" (compile project)
        "create-dex" (create-dex project)
        "crunch-resources" (crunch-resources project)
        "package-resources" (package-resources project)

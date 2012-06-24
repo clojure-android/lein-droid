@@ -76,7 +76,11 @@
   necessary dependencies. If `:aot` equals `:all-with-unused` then
   compiles all namespaces of the dependencies whether they were
   referenced in the code or not. The latter is useful for the
-  REPL-driven development."
+  REPL-driven development.
+
+  Uses neko to set compilation flags. Some neko macros and
+  subsequently project code depends on them to eliminate
+  debug-specific code when building the release."
   [{{:keys [enable-dynamic-compilation start-nrepl-server]} :android,
     :keys [aot aot-exclude-ns] :as project}]
   (info "Compiling Clojure files...")
