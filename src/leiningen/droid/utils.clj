@@ -76,6 +76,19 @@
   [sdk-root version]
   (str (get-sdk-platform-path sdk-root version) "/android.jar"))
 
+(defn get-sdk-google-api-path
+  "Returns a version-specific path to the Google SDK directory."
+  [sdk-root version]
+  (format "%s/add-ons/addon-google_apis-google-%s" sdk-root version))
+
+(defn get-sdk-google-api-jars
+  "Returns a version-specific paths to all Google SDK jars."
+  [sdk-root version]
+  (map #(.getAbsolutePath %)
+       (rest ;; The first file is the directory itself, no need in it.
+        (file-seq
+         (file (str (get-sdk-google-api-path sdk-root version) "/libs"))))))
+
 (defn process-jar-path
   "Given a jar-file from the Maven repository parses its path and
   returns the information about it."

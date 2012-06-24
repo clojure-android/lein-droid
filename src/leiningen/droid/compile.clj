@@ -9,6 +9,7 @@
             [clojure.java.io :as io]
             [leiningen.core.eval :as eval])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
+                                      get-sdk-google-api-jars
                                       ensure-paths sh dev-build?]]
         [leiningen.core
          [main :only [debug info abort]]
@@ -49,11 +50,15 @@
   Then the path to the actual `android.jar` file is constructed and
   appended to the rest of the classpath list. Also removes all duplicate
   jars from the classpath."
-  [f {{:keys [sdk-path target-version]} :android :as project}]
+  [f {{:keys [sdk-path target-version use-google-api]} :android :as project}]
   (let [classpath (f project)
         [jars paths] ((juxt filter remove) #(re-matches #".+\.jar" %) classpath)
-        result (conj (concat (unique-jars jars) paths)
+        result (conj (concat (unique-jars jars) paths
+                             (when use-google-api
+                               (get-sdk-google-api-jars sdk-path
+                                                        target-version)))
                      (get-sdk-android-jar sdk-path target-version)
+
                      (str sdk-path "/tools/support/annotations.jar"))]
     result))
 
