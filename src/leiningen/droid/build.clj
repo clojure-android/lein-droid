@@ -28,10 +28,12 @@
   (info "Creating DEX....")
   (ensure-paths sdk-path)
   (let [dx-bin (str sdk-path "/platform-tools/dx")
+        no-optimize (if (dev-build? project) "--no-optimize" "")
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (unique-jars (resolve-dependencies :dependencies project))]
     (with-process [proc (map str
-                             (flatten [dx-bin "--dex" "--output" out-dex-path
+                             (flatten [dx-bin "--dex" no-optimize
+                                       "--output" out-dex-path
                                        compile-path annotations deps
                                        external-classes-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
