@@ -30,12 +30,13 @@
   (let [dx-bin (str sdk-path "/platform-tools/dx")
         no-optimize (if (dev-build? project) "--no-optimize" "")
         annotations (str sdk-path "/tools/support/annotations.jar")
-        deps (unique-jars (resolve-dependencies :dependencies project))]
+        deps (unique-jars (resolve-dependencies :dependencies project))
+        external-paths (or external-classes-paths [])]
     (with-process [proc (map str
                              (flatten [dx-bin "--dex" no-optimize
                                        "--output" out-dex-path
                                        compile-path annotations deps
-                                       external-classes-paths]))]
+                                       external-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
 
 (defn crunch-resources
