@@ -66,13 +66,14 @@
         dev-build (dev-build? project)]
     (info (format "Build type: %s, dynamic compilation: %s, remote REPL: %s."
                   (if dev-build "debug" "release")
-                  (if (or dev-build enable-dynamic-compilation)
+                  (if (or dev-build start-nrepl-server
+                          enable-dynamic-compilation)
                     "enabled" "disabled")
                   (if (or dev-build start-nrepl-server) "enabled" "disabled")))
     (let [form `(neko.init/with-properties
                   [:android-dynamic-compilation ~enable-dynamic-compilation
                    :android-start-nrepl-server ~start-nrepl-server
-                   :android-release-build ~(not (dev-build? project))]
+                   :android-release-build ~(not dev-build)]
                   (doseq [namespace# '~nses]
                     (println "Compiling" namespace#)
                     (clojure.core/compile namespace#)))

@@ -171,7 +171,7 @@
 
 (defmacro ensure-paths
   "Checks if the given directories or files exist. Aborts Leiningen
-  execution in case either of the doesn't or the value equals nil."
+  execution in case either of them doesn't or the value equals nil."
   [& paths]
   `(do
      ~@(for [p paths]
