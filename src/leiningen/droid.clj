@@ -15,6 +15,7 @@
                        sign-apk zipalign-apk apk build]]
          [deploy :only [install run forward-port repl deploy]]
          [new :only [new init]]
+         [compatibility :only [gather-dependencies]]
          [utils :only [proj wrong-usage android-parameters ensure-paths]]]))
 
 (defn help
@@ -53,7 +54,8 @@
         :subtasks [#'new #'init #'code-gen #'compile #'create-dex
                    #'crunch-resources #'package-resources #'create-apk
                    #'sign-apk #'zipalign-apk #'install #'run #'forward-port
-                   #'repl #'build #'apk #'deploy #'doall #'release #'help]}
+                   #'repl #'build #'apk #'deploy #'doall #'release #'help
+                   #'gather-dependencies]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([project]
@@ -80,6 +82,7 @@
        "run" (apply run project args)
        "forward-port" (apply forward-port project args)
        "repl" (repl project)
+       "gather-dependencies" (apply gather-dependencies project args)
 
        ;; Meta tasks
        "build" (build project)
