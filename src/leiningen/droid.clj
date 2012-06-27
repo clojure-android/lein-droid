@@ -10,6 +10,7 @@
         [leiningen.help :only (subtask-help-for)]
         [leiningen.droid.compile :only (compile code-gen)]
         [leiningen.droid
+         [classpath :only [init-hooks]]
          [build :only [create-dex crunch-resources package-resources create-apk
                        sign-apk zipalign-apk apk build]]
          [deploy :only [install run forward-port repl deploy]]
@@ -60,6 +61,7 @@
   ([project & [cmd & args]]
      (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
        (abort "This subtask requires to be run from the project folder."))
+     (init-hooks)
      (case cmd
        ;; Standalone tasks
        "new" (if (< (count args) 2)

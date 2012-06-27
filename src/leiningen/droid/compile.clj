@@ -1,14 +1,10 @@
-;; Generally **lein-droid** tries to reuse as much Leiningen code as
-;; possible. Compilation subtasks in this namespace just call their
-;; Leiningen counterparts.
-;;
 (ns leiningen.droid.compile
   "This part of the plugin is responsible for the project compilation."
   (:refer-clojure :exclude [compile])
   (:require leiningen.compile leiningen.javac
             [clojure.java.io :as io]
             [leiningen.core.eval :as eval])
-  (:use [leiningen.droid.utils :only [get-sdk-android-jar unique-jars
+  (:use [leiningen.droid.utils :only [get-sdk-android-jar
                                       get-sdk-google-api-jars
                                       ensure-paths sh dev-build?]]
         [leiningen.core
@@ -51,13 +47,11 @@
   "Takes the original `get-classpath` function and the project map,
   extracting the path to the Android SDK and the target version from it.
   Then the path to the actual `android.jar` file is constructed and
-  appended to the rest of the classpath list. Also removes all duplicate
-  jars from the classpath."
+  appended to the rest of the classpath list."
   [f {{:keys [sdk-path target-version external-classes-paths use-google-api]}
       :android :as project}]
   (let [classpath (f project)
-        [jars paths] ((juxt filter remove) #(re-matches #".+\.jar" %) classpath)
-        result (conj (concat (unique-jars jars) paths external-classes-paths
+        result (conj (concat classpath external-classes-paths
                              (when use-google-api
                                (get-sdk-google-api-jars sdk-path
                                                         target-version)))

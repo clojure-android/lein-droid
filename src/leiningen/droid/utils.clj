@@ -128,37 +128,6 @@
         (file-seq
          (file (str (get-sdk-google-api-path sdk-root version) "/libs"))))))
 
-(defn process-jar-path
-  "Given a jar-file from the Maven repository parses its path and
-  returns the information about it."
-  [f]
-  (let [[_ group name major minor patch]
-        (re-find #".+/([^/]+)/([^/]+)/(\d+)\.(\d+)\.(\d+)(\-SNAPSHOT)?/.+"
-                 (str f))]
-    {:name name :group group :file f
-     :major major :minor minor :patch patch}))
-
-;;  Since `dx` and `apkbuilder` utilities fail when they are feeded
-;;  repeated jar-files, we need this function to return only unique
-;;  jars for the project.
-(defn unique-jars
-  "Returns the list of unique jars regardless of version or groupId.
-Android-patched version of Clojure is prefered over the other ones.
-For the rest the latest version is preferred. Implies that all
-dependencies come from the local Maven storage.
-
-This function should be rewritten in future."
-  [jars]
-  (let [grouped (group-by :name (map process-jar-path jars))]
-    (for [[name same-jars] grouped]
-      ;; For Clojure jar choose only from Android-specific versions.
-      (let [same-jars (if (= name "clojure")
-                        (filter #(= (:group %) "android") same-jars)
-                        same-jars)]
-        (:file (first
-                (sort-by #(vec (map % [:major :minor :patch]))
-                         (comp - compare) same-jars)))))))
-
 (defn first-matched
   "Returns the first item from the collection predicate `pred` for
   which returns logical truth."

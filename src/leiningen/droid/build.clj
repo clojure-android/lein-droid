@@ -7,10 +7,9 @@
          [main :only [debug info]]]
         [leiningen.droid
          [compile :only [code-gen compile]]
-         [utils :only [get-sdk-android-jar unique-jars first-matched proj sh
-                       dev-build? ensure-paths with-process read-password
-                       append-suffix create-debug-keystore get-project-file
-                       read-project]]
+         [utils :only [get-sdk-android-jar first-matched proj sh dev-build?
+                       ensure-paths with-process read-password append-suffix
+                       create-debug-keystore get-project-file read-project]]
          [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.java.io :as io]))
 
@@ -30,7 +29,7 @@
   (let [dx-bin (str sdk-path "/platform-tools/dx")
         no-optimize (if (dev-build? project) "--no-optimize" "")
         annotations (str sdk-path "/tools/support/annotations.jar")
-        deps (unique-jars (resolve-dependencies :dependencies project))
+        deps (resolve-dependencies :dependencies project)
         external-paths (or external-classes-paths [])]
     (with-process [proc (map str
                              (flatten [dx-bin "--dex" no-optimize
