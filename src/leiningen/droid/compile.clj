@@ -5,12 +5,10 @@
             [clojure.java.io :as io]
             [leiningen.core.eval :as eval])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar
-                                      get-sdk-google-api-jars
                                       ensure-paths sh dev-build?]]
         [leiningen.core
          [main :only [debug info abort]]
          [classpath :only [get-classpath]]]
-        [robert.hooke :only [add-hook]]
         [bultitude.core :only [namespaces-on-classpath]]))
 
 (defn code-gen
@@ -37,29 +35,6 @@
         "-I" android-jar
         "-J" gen-path
         "--generate-dependencies")))
-
-;; Before defining actual `compile` functions we have to manually
-;; attach Android SDK libraries to the classpath. The reason for this
-;; is that Leiningen doesn't handle external dependencies at the high
-;; level, that's why we hack `get-classpath` function.
-
-(defn classpath-hook
-  "Takes the original `get-classpath` function and the project map,
-  extracting the path to the Android SDK and the target version from it.
-  Then the path to the actual `android.jar` file is constructed and
-  appended to the rest of the classpath list."
-  [f {{:keys [sdk-path target-version external-classes-paths use-google-api]}
-      :android :as project}]
-  (let [classpath (f project)
-        result (conj (concat classpath external-classes-paths
-                             (when use-google-api
-                               (get-sdk-google-api-jars sdk-path
-                                                        target-version)))
-                     (get-sdk-android-jar sdk-path target-version)
-                     (str sdk-path "/tools/support/annotations.jar"))]
-    result))
-
-(add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook)
 
 (defn compile-clojure
   "Taken partly from Leiningen source code.

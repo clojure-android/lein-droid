@@ -1,6 +1,9 @@
 (ns leiningen.droid.classpath
-  "Contains functions and hooks to manipulate the classpath."
-  (:use [robert.hooke :only [add-hook]])
+  "Contains functions and hooks for Android-specific classpath
+  manipulation."
+  (:use [robert.hooke :only [add-hook]]
+        [leiningen.droid.utils :only [get-sdk-android-jar
+                                      get-sdk-google-api-jars]])
   (:import org.sonatype.aether.util.version.GenericVersionScheme))
 
 ;; Since `dx` and `apkbuilder` utilities fail when they are feeded
@@ -48,6 +51,29 @@
               (repeat nil))
       all-deps)))
 
+;; We also have to manually attach Android SDK libraries to the
+;; classpath. The reason for this is that Leiningen doesn't handle
+;; external dependencies at the high level, and Android jars are not
+;; distributed in a convenient fashion (using Maven repositories). To
+;; solve this we hack into `get-classpath` function.
+
+(defn classpath-hook
+  "Takes the original `get-classpath` function and the project map,
+  extracting the path to the Android SDK and the target version from it.
+  Then the path to the actual `android.jar` file is constructed and
+  appended to the rest of the classpath list."
+  [f {{:keys [sdk-path target-version external-classes-paths use-google-api]}
+      :android :as project}]
+  (let [classpath (f project)
+        result (conj (concat classpath external-classes-paths
+                             (when use-google-api
+                               (get-sdk-google-api-jars sdk-path
+                                                        target-version)))
+                     (get-sdk-android-jar sdk-path target-version)
+                     (str sdk-path "/tools/support/annotations.jar"))]
+    result))
+
 (defn init-hooks []
-  (add-hook #'leiningen.core.classpath/get-dependencies #'dependencies-hook))
+  (add-hook #'leiningen.core.classpath/get-dependencies #'dependencies-hook)
+  (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook))
 
