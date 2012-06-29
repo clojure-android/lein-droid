@@ -16,6 +16,6 @@ experimenting:).
 
 ## License
 
-Copyright © 2012 Alexander Yakushev
-
-Distributed under the Eclipse Public License, the same as Clojure.
+Copyright © 2012 Alexander Yakushev. Distributed under the Eclipse
+Public License, the same as Clojure. See the file
+[COPYING](https://github.com/alexander-yakushev/lein-droid/blob/master/README.md).
