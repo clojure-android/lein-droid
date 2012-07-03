@@ -76,4 +76,3 @@
 (defn init-hooks []
   (add-hook #'leiningen.core.classpath/get-dependencies #'dependencies-hook)
   (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook))
-

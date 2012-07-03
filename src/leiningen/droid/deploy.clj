@@ -28,12 +28,12 @@
       1 (:serial (first devices))
       (do
         (dotimes [i (count devices)]
-          (println (format "%d. %s\t\t%s" (+ i 1) (:serial (nth devices i)))
+          (println (format "%d. %s\t\t%s" (inc i) (:serial (nth devices i)))
                    (:type (nth devices i))))
         (print (format "Enter the number 1..%d to choose the device: "
                        (count devices)))
         (flush)
-        (let [answer (- (Integer/parseInt (read-line)) 1)]
+        (let [answer (dec (Integer/parseInt (read-line)))]
           (:serial (nth devices answer)))))))
 
 (defn get-device-args
