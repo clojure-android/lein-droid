@@ -12,7 +12,7 @@
         [leiningen.droid
          [classpath :only [init-hooks]]
          [build :only [create-dex crunch-resources package-resources create-apk
-                       sign-apk zipalign-apk apk build]]
+                       sign-apk zipalign-apk apk build jar]]
          [deploy :only [install run forward-port repl deploy]]
          [new :only [new init]]
          [compatibility :only [gather-dependencies]]
@@ -90,6 +90,7 @@
        "deploy" (apply deploy project args)
        "doall" (apply doall project args)
        "release" (release project)
+       "jar" (jar project)
 
        ;; Help tasks
        "foo" (foo project)

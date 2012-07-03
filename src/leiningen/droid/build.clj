@@ -11,7 +11,8 @@
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project]]
          [manifest :only [write-manifest-with-internet-permission]]])
-  (:require [clojure.java.io :as io]))
+  (:require [clojure.java.io :as io]
+            leiningen.jar leiningen.javac))
 
 ;; ### Build-related subtasks
 
@@ -72,6 +73,15 @@
       build-project-dependencies code-gen compile crunch-resources)
     (doto project
       build-project-dependencies code-gen compile create-dex)))
+
+(defn jar
+  "Metatask. Packages compiled Java files and Clojure sources into JAR.
+
+  Same as `lein jar` but appends Android libraries to the classpath
+  while compiling Java files."
+  [project]
+  (leiningen.javac/javac project)
+  (leiningen.jar/jar project))
 
 ;; ### APK-related subtasks
 
