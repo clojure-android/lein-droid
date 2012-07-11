@@ -6,6 +6,7 @@
             [leiningen.core.eval :as eval])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar
                                       ensure-paths sh dev-build?]]
+        [leiningen.droid.manifest :only [get-package-name]]
         [leiningen.core
          [main :only [debug info abort]]
          [classpath :only [get-classpath]]]
@@ -50,7 +51,8 @@
   Uses neko to set compilation flags. Some neko macros and
   subsequently project code depends on them to eliminate
   debug-specific code when building the release."
-  [{{:keys [enable-dynamic-compilation start-nrepl-server]} :android,
+  [{{:keys [enable-dynamic-compilation start-nrepl-server
+            manifest-path]} :android,
     :keys [aot aot-exclude-ns] :as project}]
   (info "Compiling Clojure files...")
   (debug "Project classpath:" (get-classpath project))
@@ -73,7 +75,8 @@
     (let [form `(neko.init/with-properties
                   [:android-dynamic-compilation ~enable-dynamic-compilation
                    :android-start-nrepl-server ~start-nrepl-server
-                   :android-release-build ~(not dev-build)]
+                   :android-release-build ~(not dev-build)
+                   :android-package-name ~(get-package-name manifest-path)]
                   (doseq [namespace# '~nses]
                     (println "Compiling" namespace#)
                     (clojure.core/compile namespace#)))
