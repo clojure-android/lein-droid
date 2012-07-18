@@ -28,7 +28,7 @@
   (info "Creating DEX....")
   (ensure-paths sdk-path)
   (let [dx-bin (str sdk-path "/platform-tools/dx")
-        no-optimize (if (dev-build? project) "--no-optimize" "")
+        no-optimize (if (dev-build? project) "--no-optimize" [])
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (resolve-dependencies :dependencies project)
         external-paths (or external-classes-paths [])]
