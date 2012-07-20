@@ -59,31 +59,35 @@
   (let [nses
         (case aot
           :all
-            (conj (seq (leiningen.compile/stale-namespaces project)) 'neko.init)
+            (conj (seq (leiningen.compile/stale-namespaces project))
+                  'neko.init.options)
           :all-with-unused
             (namespaces-on-classpath :classpath
                                      (map io/file (get-classpath project)))
-          (conj (map symbol aot) 'neko.init))
+          (conj (map symbol aot) 'neko.init.options))
         nses (remove (set (map symbol aot-exclude-ns)) nses)
-        dev-build (dev-build? project)]
+        dev-build (dev-build? project)
+        compiler-options (if dev-build {} {:elide-meta [:doc :file :line]})]
     (info (format "Build type: %s, dynamic compilation: %s, remote REPL: %s."
                   (if dev-build "debug" "release")
                   (if (or dev-build start-nrepl-server
                           enable-dynamic-compilation)
                     "enabled" "disabled")
                   (if (or dev-build start-nrepl-server) "enabled" "disabled")))
-    (let [form `(neko.init/with-properties
-                  [:android-dynamic-compilation ~enable-dynamic-compilation
-                   :android-start-nrepl-server ~start-nrepl-server
-                   :android-release-build ~(not dev-build)
-                   :android-package-name ~(get-package-name manifest-path)]
-                  (doseq [namespace# '~nses]
-                    (println "Compiling" namespace#)
-                    (clojure.core/compile namespace#)))
+    (let [form
+          `(binding [o/*release-build* ~(not dev-build)
+                     o/*start-nrepl-server* ~start-nrepl-server
+                     o/*enable-dynamic-compilation* ~enable-dynamic-compilation
+                     o/*package-name* ~(get-package-name manifest-path)
+                     *compiler-options* ~compiler-options]
+             (doseq [namespace# '~nses]
+               (println "Compiling" namespace#)
+               (clojure.core/compile namespace#)))
           project (update-in project [:prep-tasks]
                              (partial remove #{"compile"}))]
       (.mkdirs (io/file (:compile-path project)))
-      (try (eval/eval-in-project project form '(require 'neko.init))
+      (try (eval/eval-in-project project form
+                                 '(require '[neko.init.options :as o]))
            (info "Compilation succeeded.")
            (catch Exception e
              (abort "Compilation failed."))))))
