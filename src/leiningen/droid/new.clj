@@ -81,5 +81,4 @@
      ["res/drawable-ldpi/ic_launcher.png" (render "ic_launcher_ldpi.png")]
      ["res/values/strings.xml" (render "strings.xml" data)]
      "src/java"
-     ["src/clojure/{{path}}/{{activity}}.clj"
-      (render "MainActivity.clj" data)])))
+     ["src/clojure/{{path}}/main.clj" (render "main.clj" data)])))
