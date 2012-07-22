@@ -4,26 +4,27 @@
         [neko.ui :only [defui by-id]]
         [neko.application :only [defapplication]]))
 
+(declare ^android.app.Activity a
+         ^android.widget.EditText user-input)
+
 ;; This line defines the Application class and automatically
 ;; initializies neko and nREPL.
 (defapplication test.leindroid.sample.Application)
 
 (defn notify-from-edit [_]
-  (.show
-   (toast (str "Your input: "
-               (.getText (by-id ::user-input)))
-          :long)))
+  (toast (str "Your input: " (.getText user-input))
+         :long))
 
 (defactivity test.leindroid.sample.MainActivity
+  :def a
   :create
   (fn [this bundle]
     (do-ui
-     MainActivity
-     (set-content-view!
+     (set-content-view! a
       (defui [:linear-layout {:orientation :vertical
                               :layout-width :fill
                               :layout-height :wrap}
-              [:edit {:id ::user-input
+              [:edit {:def user-input
                       :layout-width :fill}]
               [:button {:text "Touch me"
                         :on-click notify-from-edit}]])))))
