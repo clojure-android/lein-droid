@@ -76,9 +76,7 @@
       (sets/difference aot-exclude-ns)))
 
 (defn compile-clojure
-  "Taken partly from Leiningen source code.
-
-  Compiles Clojure files into .class files.
+  "Compiles Clojure files into .class files.
 
   If `:aot` project parameter equals `:all` then compiles the
   necessary dependencies. If `:aot` equals `:all-with-unused` then
@@ -90,8 +88,7 @@
   subsequently project code depends on them to eliminate
   debug-specific code when building the release."
   [{{:keys [enable-dynamic-compilation start-nrepl-server
-            manifest-path]} :android,
-    :keys [aot aot-exclude-ns] :as project}]
+            manifest-path]} :android :as project}]
   (info "Compiling Clojure files...")
   (ensure-paths manifest-path)
   (debug "Project classpath:" (get-classpath project))

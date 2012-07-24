@@ -1,4 +1,6 @@
 (ns leiningen.droid.new
+  "Provides tasks for creating a new project or initialiaing plugin
+  support in an existing one."
   (:require [clojure.string :as string]
             [clojure.java.io :as io])
   (:use [leiningen.core.main :only [info abort]]
