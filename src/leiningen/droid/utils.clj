@@ -52,10 +52,13 @@
    :repl-local-port 9999
    :target-version 10})
 
+(declare android-parameters)
+
 (defn read-project
-  "Reads and initializes a Leiningen project."
+  "Reads and initializes a Leiningen project and applies Android
+  middleware to it."
   [project-file]
-  (pr/init-project (pr/read (str project-file))))
+  (android-parameters (pr/init-project (pr/read (str project-file)))))
 
 (defn get-project-file
   "Returns the path to project.clj file in the specified project

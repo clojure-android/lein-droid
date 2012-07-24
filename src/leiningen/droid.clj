@@ -64,34 +64,36 @@
      (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
        (abort "This subtask requires to be run from the project folder."))
      (init-hooks)
-     (case cmd
-       ;; Standalone tasks
-       "new" (if (< (count args) 2)
-               (abort (wrong-usage "lein droid new" #'new))
-               (apply new args))
-       "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
-       "code-gen" (code-gen project)
-       "compile" (compile project)
-       "create-dex" (create-dex project)
-       "crunch-resources" (crunch-resources project)
-       "package-resources" (package-resources project)
-       "create-apk" (create-apk project)
-       "sign-apk" (sign-apk project)
-       "zipalign-apk" (zipalign-apk project)
-       "install" (apply install project args)
-       "run" (apply run project args)
-       "forward-port" (apply forward-port project args)
-       "repl" (repl project)
-       "gather-dependencies" (apply gather-dependencies project args)
+     (let [;; Poor man's middleware here
+           project (when project (android-parameters project))]
+       (case cmd
+         ;; Standalone tasks
+         "new" (if (< (count args) 2)
+                 (abort (wrong-usage "lein droid new" #'new))
+                 (apply new args))
+         "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
+         "code-gen" (code-gen project)
+         "compile" (compile project)
+         "create-dex" (create-dex project)
+         "crunch-resources" (crunch-resources project)
+         "package-resources" (package-resources project)
+         "create-apk" (create-apk project)
+         "sign-apk" (sign-apk project)
+         "zipalign-apk" (zipalign-apk project)
+         "install" (apply install project args)
+         "run" (apply run project args)
+         "forward-port" (apply forward-port project args)
+         "repl" (repl project)
+         "gather-dependencies" (apply gather-dependencies project args)
 
-       ;; Meta tasks
-       "build" (build project)
-       "apk" (apk project)
-       "deploy" (apply deploy project args)
-       "doall" (apply doall project args)
-       "release" (release project)
-       "jar" (jar project)
+         ;; Meta tasks
+         "build" (build project)
+         "apk" (apk project)
+         "deploy" (apply deploy project args)
+         "doall" (apply doall project args)
+         "release" (release (android-parameters project))
+         "jar" (jar project)
 
-       ;; Help tasks
-       "foo" (foo project)
-       "help" (help #'droid))))
+         ;; Help tasks
+         "foo" (foo project)
+         "help" (help #'droid)))))
