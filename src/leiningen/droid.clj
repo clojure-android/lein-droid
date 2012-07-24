@@ -4,11 +4,10 @@
 ;;
 (ns leiningen.droid
   (:refer-clojure :exclude [compile doall repl])
-  (:use [leiningen.clean :only [delete-file-recursively]]
-        [leiningen.core.project :only [merge-profiles unmerge-profiles]]
+  (:use [leiningen.core.project :only [merge-profiles unmerge-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
-        [leiningen.droid.compile :only (compile code-gen)]
+        [leiningen.droid.compile :only (compile clean-compile-dir code-gen)]
         [leiningen.droid
          [classpath :only [init-hooks]]
          [build :only [create-dex crunch-resources package-resources create-apk
@@ -38,17 +37,25 @@
           build apk)
         (apply deploy project device-args))))
 
+(declare execute-subtask)
+
 (defn release
-  "Metatask. Builds, packs and deploys the release version of the project."
-  [project]
-  (let [release-project (-> project
+  "Metatask. Builds, packs and deploys the release version of the project.
+
+  Can also take optional list of subtasks to execute (instead of
+  executing all of them) and arguments to `adb` for deploying."
+  [project & args]
+  (let [;; adb-args should be in the end of the argument list.
+        [subtasks adb-args] (split-with #(not (.startsWith % "-")) args)
+        subtasks (if (empty? subtasks)
+                   ["clean-compile-dir" "build" "apk" "deploy"]
+                   subtasks)
+        release-project (-> project
                             (unmerge-profiles [:dev])
                             (merge-profiles [:release])
                             android-parameters)]
-    (delete-file-recursively (:compile-path project) :silently)
-    (build release-project)
-    (apk release-project)
-    (install release-project)))
+    (doseq [task subtasks]
+      (execute-subtask release-project task adb-args))))
 
 (defn ^{:no-project-needed true
         :subtasks [#'new #'init #'code-gen #'compile #'create-dex
@@ -61,39 +68,45 @@
   ([project]
      (help #'droid))
   ([project & [cmd & args]]
-     (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
-       (abort "This subtask requires to be run from the project folder."))
      (init-hooks)
      (let [;; Poor man's middleware here
            project (when project (android-parameters project))]
-       (case cmd
-         ;; Standalone tasks
-         "new" (if (< (count args) 2)
-                 (abort (wrong-usage "lein droid new" #'new))
-                 (apply new args))
-         "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
-         "code-gen" (code-gen project)
-         "compile" (compile project)
-         "create-dex" (create-dex project)
-         "crunch-resources" (crunch-resources project)
-         "package-resources" (package-resources project)
-         "create-apk" (create-apk project)
-         "sign-apk" (sign-apk project)
-         "zipalign-apk" (zipalign-apk project)
-         "install" (apply install project args)
-         "run" (apply run project args)
-         "forward-port" (apply forward-port project args)
-         "repl" (repl project)
-         "gather-dependencies" (apply gather-dependencies project args)
+       (execute-subtask project cmd args))))
 
-         ;; Meta tasks
-         "build" (build project)
-         "apk" (apk project)
-         "deploy" (apply deploy project args)
-         "doall" (apply doall project args)
-         "release" (release (android-parameters project))
-         "jar" (jar project)
+(defn execute-subtask
+  "Executes a subtask defined by `name` on the given project."
+  [project name args]
+  (when (and (nil? project) (not (#{"new" "help" "init"} name)))
+    (abort "Subtask" name "should be run from the project folder."))
+  (case name
+    ;; Standalone tasks
+    "new" (if (< (count args) 2)
+            (abort (wrong-usage "lein droid new" #'new))
+            (apply new args))
+    "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
+    "code-gen" (code-gen project)
+    "clean-compile-dir" (clean-compile-dir project)
+    "compile" (compile project)
+    "create-dex" (create-dex project)
+    "crunch-resources" (crunch-resources project)
+    "package-resources" (package-resources project)
+    "create-apk" (create-apk project)
+    "sign-apk" (sign-apk project)
+    "zipalign-apk" (zipalign-apk project)
+    "install" (apply install project args)
+    "run" (apply run project args)
+    "forward-port" (apply forward-port project args)
+    "repl" (repl project)
+    "gather-dependencies" (apply gather-dependencies project args)
 
-         ;; Help tasks
-         "foo" (foo project)
-         "help" (help #'droid)))))
+    ;; Meta tasks
+    "build" (build project)
+    "apk" (apk project)
+    "deploy" (apply deploy project args)
+    "doall" (apply doall project args)
+    "release" (apply release project args)
+    "jar" (jar project)
+
+    ;; Help tasks
+    "foo" (foo project)
+    "help" (help #'droid)))
