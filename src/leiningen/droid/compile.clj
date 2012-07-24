@@ -3,6 +3,7 @@
   (:refer-clojure :exclude [compile])
   (:require [leiningen compile javac clean]
             [clojure.java.io :as io]
+            [clojure.set :as sets]
             [leiningen.core.eval :as eval])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar
                                       ensure-paths sh dev-build?]]
@@ -11,6 +12,8 @@
          [main :only [debug info abort]]
          [classpath :only [get-classpath]]]
         [bultitude.core :only [namespaces-on-classpath]]))
+
+;; ### Pre-compilation tasks
 
 (defn code-gen
   "Generates the R.java file from the resources.
@@ -45,6 +48,33 @@
   [{:keys [compile-path]} & _]
   (leiningen.clean/delete-file-recursively compile-path :silently))
 
+;; ### Compilation
+
+;; Stores a set of namespaces that should always be compiled
+;; regardless of the build type. Since these namespaces are used in
+;; `eval-in-project` call they naturally don't get AOT-compiled during
+;; automatic dependency resolution, so we have to make sure they are
+;; compiled anyway.
+;;
+(def ^:private always-compile-ns
+  (set '(clojure.core clojure.core.protocols clojure.string
+                      clojure.java.io neko.init.options)))
+
+(defn namespaces-to-compile
+  "Takes project and returns a set of namespaces that should be AOT-compiled."
+  [{:keys [aot aot-exclude-ns] :as project}]
+  (-> (case aot
+        :all
+          (seq (leiningen.compile/stale-namespaces project))
+        :all-with-unused
+          (namespaces-on-classpath :classpath
+                                   (map io/file (get-classpath project)))
+        ;; else
+          (map symbol aot))
+      set
+      (sets/union always-compile-ns)
+      (sets/difference aot-exclude-ns)))
+
 (defn compile-clojure
   "Taken partly from Leiningen source code.
 
@@ -63,19 +93,12 @@
             manifest-path]} :android,
     :keys [aot aot-exclude-ns] :as project}]
   (info "Compiling Clojure files...")
+  (ensure-paths manifest-path)
   (debug "Project classpath:" (get-classpath project))
-  (let [nses
-        (case aot
-          :all
-            (conj (seq (leiningen.compile/stale-namespaces project))
-                  'neko.init.options)
-          :all-with-unused
-            (namespaces-on-classpath :classpath
-                                     (map io/file (get-classpath project)))
-          (conj (map symbol aot) 'neko.init.options))
-        nses (remove (set (map symbol aot-exclude-ns)) nses)
+  (let [nses (namespaces-to-compile project)
         dev-build (dev-build? project)
-        compiler-options (if dev-build {} {:elide-meta [:doc :file :line]})]
+        compiler-options (if dev-build {} {:elide-meta [:doc :file :line :added
+                                                        :arglists :private]})]
     (info (format "Build type: %s, dynamic compilation: %s, remote REPL: %s."
                   (if dev-build "debug" "release")
                   (if (or dev-build start-nrepl-server
