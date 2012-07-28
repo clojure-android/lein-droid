@@ -73,7 +73,7 @@
           (map symbol aot))
       set
       (sets/union always-compile-ns)
-      (sets/difference aot-exclude-ns)))
+      (sets/difference (set (map symbol aot-exclude-ns)))))
 
 (defn compile-clojure
   "Compiles Clojure files into .class files.
