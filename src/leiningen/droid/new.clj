@@ -62,10 +62,12 @@
 
 (defn new
   "Creates new Android project given the project's name and package name."
-  [project-name package-name & {:keys [activity target-sdk app-name],
-                                :or {activity "MainActivity", target-sdk "10",
-                                     app-name project-name}}]
-  (let [data {:name project-name
+  [project-name package-name & options]
+  (let [options (apply hash-map options)
+        activity (get options ":activity" "MainActivity")
+        target-sdk (get options ":target-sdk" "10")
+        app-name (get options ":app-name" project-name)
+        data {:name project-name
               :package package-name
               :package-sanitized (sanitize package-name)
               :path (package-to-path (sanitize package-name))
