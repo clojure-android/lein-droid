@@ -163,6 +163,8 @@
       (create-debug-keystore keystore-path))
     (ensure-paths unaligned-path keystore-path)
     (sh "jarsigner"
+        "-sigalg" "MD5withRSA"
+        "-digestalg" "SHA1"
         "-keystore" keystore-path
         "-storepass" storepass
         "-keypass" keypass
