@@ -1,7 +1,8 @@
 (ns test.leindroid.sample.main
-  (:use [neko.activity :only [defactivity do-ui set-content-view!]]
+  (:use [neko.activity :only [defactivity set-content-view!]]
         [neko.notify :only [toast]]
-        [neko.ui :only [defui by-id]]
+        [neko.ui :only [defui]]
+        [neko.threading :only [on-ui]]
         [neko.application :only [defapplication]]))
 
 (declare ^android.app.Activity a
@@ -19,7 +20,7 @@
   :def a
   :create
   (fn [this bundle]
-    (do-ui
+    (on-ui
      (set-content-view! a
       (defui [:linear-layout {:orientation :vertical
                               :layout-width :fill
