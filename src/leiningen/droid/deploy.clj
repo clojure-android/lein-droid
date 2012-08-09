@@ -56,7 +56,7 @@
         device (get-device-args adb-bin device-args)]
     (ensure-paths apk-path)
     ;; Uninstall old APK first.
-    (sh adb-bin device "uninstall" (get-package-name manifest-path))
+    ;; (sh adb-bin device "uninstall" (get-package-name manifest-path))
     (sh adb-bin device "install" "-r" apk-path)))
 
 (defn run
