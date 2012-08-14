@@ -5,6 +5,8 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :min-lein-version "2.0.0"
 
+  :warn-on-reflection true
+
   :source-paths ["src/clojure"]
   :java-source-paths ["src/java" "gen"]
   ;; The following two definitions are optional. The default
