@@ -1,7 +1,7 @@
 (ns test.leindroid.sample.main
   (:use [neko.activity :only [defactivity set-content-view!]]
         [neko.notify :only [toast]]
-        [neko.ui :only [defui]]
+        [neko.ui :only [make-ui]]
         [neko.threading :only [on-ui]]
         [neko.application :only [defapplication]]))
 
@@ -22,10 +22,10 @@
   (fn [this bundle]
     (on-ui
      (set-content-view! a
-      (defui [:linear-layout {:orientation :vertical
-                              :layout-width :fill
-                              :layout-height :wrap}
-              [:edit {:def user-input
-                      :layout-width :fill}]
-              [:button {:text "Touch me"
-                        :on-click notify-from-edit}]])))))
+      (make-ui [:linear-layout {:orientation :vertical
+                                :layout-width :fill
+                                :layout-height :wrap}
+                [:edit {:def user-input
+                        :layout-width :fill}]
+                [:button {:text "Touch me"
+                          :on-click notify-from-edit}]])))))

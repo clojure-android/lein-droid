@@ -15,8 +15,8 @@
   :aot-exclude-ns ["clojure.parallel"]
 
   :dependencies [[android/clojure "1.4.0"]
-                 [neko/neko "2.0.0-alpha1"]]
-  :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.0-beta6"]]}
+                 [neko/neko "2.0.0-beta1"]]
+  :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]]}
              :release {:android {;; Specify the path to your private
                                  ;; keystore and the the alias of the
                                  ;; key you want to sign APKs with.
