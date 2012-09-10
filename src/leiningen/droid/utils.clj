@@ -222,6 +222,7 @@
   (sh "keytool" "-genkey" "-v"
       "-keystore" keystore-path
       "-alias" "androiddebugkey"
+      "-sigalg" "MD5withRSA"
       "-keyalg" "RSA"
       "-keysize" "1024"
       "-validity" "365"
