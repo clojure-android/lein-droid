@@ -13,22 +13,21 @@
   ;; target-path is "target", but you can change it to whatever you like.
   ;; :target-path "bin"
   ;; :compile-path "bin/classes"
-  :aot :all-with-unused ;; This one is necessary, please keep it
-  :aot-exclude-ns ["clojure.parallel"]
 
   :dependencies [[android/clojure "1.4.0"]
                  [neko/neko "2.0.0-beta1"]]
-  :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]]}
+  :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]]
+                   :android {:aot :all-with-unused}}
              :release {:android
                        {;; Specify the path to your private
                         ;; keystore and the the alias of the
                         ;; key you want to sign APKs with.
                         ;; :keystore-path "/home/user/.android/private.keystore"
                         ;; :key-alias "mykeyalias"
-                        }
-                       :aot :all}}
+                        :aot :all}}}
 
   :android {;; Specify the path to the Android SDK directory either
             ;; here or in your ~/.lein/profiles.clj file.
             ;; :sdk-path "/home/user/path/to/android-sdk/"
-            :target-version "{{target-sdk}}"})
+            :target-version "{{target-sdk}}"
+            :aot-exclude-ns ["clojure.parallel"]})

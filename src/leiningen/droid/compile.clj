@@ -62,7 +62,7 @@
 
 (defn namespaces-to-compile
   "Takes project and returns a set of namespaces that should be AOT-compiled."
-  [{:keys [aot aot-exclude-ns] :as project}]
+  [{{:keys [aot aot-exclude-ns]} :android :as project}]
   (-> (case aot
         :all
           (seq (leiningen.compile/stale-namespaces project))
