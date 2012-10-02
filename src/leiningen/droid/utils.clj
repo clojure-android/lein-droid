@@ -170,7 +170,7 @@
 (defn dev-build?
   "Checks if the current Leiningen run contains :dev profile."
   [project]
-  (contains? (-> project meta :included-profiles set) :dev))
+  (not (contains? (-> project meta :included-profiles set) :release)))
 
 (defmacro ensure-paths
   "Checks if the given directories or files exist. Aborts Leiningen
