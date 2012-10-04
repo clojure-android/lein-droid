@@ -14,6 +14,10 @@
   ;; :target-path "bin"
   ;; :compile-path "bin/classes"
 
+  ;; Uncomment this line if your project doesn't use Clojure. Also
+  ;; don't forget to remove respective dependencies.
+  ;; java-only true
+
   :dependencies [[android/clojure "1.4.0"]
                  [neko/neko "2.0.0-beta1"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]]

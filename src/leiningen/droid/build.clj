@@ -130,20 +130,20 @@
   It is done by running `apkbuilder` tool on the generated DEX-file
   and the resource package."
   [{{:keys [sdk-path out-apk-path out-res-pkg-path out-dex-path]} :android,
-    source-paths :source-paths, java-source-paths :java-source-paths
-    :as project}]
+    source-paths :source-paths, java-source-paths :java-source-paths,
+    java-only :java-only :as project}]
   (info "Creating APK...")
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [apkbuilder-bin (str sdk-path "/tools/apkbuilder")
         suffix (if (dev-build? project) "debug-analigned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
         clojure-jar (first-matched #(re-find #"android/clojure" (str %))
-                                   (resolve-dependencies :dependencies
-                                                         project))]
+                                   (resolve-dependencies :dependencies project))
+        rj-line (if java-only [] ["-rj" (str clojure-jar)])]
     (sh apkbuilder-bin unaligned-path "-u"
         "-z" out-res-pkg-path
         "-f" out-dex-path
-        "-rj" (str clojure-jar))))
+        rj-line)))
 
 (defn sign-apk
   "Signs APK file with the key taken from the keystore.
