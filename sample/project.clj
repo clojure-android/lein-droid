@@ -32,6 +32,9 @@
             ;; Uncomment this line to be able to use Google API.
             ;; :use-google-api true
 
+            ;; Uncomment this if dexer fails with OutOfMemoryException
+            ;; :force-dex-optimize true
+
             ;; Use this property to add project dependencies.
             ;; :project-dependencies [ "/path/to/library/project" ]
             :target-version "10"

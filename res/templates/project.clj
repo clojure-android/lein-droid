@@ -29,5 +29,9 @@
   :android {;; Specify the path to the Android SDK directory either
             ;; here or in your ~/.lein/profiles.clj file.
             ;; :sdk-path "/home/user/path/to/android-sdk/"
+
+            ;; Uncomment this if dexer fails with OutOfMemoryException
+            ;; :force-dex-optimize true
+
             :target-version "{{target-sdk}}"
             :aot-exclude-ns ["clojure.parallel"]})

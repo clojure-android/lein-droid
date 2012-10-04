@@ -23,12 +23,14 @@
 ;;
 (defn create-dex
   "Creates a DEX file from the compiled .class files."
-  [{{:keys [sdk-path out-dex-path external-classes-paths]} :android,
+  [{{:keys [sdk-path out-dex-path external-classes-paths
+            force-dex-optimize]} :android,
     compile-path :compile-path :as project}]
   (info "Creating DEX....")
   (ensure-paths sdk-path)
   (let [dx-bin (str sdk-path "/platform-tools/dx")
-        no-optimize (if (dev-build? project) "--no-optimize" [])
+        no-optimize (if (and (not force-dex-optimize) (dev-build? project))
+                      "--no-optimize" [])
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (resolve-dependencies :dependencies project)
         external-paths (or external-classes-paths [])]
