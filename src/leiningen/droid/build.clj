@@ -135,7 +135,7 @@
   (info "Creating APK...")
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [apkbuilder-bin (str sdk-path "/tools/apkbuilder")
-        suffix (if (dev-build? project) "debug-analigned" "unaligned")
+        suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
         clojure-jar (first-matched #(re-find #"android/clojure" (str %))
                                    (resolve-dependencies :dependencies project))
@@ -154,7 +154,7 @@
   [{{:keys [out-apk-path keystore-path key-alias]} :android :as project}]
   (info "Signing APK...")
   (let [dev-build (dev-build? project)
-        suffix (if dev-build "debug-analigned" "unaligned")
+        suffix (if dev-build "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
         storepass (if dev-build "android"
                       (read-password "Enter storepass: "))
@@ -179,7 +179,7 @@
   [{{:keys [sdk-path out-apk-path]} :android :as project}]
   (info "Aligning APK...")
   (let [zipalign-bin (str sdk-path "/tools/zipalign")
-        unaligned-suffix (if (dev-build? project) "debug-analigned" "unaligned")
+        unaligned-suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path unaligned-suffix)
         aligned-path (if (dev-build? project)
                        (append-suffix out-apk-path "debug")
