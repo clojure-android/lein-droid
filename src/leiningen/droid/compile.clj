@@ -65,7 +65,7 @@
   [{{:keys [aot aot-exclude-ns]} :android :as project}]
   (-> (case aot
         :all
-          (seq (leiningen.compile/stale-namespaces project))
+          (seq (leiningen.compile/stale-namespaces (assoc project :aot :all)))
         :all-with-unused
           (namespaces-on-classpath :classpath
                                    (map io/file (get-classpath project)))
