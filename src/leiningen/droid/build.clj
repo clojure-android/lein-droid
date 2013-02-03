@@ -137,7 +137,7 @@
   (let [apkbuilder-bin (str sdk-path "/tools/apkbuilder")
         suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
-        clojure-jar (first-matched #(re-find #"android/clojure" (str %))
+        clojure-jar (first-matched #(re-find #"android[/\\]clojure" (str %))
                                    (resolve-dependencies :dependencies project))
         rj-line (if java-only [] ["-rj" (str clojure-jar)])]
     (sh apkbuilder-bin unaligned-path "-u"
