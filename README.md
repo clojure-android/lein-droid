@@ -5,7 +5,7 @@ platform. See Marginalia docs [here](http://alexander-yakushev.github.com/lein-d
 
 ## Usage
 
-Current version of lein-droid is `0.1.0-beta1`.
+Current version of lein-droid is `0.1.0-preview1`.
 
 See the
 [Tutorial](https://github.com/alexander-yakushev/lein-droid/wiki/Tutorial)
