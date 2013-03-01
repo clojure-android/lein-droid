@@ -7,9 +7,10 @@
          [main :only [debug info]]]
         [leiningen.droid
          [compile :only [code-gen compile]]
-         [utils :only [get-sdk-android-jar first-matched proj sh dev-build?
+         [utils :only [get-sdk-android-jar first-matched sh dev-build?
                        ensure-paths with-process read-password append-suffix
-                       create-debug-keystore get-project-file read-project]]
+                       create-debug-keystore get-project-file read-project
+                       sdk-binary]]
          [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.java.io :as io]
             leiningen.jar leiningen.javac))
@@ -28,7 +29,7 @@
     compile-path :compile-path :as project}]
   (info "Creating DEX....")
   (ensure-paths sdk-path)
-  (let [dx-bin (str sdk-path "/platform-tools/dx")
+  (let [dx-bin (sdk-binary sdk-path :dx)
         no-optimize (if (and (not force-dex-optimize) (dev-build? project))
                       "--no-optimize" [])
         annotations (str sdk-path "/tools/support/annotations.jar")
@@ -48,7 +49,7 @@
   [{{:keys [sdk-path res-path out-res-path]} :android}]
   (info "Crunching resources...")
   (ensure-paths sdk-path res-path)
-  (let [aapt-bin (str sdk-path "/platform-tools/aapt")]
+  (let [aapt-bin (sdk-binary sdk-path :aapt)]
     (sh aapt-bin "crunch -v"
         "-S" res-path
         "-C" out-res-path)))
@@ -100,7 +101,7 @@
             :as project}]
   (info "Packaging resources...")
   (ensure-paths sdk-path manifest-path res-path)
-  (let [aapt-bin (str sdk-path "/platform-tools/aapt")
+  (let [aapt-bin (sdk-binary sdk-path :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         dev-build (dev-build? project)
         manifest-file (io/file manifest-path)
@@ -134,7 +135,7 @@
     java-only :java-only :as project}]
   (info "Creating APK...")
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
-  (let [apkbuilder-bin (str sdk-path "/tools/apkbuilder")
+  (let [apkbuilder-bin (sdk-binary sdk-path :apkbuilder)
         suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
         clojure-jar (first-matched #(re-find #"android[/\\]clojure" (str %))
@@ -178,7 +179,7 @@
   Done by calling `zipalign` binary on APK file."
   [{{:keys [sdk-path out-apk-path]} :android :as project}]
   (info "Aligning APK...")
-  (let [zipalign-bin (str sdk-path "/tools/zipalign")
+  (let [zipalign-bin (sdk-binary sdk-path :zipalign)
         unaligned-suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path unaligned-suffix)
         aligned-path (if (dev-build? project)

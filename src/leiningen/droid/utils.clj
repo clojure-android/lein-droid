@@ -45,7 +45,7 @@
    :assets-path "assets"
    :out-res-pkg-path (str target-path "/" name ".ap_")
    :out-apk-path (str target-path "/" name ".apk")
-   :keystore-path (str (System/getenv "HOME") "/.android/debug.keystore")
+   :keystore-path (str (file (System/getProperty "user.home") ".android" "debug.keystore"))
    :adb-bin (str sdk-path "/platform-tools/adb")
    :key-alias "androiddebugkey"
    :repl-device-port 9999
@@ -111,17 +111,17 @@
 (defn get-sdk-platform-path
   "Returns a version-specific path to the Android platform tools."
   [sdk-root version]
-  (format "%s/platforms/android-%s" sdk-root version))
+  (str (file sdk-root "platforms" (str "android-" version))))
 
 (defn get-sdk-android-jar
   "Returns a version-specific path to the `android.jar` SDK file."
   [sdk-root version]
-  (str (get-sdk-platform-path sdk-root version) "/android.jar"))
+  (str (file (get-sdk-platform-path sdk-root version) "android.jar")))
 
 (defn get-sdk-google-api-path
   "Returns a version-specific path to the Google SDK directory."
   [sdk-root version]
-  (format "%s/add-ons/addon-google_apis-google-%s" sdk-root version))
+  (str (file sdk-root "add-ons" (str "addon-google_apis-google-" version))))
 
 (defn get-sdk-google-api-jars
   "Returns a version-specific paths to all Google SDK jars."
@@ -136,6 +136,29 @@
   which returns logical truth."
   [pred coll]
   (some (fn [item] (when (pred item) item)) coll))
+
+;; #### Convenient functions to run SDK binaries
+
+(def sdk-binary-paths
+  "Contains relative paths to different SDK binaries for both Unix and
+  Windows platforms."
+  {:dx {:unix ["platform-tools" "dx"] :win ["platform-tools" "dx.bat"]}
+   :aapt {:unix ["platform-tools" "aapt"] :win ["platform-tools" "aapt.exe"]}
+   :apkbuilder {:unix ["tools" "apkbuilder"] :win ["tools" "apkbuilder.bat"]}
+   :zipalign {:unix ["tools" "zipalign"] :win ["tools" "zipalign.exe"]}})
+
+(defn sdk-binary
+  "Given the path to SDK and the binary keyword, returns either a full
+  path to the binary as a string, or a vector with call to cmd.exe for
+  batch-files."
+  [sdk-path binary-kw]
+  (let [binary (get-in sdk-binary-paths
+                       [binary-kw
+                        (if (.startsWith (System/getProperty "os.name") "Windows")
+                          :win :unix)])]
+    (if (.endsWith (last binary) ".bat")
+      ["cmd.exe" "/C" (str (apply file sdk-path binary))]
+      (str (apply file sdk-path binary)))))
 
 (defmacro with-process
   "Executes the subprocess specified in the binding list and applies
@@ -174,14 +197,21 @@
 
 (defmacro ensure-paths
   "Checks if the given directories or files exist. Aborts Leiningen
-  execution in case either of them doesn't or the value equals nil."
+  execution in case either of them doesn't or the value equals nil.
+
+  We assume paths to be strings or lists/vectors. The latter case is
+  used exclusively for Windows batch-files which are represented like
+  `cmd.exe /C batch-file`, so we test third element of the list for
+  the existence."
   [& paths]
   `(do
      ~@(for [p paths]
          `(cond (nil? ~p)
                 (abort "The value of" (str '~p) "is nil. Abort execution.")
 
-                (not (.exists (file ~p)))
+                (or
+                 (and (sequential? ~p) (not (.exists (file (nth ~p 2)))))
+                 (and (string? ~p) (not (.exists (file ~p)))))
                 (abort "The path" ~p "doesn't exist. Abort execution.")))))
 
 (defn wrong-usage

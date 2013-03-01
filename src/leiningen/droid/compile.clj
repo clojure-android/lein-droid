@@ -5,7 +5,7 @@
             [clojure.java.io :as io]
             [clojure.set :as sets]
             [leiningen.core.eval :as eval])
-  (:use [leiningen.droid.utils :only [get-sdk-android-jar
+  (:use [leiningen.droid.utils :only [get-sdk-android-jar sdk-binary
                                       ensure-paths sh dev-build?]]
         [leiningen.droid.manifest :only [get-package-name]]
         [leiningen.core
@@ -23,7 +23,7 @@
   [{{:keys [sdk-path target-version manifest-path res-path gen-path
             out-res-path external-res-paths library]} :android}]
   (info "Generating R.java...")
-  (let [aapt-bin (str sdk-path "/platform-tools/aapt")
+  (let [aapt-bin (sdk-binary sdk-path :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         manifest-file (io/file manifest-path)
         library-specific (if library "--non-constant-id" "--auto-add-overlay")
