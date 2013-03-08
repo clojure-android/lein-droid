@@ -26,7 +26,7 @@
   "Creates a DEX file from the compiled .class files."
   [{{:keys [sdk-path out-dex-path external-classes-paths
             force-dex-optimize]} :android,
-    compile-path :compile-path :as project}]
+    compile-path :compile-path resource-paths :resource-paths :as project}]
   (info "Creating DEX....")
   (ensure-paths sdk-path)
   (let [dx-bin (sdk-binary sdk-path :dx)
@@ -34,12 +34,15 @@
                       "--no-optimize" [])
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (resolve-dependencies :dependencies project)
-        external-paths (or external-classes-paths [])]
+        external-paths (or external-classes-paths [])
+        existing-resource-paths (filter #(.exists (java.io.File. %))
+                                        resource-paths)]
     (with-process [proc (map str
                              (flatten [dx-bin "--dex" no-optimize
                                        "--output" out-dex-path
                                        compile-path annotations deps
-                                       external-paths]))]
+                                       external-paths
+                                       existing-resource-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
 
 (defn crunch-resources
