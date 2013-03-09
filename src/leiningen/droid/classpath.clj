@@ -15,11 +15,9 @@
   version or groupId. Android-patched version of Clojure is prefered
   over the other ones. For the rest the latest version is preferred."
   [dependencies]
-  (let [tagged (map
-                (fn [[artifact version :as dep]]
-                  (let [[_ group name] (re-find #"(.+/)?(.+)" (str artifact))]
-                    {:name name, :group group, :ver version, :original dep}))
-                dependencies)
+  (let [tagged (for [[artifact version :as dep] dependencies]
+                 (let [[_ group name] (re-matches #"(.+/)?(.+)" (str artifact))]
+                   {:name name, :group group, :ver version, :original dep}))
         grouped (group-by :name tagged)
         scheme (GenericVersionScheme.)]
     (for [[name same-jars] grouped]
@@ -33,8 +31,10 @@
                             same-jars))
                         same-jars)]
         (:original
-         (reduce #(if (pos? (compare (.parseVersion scheme (:version %2))
-                                     (.parseVersion scheme (:version %1))))
+         (reduce #(if (pos? (compare (.parseVersion scheme (or (:version %2)
+                                                               "0"))
+                                     (.parseVersion scheme (or (:version %1)
+                                                               "0"))))
                     %2 %1)
                  same-jars))))))
 
