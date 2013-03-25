@@ -19,7 +19,11 @@
   (fn [template & [data]]
     (let [path (string/join "/" [name (sanitize template)])]
       (if data
-        (render-text (-> path io/resource slurp-resource) data)
+        (render-text
+         (try (-> path io/resource slurp-resource)
+              (catch ClassCastException _
+                (slurp-resource path)))
+         data)
         (io/input-stream (io/resource path))))))
 
 (defn package-to-path [package-name]
