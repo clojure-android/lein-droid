@@ -17,10 +17,10 @@
   file is simply slurped and the content returned unchanged."
   [name]
   (fn [template & [data]]
-    (let [path (string/join "/" [name (sanitize template)])]
+    (let [res (-> (io/file name (sanitize template)) .getPath io/resource)]
       (if data
-        (render-text (slurp-resource path) data)
-        (io/input-stream (io/resource path))))))
+        (render-text (slurp-resource res) data)
+        (io/input-stream res)))))
 
 (defn package-to-path [package-name]
   (string/replace package-name #"\." "/"))
