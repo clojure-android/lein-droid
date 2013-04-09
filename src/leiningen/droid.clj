@@ -109,4 +109,7 @@
 
     ;; Help tasks
     "foo" (foo project)
-    "help" (help #'droid)))
+    "help" (help #'droid)
+    (do
+      (println "Subtask is not recognized:" name
+               (subtask-help-for nil #'droid)))))

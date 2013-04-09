@@ -106,7 +106,15 @@
 
 ;; ### General utilities
 
-(defn proj [] (read-project "sample/project.clj"))
+(defn proj [] (read-project #_"/home/unlogic/work/projects/Android/ActionBarSherlock/project.clj"
+                            #_"/home/unlogic/work/projects/Clojure/android/holmes/project.clj"
+                            #_"/home/unlogic/clojure/android/foreclojure-android/project.clj"
+                            #_"/home/unlogic/clojure/android/nexus-clojure/project.clj"
+                            #_"/home/unlogic/clojure/android/neko/project.clj"
+                            "/home/unlogic/clojure/lein-droid-test/project.clj"
+                            ))
+
+;;  ([path] (init-project (read-project path [:user :default :dev])))
 
 (defn get-sdk-platform-path
   "Returns a version-specific path to the Android platform tools."
