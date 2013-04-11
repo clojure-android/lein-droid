@@ -5,6 +5,7 @@
         [leiningen.droid.manifest :only (get-launcher-activity
                                          get-package-name)]
         [leiningen.droid.utils :only (sh ensure-paths dev-build? append-suffix)]
+        [leiningen.droid.compatibility :only (create-repl-port-file)]
         [reply.main :only (launch-nrepl)]))
 
 (defn- device-list
@@ -72,10 +73,12 @@
   "Binds a port on the local machine to the port on the device.
 
   This allows to connect to the remote REPL from the current machine."
-  [{{:keys [adb-bin repl-device-port repl-local-port]} :android} & device-args]
+  [{{:keys [adb-bin repl-device-port repl-local-port]} :android :as project}
+   & device-args]
   (info "Binding device port" repl-device-port
         "to local port" repl-local-port "...")
   (ensure-paths adb-bin)
+  (create-repl-port-file project)
   (let [device (get-device-args adb-bin device-args)]
     (sh adb-bin device "forward"
         (str "tcp:" repl-local-port)

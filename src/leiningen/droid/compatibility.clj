@@ -17,3 +17,9 @@
     (doseq [dep dependencies]
       (io/copy dep
                (io/file destination-dir (.getName dep))))))
+
+(defn create-repl-port-file
+  "Creates a file named `repl-port` in target directory with port
+  number inside, so fireplace.vim can connect to the REPL."
+  [{{:keys [repl-local-port]} :android, target-path :target-path :as project}]
+  (spit (io/file target-path "repl-port") repl-local-port))
