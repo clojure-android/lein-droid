@@ -3028,7 +3028,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>lein-droid/lein-droid -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">lein-droid/lein-droid</h1><h2 class="project-version">0.0.9-SNAPSHOT</h2><br /><p>Plugin for easy Clojure/Android development and deployment</p>
+</script><title>lein-droid/lein-droid -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">lein-droid/lein-droid</h1><h2 class="project-version">0.1.0-preview3</h2><br /><p>Plugin for easy Clojure/Android development and deployment</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">robert/hooke</td><td class="dotted"><hr /></td><td class="dep-version">1.1.2</td></tr><tr><td class="dep-name">org.clojure/data.zip</td><td class="dotted"><hr /></td><td class="dep-version">0.1.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#leiningen.droid">leiningen.droid</a></li><li><a href="#leiningen.droid.build">leiningen.droid.build</a></li><li><a href="#leiningen.droid.classpath">leiningen.droid.classpath</a></li><li><a href="#leiningen.droid.compatibility">leiningen.droid.compatibility</a></li><li><a href="#leiningen.droid.compile">leiningen.droid.compile</a></li><li><a href="#leiningen.droid.deploy">leiningen.droid.deploy</a></li><li><a href="#leiningen.droid.manifest">leiningen.droid.manifest</a></li><li><a href="#leiningen.droid.new">leiningen.droid.new</a></li><li><a href="#leiningen.droid.utils">leiningen.droid.utils</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.droid" name="leiningen.droid"><h1 class="project-name">leiningen.droid</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Clojure is simple. Android should also be.</h2>
 
 <p>This plugin is intended to make your Clojure/Android development as
@@ -3125,7 +3125,10 @@ seamless and efficient as when developing ordinar Clojure JVM programs.</p>
     &quot;jar&quot; (jar project)
     ;; Help tasks
     &quot;foo&quot; (foo project)
-    &quot;help&quot; (help #'droid)))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.droid.build" name="leiningen.droid.build"><h1 class="project-name">leiningen.droid.build</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>A set of functions and subtasks responsible for building the
+    &quot;help&quot; (help #'droid)
+    (do
+      (println &quot;Subtask is not recognized:&quot; name
+               (subtask-help-for nil #'droid)))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.droid.build" name="leiningen.droid.build"><h1 class="project-name">leiningen.droid.build</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>A set of functions and subtasks responsible for building the
   Android project.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns leiningen.droid.build
   (:refer-clojure :exclude [compile])
@@ -3134,9 +3137,10 @@ seamless and efficient as when developing ordinar Clojure JVM programs.</p>
          [main :only [debug info]]]
         [leiningen.droid
          [compile :only [code-gen compile]]
-         [utils :only [get-sdk-android-jar first-matched proj sh dev-build?
+         [utils :only [get-sdk-android-jar first-matched sh dev-build?
                        ensure-paths with-process read-password append-suffix
-                       create-debug-keystore get-project-file read-project]]
+                       create-debug-keystore get-project-file read-project
+                       sdk-binary]]
          [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.java.io :as io]
             leiningen.jar leiningen.javac))</pre></td></tr><tr><td class="docs"><h3>Build-related subtasks</h3>
@@ -3147,20 +3151,26 @@ ensure that its subprocess will be killed if user cancels the build
 (sends SIGINT to leiningen). That is why we add a hook to the
 runtime that will be triggered when Leiningen is closed.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn create-dex
-  [{{:keys [sdk-path out-dex-path external-classes-paths]} :android,
-    compile-path :compile-path :as project}]
+  [{{:keys [sdk-path out-dex-path external-classes-paths
+            force-dex-optimize dex-opts]} :android,
+    compile-path :compile-path resource-paths :resource-paths :as project}]
   (info &quot;Creating DEX....&quot;)
   (ensure-paths sdk-path)
-  (let [dx-bin (str sdk-path &quot;/platform-tools/dx&quot;)
-        no-optimize (if (dev-build? project) &quot;--no-optimize&quot; [])
+  (let [dx-bin (sdk-binary sdk-path :dx)
+        options (or dex-opts [])
+        no-optimize (if (and (not force-dex-optimize) (dev-build? project))
+                      &quot;--no-optimize&quot; [])
         annotations (str sdk-path &quot;/tools/support/annotations.jar&quot;)
         deps (resolve-dependencies :dependencies project)
-        external-paths (or external-classes-paths [])]
+        external-paths (or external-classes-paths [])
+        existing-resource-paths (filter #(.exists (java.io.File. %))
+                                        resource-paths)]
     (with-process [proc (map str
-                             (flatten [dx-bin &quot;--dex&quot; no-optimize
+                             (flatten [dx-bin options &quot;--dex&quot; no-optimize
                                        &quot;--output&quot; out-dex-path
                                        compile-path annotations deps
-                                       external-paths]))]
+                                       external-paths
+                                       existing-resource-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))</pre></td></tr><tr><td class="docs"><p>Updates the pre-processed PNG cache.</p>
 
 <p>  Calls <code>aapt</code> binary with the <em>crunch</em> task.</p>
@@ -3168,7 +3178,7 @@ runtime that will be triggered when Leiningen is closed.</p>
   [{{:keys [sdk-path res-path out-res-path]} :android}]
   (info &quot;Crunching resources...&quot;)
   (ensure-paths sdk-path res-path)
-  (let [aapt-bin (str sdk-path &quot;/platform-tools/aapt&quot;)]
+  (let [aapt-bin (sdk-binary sdk-path :aapt)]
     (sh aapt-bin &quot;crunch -v&quot;
         &quot;-S&quot; res-path
         &quot;-C&quot; out-res-path)))</pre></td></tr><tr><td class="docs"><p>We have to declare a future reference here because <code>build</code> and
@@ -3208,7 +3218,7 @@ runtime that will be triggered when Leiningen is closed.</p>
             :as project}]
   (info &quot;Packaging resources...&quot;)
   (ensure-paths sdk-path manifest-path res-path)
-  (let [aapt-bin (str sdk-path &quot;/platform-tools/aapt&quot;)
+  (let [aapt-bin (sdk-binary sdk-path :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         dev-build (dev-build? project)
         manifest-file (io/file manifest-path)
@@ -3236,20 +3246,20 @@ runtime that will be triggered when Leiningen is closed.</p>
   and the resource package.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn create-apk
   [{{:keys [sdk-path out-apk-path out-res-pkg-path out-dex-path]} :android,
-    source-paths :source-paths, java-source-paths :java-source-paths
-    :as project}]
+    source-paths :source-paths, java-source-paths :java-source-paths,
+    java-only :java-only :as project}]
   (info &quot;Creating APK...&quot;)
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
-  (let [apkbuilder-bin (str sdk-path &quot;/tools/apkbuilder&quot;)
-        suffix (if (dev-build? project) &quot;debug-analigned&quot; &quot;unaligned&quot;)
+  (let [apkbuilder-bin (sdk-binary sdk-path :apkbuilder)
+        suffix (if (dev-build? project) &quot;debug-unaligned&quot; &quot;unaligned&quot;)
         unaligned-path (append-suffix out-apk-path suffix)
-        clojure-jar (first-matched #(re-find #&quot;android/clojure&quot; (str %))
-                                   (resolve-dependencies :dependencies
-                                                         project))]
+        clojure-jar (first-matched #(re-find #&quot;android[/\\]clojure&quot; (str %))
+                                   (resolve-dependencies :dependencies project))
+        rj-line (if java-only [] [&quot;-rj&quot; (str clojure-jar)])]
     (sh apkbuilder-bin unaligned-path &quot;-u&quot;
         &quot;-z&quot; out-res-pkg-path
         &quot;-f&quot; out-dex-path
-        &quot;-rj&quot; (str clojure-jar))))</pre></td></tr><tr><td class="docs"><p>Signs APK file with the key taken from the keystore.</p>
+        rj-line)))</pre></td></tr><tr><td class="docs"><p>Signs APK file with the key taken from the keystore.</p>
 
 <p>  Either a debug keystore key or a release key is used based on
   whether the build type is the debug one. Creates a debug keystore if
@@ -3258,7 +3268,7 @@ runtime that will be triggered when Leiningen is closed.</p>
   [{{:keys [out-apk-path keystore-path key-alias]} :android :as project}]
   (info &quot;Signing APK...&quot;)
   (let [dev-build (dev-build? project)
-        suffix (if dev-build &quot;debug-analigned&quot; &quot;unaligned&quot;)
+        suffix (if dev-build &quot;debug-unaligned&quot; &quot;unaligned&quot;)
         unaligned-path (append-suffix out-apk-path suffix)
         storepass (if dev-build &quot;android&quot;
                       (read-password &quot;Enter storepass: &quot;))
@@ -3269,6 +3279,8 @@ runtime that will be triggered when Leiningen is closed.</p>
       (create-debug-keystore keystore-path))
     (ensure-paths unaligned-path keystore-path)
     (sh &quot;jarsigner&quot;
+        &quot;-sigalg&quot; &quot;MD5withRSA&quot;
+        &quot;-digestalg&quot; &quot;SHA1&quot;
         &quot;-keystore&quot; keystore-path
         &quot;-storepass&quot; storepass
         &quot;-keypass&quot; keypass
@@ -3278,8 +3290,8 @@ runtime that will be triggered when Leiningen is closed.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn zipalign-apk
   [{{:keys [sdk-path out-apk-path]} :android :as project}]
   (info &quot;Aligning APK...&quot;)
-  (let [zipalign-bin (str sdk-path &quot;/tools/zipalign&quot;)
-        unaligned-suffix (if (dev-build? project) &quot;debug-analigned&quot; &quot;unaligned&quot;)
+  (let [zipalign-bin (sdk-binary sdk-path :zipalign)
+        unaligned-suffix (if (dev-build? project) &quot;debug-unaligned&quot; &quot;unaligned&quot;)
         unaligned-path (append-suffix out-apk-path unaligned-suffix)
         aligned-path (if (dev-build? project)
                        (append-suffix out-apk-path &quot;debug&quot;)
@@ -3305,11 +3317,9 @@ contains only unique jars.</p>
   over the other ones. For the rest the latest version is preferred.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn remove-duplicate-dependencies
   [dependencies]
-  (let [tagged (map
-                (fn [[artifact version :as dep]]
-                  (let [[_ group name] (re-find #&quot;(.+/)?(.+)&quot; (str artifact))]
-                    {:name name, :group group, :ver version, :original dep}))
-                dependencies)
+  (let [tagged (for [[artifact version :as dep] dependencies]
+                 (let [[_ group name] (re-matches #&quot;(.+/)?(.+)&quot; (str artifact))]
+                   {:name name, :group group, :ver version, :original dep}))
         grouped (group-by :name tagged)
         scheme (GenericVersionScheme.)]
     (for [[name same-jars] grouped]
@@ -3323,8 +3333,10 @@ contains only unique jars.</p>
                             same-jars))
                         same-jars)]
         (:original
-         (reduce #(if (pos? (compare (.parseVersion scheme (:version %2))
-                                     (.parseVersion scheme (:version %1))))
+         (reduce #(if (pos? (compare (.parseVersion scheme (or (:version %2)
+                                                               &quot;0&quot;))
+                                     (.parseVersion scheme (or (:version %1)
+                                                               &quot;0&quot;))))
                     %2 %1)
                  same-jars))))))</pre></td></tr><tr><td class="docs"><p>Takes the original <code>get-dependencies</code> function and arguments to it.
   Removes duplicate entries from the result when resolving project
@@ -3375,14 +3387,18 @@ solve this we hack into <code>get-classpath</code> function.</p>
     (.mkdirs destination-dir)
     (doseq [dep dependencies]
       (io/copy dep
-               (io/file destination-dir (.getName dep))))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.droid.compile" name="leiningen.droid.compile"><h1 class="project-name">leiningen.droid.compile</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>This part of the plugin is responsible for the project compilation.</p>
+               (io/file destination-dir (.getName dep))))))</pre></td></tr><tr><td class="docs"><p>Creates a file named <code>repl-port</code> in target directory with port
+  number inside, so fireplace.vim can connect to the REPL.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn create-repl-port-file
+  [{{:keys [repl-local-port]} :android, target-path :target-path :as project}]
+  (spit (io/file target-path &quot;repl-port&quot;) repl-local-port))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.droid.compile" name="leiningen.droid.compile"><h1 class="project-name">leiningen.droid.compile</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>This part of the plugin is responsible for the project compilation.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns leiningen.droid.compile
   (:refer-clojure :exclude [compile])
   (:require [leiningen compile javac clean]
             [clojure.java.io :as io]
             [clojure.set :as sets]
             [leiningen.core.eval :as eval])
-  (:use [leiningen.droid.utils :only [get-sdk-android-jar
+  (:use [leiningen.droid.utils :only [get-sdk-android-jar sdk-binary
                                       ensure-paths sh dev-build?]]
         [leiningen.droid.manifest :only [get-package-name]]
         [leiningen.core
@@ -3397,7 +3413,7 @@ solve this we hack into <code>get-classpath</code> function.</p>
   [{{:keys [sdk-path target-version manifest-path res-path gen-path
             out-res-path external-res-paths library]} :android}]
   (info &quot;Generating R.java...&quot;)
-  (let [aapt-bin (str sdk-path &quot;/platform-tools/aapt&quot;)
+  (let [aapt-bin (sdk-binary sdk-path :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         manifest-file (io/file manifest-path)
         library-specific (if library &quot;--non-constant-id&quot; &quot;--auto-add-overlay&quot;)
@@ -3428,10 +3444,10 @@ compiled anyway.</p>
   (set '(clojure.core clojure.core.protocols clojure.string
                       clojure.java.io neko.init.options)))</pre></td></tr><tr><td class="docs"><p>Takes project and returns a set of namespaces that should be AOT-compiled.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn namespaces-to-compile
-  [{:keys [aot aot-exclude-ns] :as project}]
+  [{{:keys [aot aot-exclude-ns]} :android :as project}]
   (-&gt; (case aot
         :all
-          (seq (leiningen.compile/stale-namespaces project))
+          (seq (leiningen.compile/stale-namespaces (assoc project :aot :all)))
         :all-with-unused
           (namespaces-on-classpath :classpath
                                    (map io/file (get-classpath project)))
@@ -3439,7 +3455,7 @@ compiled anyway.</p>
           (map symbol aot))
       set
       (sets/union always-compile-ns)
-      (sets/difference aot-exclude-ns)))</pre></td></tr><tr><td class="docs"><p>Compiles Clojure files into .class files.</p>
+      (sets/difference (set (map symbol aot-exclude-ns)))))</pre></td></tr><tr><td class="docs"><p>Compiles Clojure files into .class files.</p>
 
 <p>  If <code>:aot</code> project parameter equals <code>:all</code> then compiles the
   necessary dependencies. If <code>:aot</code> equals <code>:all-with-unused</code> then
@@ -3495,6 +3511,7 @@ compiled anyway.</p>
         [leiningen.droid.manifest :only (get-launcher-activity
                                          get-package-name)]
         [leiningen.droid.utils :only (sh ensure-paths dev-build? append-suffix)]
+        [leiningen.droid.compatibility :only (create-repl-port-file)]
         [reply.main :only (launch-nrepl)]))</pre></td></tr><tr><td class="docs"><p>Returns the list of currently attached devices.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- device-list
   [adb-bin]
@@ -3538,7 +3555,7 @@ compiled anyway.</p>
         device (get-device-args adb-bin device-args)]
     (ensure-paths apk-path)
     ;; Uninstall old APK first.
-    (sh adb-bin device &quot;uninstall&quot; (get-package-name manifest-path))
+    ;; (sh adb-bin device &quot;uninstall&quot; (get-package-name manifest-path))
     (sh adb-bin device &quot;install&quot; &quot;-r&quot; apk-path)))</pre></td></tr><tr><td class="docs"><p>Launches the installed APK on the connected device.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn run
   [{{:keys [adb-bin manifest-path]} :android} &amp; device-args]
@@ -3550,10 +3567,12 @@ compiled anyway.</p>
 
 <p>  This allows to connect to the remote REPL from the current machine.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn forward-port
-  [{{:keys [adb-bin repl-device-port repl-local-port]} :android} &amp; device-args]
+  [{{:keys [adb-bin repl-device-port repl-local-port]} :android :as project}
+   &amp; device-args]
   (info &quot;Binding device port&quot; repl-device-port
         &quot;to local port&quot; repl-local-port &quot;...&quot;)
   (ensure-paths adb-bin)
+  (create-repl-port-file project)
   (let [device (get-device-args adb-bin device-args)]
     (sh adb-bin device &quot;forward&quot;
         (str &quot;tcp:&quot; repl-local-port)
@@ -3649,10 +3668,10 @@ compiled anyway.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn renderer
   [name]
   (fn [template &amp; [data]]
-    (let [path (string/join &quot;/&quot; [name (sanitize template)])]
+    (let [res (-&gt; (io/file name (sanitize template)) .getPath io/resource)]
       (if data
-        (render-text (slurp-resource path) data)
-        (io/input-stream (io/resource path))))))</pre></td></tr><tr><td class="docs">
+        (render-text (slurp-resource res) data)
+        (io/input-stream res)))))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn package-to-path [package-name]
   (string/replace package-name #&quot;\.&quot; &quot;/&quot;))</pre></td></tr><tr><td class="docs"><p>Loads a properties file. Returns nil if the file doesn't exist.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- load-properties
@@ -3687,10 +3706,12 @@ compiled anyway.</p>
       (io/copy (render &quot;library.project.clj&quot; data)
                (io/file current-dir &quot;project.clj&quot;)))))</pre></td></tr><tr><td class="docs"><p>Creates new Android project given the project's name and package name.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn new
-  [project-name package-name &amp; {:keys [activity target-sdk app-name],
-                                :or {activity &quot;MainActivity&quot;, target-sdk &quot;10&quot;,
-                                     app-name project-name}}]
-  (let [data {:name project-name
+  [project-name package-name &amp; options]
+  (let [options (apply hash-map options)
+        activity (get options &quot;:activity&quot; &quot;MainActivity&quot;)
+        target-sdk (get options &quot;:target-sdk&quot; &quot;10&quot;)
+        app-name (get options &quot;:app-name&quot; project-name)
+        data {:name project-name
               :package package-name
               :package-sanitized (sanitize package-name)
               :path (package-to-path (sanitize package-name))
@@ -3745,7 +3766,7 @@ compiled anyway.</p>
    :assets-path &quot;assets&quot;
    :out-res-pkg-path (str target-path &quot;/&quot; name &quot;.ap_&quot;)
    :out-apk-path (str target-path &quot;/&quot; name &quot;.apk&quot;)
-   :keystore-path (str (System/getenv &quot;HOME&quot;) &quot;/.android/debug.keystore&quot;)
+   :keystore-path (str (file (System/getProperty &quot;user.home&quot;) &quot;.android&quot; &quot;debug.keystore&quot;))
    :adb-bin (str sdk-path &quot;/platform-tools/adb&quot;)
    :key-alias &quot;androiddebugkey&quot;
    :repl-device-port 9999
@@ -3799,13 +3820,13 @@ compiled anyway.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn proj [] (read-project &quot;sample/project.clj&quot;))</pre></td></tr><tr><td class="docs"><p>Returns a version-specific path to the Android platform tools.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-sdk-platform-path
   [sdk-root version]
-  (format &quot;%s/platforms/android-%s&quot; sdk-root version))</pre></td></tr><tr><td class="docs"><p>Returns a version-specific path to the <code>android.jar</code> SDK file.</p>
+  (str (file sdk-root &quot;platforms&quot; (str &quot;android-&quot; version))))</pre></td></tr><tr><td class="docs"><p>Returns a version-specific path to the <code>android.jar</code> SDK file.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-sdk-android-jar
   [sdk-root version]
-  (str (get-sdk-platform-path sdk-root version) &quot;/android.jar&quot;))</pre></td></tr><tr><td class="docs"><p>Returns a version-specific path to the Google SDK directory.</p>
+  (str (file (get-sdk-platform-path sdk-root version) &quot;android.jar&quot;)))</pre></td></tr><tr><td class="docs"><p>Returns a version-specific path to the Google SDK directory.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-sdk-google-api-path
   [sdk-root version]
-  (format &quot;%s/add-ons/addon-google_apis-google-%s&quot; sdk-root version))</pre></td></tr><tr><td class="docs"><p>Returns a version-specific paths to all Google SDK jars.</p>
+  (str (file sdk-root &quot;add-ons&quot; (str &quot;addon-google_apis-google-&quot; version))))</pre></td></tr><tr><td class="docs"><p>Returns a version-specific paths to all Google SDK jars.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-sdk-google-api-jars
   [sdk-root version]
   (map #(.getAbsolutePath %)
@@ -3815,7 +3836,25 @@ compiled anyway.</p>
   which returns logical truth.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn first-matched
   [pred coll]
-  (some (fn [item] (when (pred item) item)) coll))</pre></td></tr><tr><td class="docs"><p>Executes the subprocess specified in the binding list and applies
+  (some (fn [item] (when (pred item) item)) coll))</pre></td></tr><tr><td class="docs"><h4>Convenient functions to run SDK binaries</h4>
+</td><td class="codes"></td></tr><tr><td class="docs"><p>Contains relative paths to different SDK binaries for both Unix and
+  Windows platforms.</p>
+</td><td class="codes"><pre class="brush: clojure">(def sdk-binary-paths
+  {:dx {:unix [&quot;platform-tools&quot; &quot;dx&quot;] :win [&quot;platform-tools&quot; &quot;dx.bat&quot;]}
+   :aapt {:unix [&quot;platform-tools&quot; &quot;aapt&quot;] :win [&quot;platform-tools&quot; &quot;aapt.exe&quot;]}
+   :apkbuilder {:unix [&quot;tools&quot; &quot;apkbuilder&quot;] :win [&quot;tools&quot; &quot;apkbuilder.bat&quot;]}
+   :zipalign {:unix [&quot;tools&quot; &quot;zipalign&quot;] :win [&quot;tools&quot; &quot;zipalign.exe&quot;]}})</pre></td></tr><tr><td class="docs"><p>Given the path to SDK and the binary keyword, returns either a full
+  path to the binary as a string, or a vector with call to cmd.exe for
+  batch-files.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn sdk-binary
+  [sdk-path binary-kw]
+  (let [binary (get-in sdk-binary-paths
+                       [binary-kw
+                        (if (.startsWith (System/getProperty &quot;os.name&quot;) &quot;Windows&quot;)
+                          :win :unix)])]
+    (if (.endsWith (last binary) &quot;.bat&quot;)
+      [&quot;cmd.exe&quot; &quot;/C&quot; (str (apply file sdk-path binary))]
+      (str (apply file sdk-path binary)))))</pre></td></tr><tr><td class="docs"><p>Executes the subprocess specified in the binding list and applies
   <code>body</code> do it while it is running. The binding list consists of a var
   name for the process and the list of strings that represents shell
   command.</p>
@@ -3844,15 +3883,22 @@ compiled anyway.</p>
   (with-process [process (flatten args)]))</pre></td></tr><tr><td class="docs"><p>Checks if the current Leiningen run contains :dev profile.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn dev-build?
   [project]
-  (contains? (-&gt; project meta :included-profiles set) :dev))</pre></td></tr><tr><td class="docs"><p>Checks if the given directories or files exist. Aborts Leiningen
+  (not (contains? (-&gt; project meta :included-profiles set) :release)))</pre></td></tr><tr><td class="docs"><p>Checks if the given directories or files exist. Aborts Leiningen
   execution in case either of them doesn't or the value equals nil.</p>
+
+<p>  We assume paths to be strings or lists/vectors. The latter case is
+  used exclusively for Windows batch-files which are represented like
+  <code>cmd.exe /C batch-file</code>, so we test third element of the list for
+  the existence.</p>
 </td><td class="codes"><pre class="brush: clojure">(defmacro ensure-paths
   [&amp; paths]
   `(do
      ~@(for [p paths]
          `(cond (nil? ~p)
                 (abort &quot;The value of&quot; (str '~p) &quot;is nil. Abort execution.&quot;)
-                (not (.exists (file ~p)))
+                (or
+                 (and (sequential? ~p) (not (.exists (file (nth ~p 2)))))
+                 (and (string? ~p) (not (.exists (file ~p)))))
                 (abort &quot;The path&quot; ~p &quot;doesn't exist. Abort execution.&quot;)))))</pre></td></tr><tr><td class="docs"><p>Returns a string with the information about the proper function usage.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn wrong-usage
   ([task-name function-var]
@@ -3885,6 +3931,7 @@ compiled anyway.</p>
   (sh &quot;keytool&quot; &quot;-genkey&quot; &quot;-v&quot;
       &quot;-keystore&quot; keystore-path
       &quot;-alias&quot; &quot;androiddebugkey&quot;
+      &quot;-sigalg&quot; &quot;MD5withRSA&quot;
       &quot;-keyalg&quot; &quot;RSA&quot;
       &quot;-keysize&quot; &quot;1024&quot;
       &quot;-validity&quot; &quot;365&quot;
