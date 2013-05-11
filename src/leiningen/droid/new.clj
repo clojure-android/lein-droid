@@ -17,7 +17,7 @@
   file is simply slurped and the content returned unchanged."
   [name]
   (fn [template & [data]]
-    (let [res (-> (io/file name (sanitize template)) .getPath io/resource)]
+    (let [res (-> (str name "/" (sanitize template)) io/resource)]
       (if data
         (render-text (slurp-resource res) data)
         (io/input-stream res)))))
