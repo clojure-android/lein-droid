@@ -6,6 +6,33 @@
         [leiningen.core.main :only (info debug abort)]
         [clojure.string :only (join)]))
 
+;; #### Convenient functions to run SDK binaries
+
+(defn windows?
+  "Returns true if we are running on Microsoft Windows"
+  []
+  (= java.io.File/separator "\\"))
+
+(def sdk-binary-paths
+  "Contains relative paths to different SDK binaries for both Unix and
+  Windows platforms."
+  {:dx {:unix ["platform-tools" "dx"] :win ["platform-tools" "dx.bat"]}
+   :adb {:unix ["platform-tools" "adb"] :win ["platform-tools" "adb.exe"]}
+   :aapt {:unix ["platform-tools" "aapt"] :win ["platform-tools" "aapt.exe"]}
+   :apkbuilder {:unix ["tools" "apkbuilder"] :win ["tools" "apkbuilder.bat"]}
+   :zipalign {:unix ["tools" "zipalign"] :win ["tools" "zipalign.exe"]}})
+
+(defn sdk-binary
+  "Given the path to SDK and the binary keyword, returns either a full
+  path to the binary as a string, or a vector with call to cmd.exe for
+  batch-files."
+  [sdk-path binary-kw]
+  (let [binary (get-in sdk-binary-paths
+                       [binary-kw (if (windows?) :win :unix)])]
+    (if (.endsWith (last binary) ".bat")
+      ["cmd.exe" "/C" (str (apply file sdk-path binary))]
+      (str (apply file sdk-path binary)))))
+
 ;; ### Middleware section
 
 (defn absolutize
@@ -46,7 +73,7 @@
    :out-res-pkg-path (str target-path "/" name ".ap_")
    :out-apk-path (str target-path "/" name ".apk")
    :keystore-path (str (file (System/getProperty "user.home") ".android" "debug.keystore"))
-   :adb-bin (str sdk-path "/platform-tools/adb")
+   :adb-bin (sdk-binary sdk-path :adb)
    :key-alias "androiddebugkey"
    :repl-device-port 9999
    :repl-local-port 9999
@@ -136,29 +163,6 @@
   which returns logical truth."
   [pred coll]
   (some (fn [item] (when (pred item) item)) coll))
-
-;; #### Convenient functions to run SDK binaries
-
-(def sdk-binary-paths
-  "Contains relative paths to different SDK binaries for both Unix and
-  Windows platforms."
-  {:dx {:unix ["platform-tools" "dx"] :win ["platform-tools" "dx.bat"]}
-   :aapt {:unix ["platform-tools" "aapt"] :win ["platform-tools" "aapt.exe"]}
-   :apkbuilder {:unix ["tools" "apkbuilder"] :win ["tools" "apkbuilder.bat"]}
-   :zipalign {:unix ["tools" "zipalign"] :win ["tools" "zipalign.exe"]}})
-
-(defn sdk-binary
-  "Given the path to SDK and the binary keyword, returns either a full
-  path to the binary as a string, or a vector with call to cmd.exe for
-  batch-files."
-  [sdk-path binary-kw]
-  (let [binary (get-in sdk-binary-paths
-                       [binary-kw
-                        (if (.startsWith (System/getProperty "os.name") "Windows")
-                          :win :unix)])]
-    (if (.endsWith (last binary) ".bat")
-      ["cmd.exe" "/C" (str (apply file sdk-path binary))]
-      (str (apply file sdk-path binary)))))
 
 (defmacro with-process
   "Executes the subprocess specified in the binding list and applies
