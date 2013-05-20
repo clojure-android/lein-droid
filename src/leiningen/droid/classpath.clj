@@ -6,7 +6,7 @@
                                       get-sdk-google-api-jars]])
   (:import org.sonatype.aether.util.version.GenericVersionScheme))
 
-;; Since `dx` and `apkbuilder` utilities fail when they are feeded
+;; Since `dx` and `ApkBuilder` utilities fail when they are feeded
 ;; repeated jar-files, we need to make sure that JAR dependencies list
 ;; contains only unique jars.
 

@@ -19,7 +19,6 @@
   {:dx {:unix ["platform-tools" "dx"] :win ["platform-tools" "dx.bat"]}
    :adb {:unix ["platform-tools" "adb"] :win ["platform-tools" "adb.exe"]}
    :aapt {:unix ["platform-tools" "aapt"] :win ["platform-tools" "aapt.exe"]}
-   :apkbuilder {:unix ["tools" "apkbuilder"] :win ["tools" "apkbuilder.bat"]}
    :zipalign {:unix ["tools" "zipalign"] :win ["tools" "zipalign.exe"]}})
 
 (defn sdk-binary

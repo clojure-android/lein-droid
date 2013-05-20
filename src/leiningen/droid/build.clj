@@ -13,6 +13,7 @@
                        sdk-binary]]
          [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.java.io :as io]
+            [leiningen.droid.sdk :as sdk]
             leiningen.jar leiningen.javac))
 
 ;; ### Build-related subtasks
@@ -132,23 +133,19 @@
 (defn create-apk
   "Creates a deployment-ready APK file.
 
-  It is done by running `apkbuilder` tool on the generated DEX-file
-  and the resource package."
+  It is done by executing methods from ApkBuilder SDK class on the
+  generated DEX-file and the resource package."
   [{{:keys [sdk-path out-apk-path out-res-pkg-path out-dex-path]} :android,
-    source-paths :source-paths, java-source-paths :java-source-paths,
     java-only :java-only :as project}]
   (info "Creating APK...")
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
-  (let [apkbuilder-bin (sdk-binary sdk-path :apkbuilder)
-        suffix (if (dev-build? project) "debug-unaligned" "unaligned")
+  (let [suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
         clojure-jar (first-matched #(re-find #"android[/\\]clojure" (str %))
                                    (resolve-dependencies :dependencies project))
-        rj-line (if java-only [] ["-rj" (str clojure-jar)])]
-    (sh apkbuilder-bin unaligned-path "-u"
-        "-z" out-res-pkg-path
-        "-f" out-dex-path
-        rj-line)))
+        resource-jars (if java-only [] [clojure-jar])]
+    (sdk/create-apk project
+                    :apk-name unaligned-path :resource-jars resource-jars)))
 
 (defn sign-apk
   "Signs APK file with the key taken from the keystore.
