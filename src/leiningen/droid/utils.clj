@@ -16,10 +16,14 @@
 (def sdk-binary-paths
   "Contains relative paths to different SDK binaries for both Unix and
   Windows platforms."
-  {:dx {:unix ["platform-tools" "dx"] :win ["platform-tools" "dx.bat"]}
-   :adb {:unix ["platform-tools" "adb"] :win ["platform-tools" "adb.exe"]}
-   :aapt {:unix ["platform-tools" "aapt"] :win ["platform-tools" "aapt.exe"]}
-   :zipalign {:unix ["tools" "zipalign"] :win ["tools" "zipalign.exe"]}})
+  {:dx {:unix ["build-tools" "17.0.0" "dx"]
+        :win ["build-tools" "17.0.0" "dx.bat"]}
+   :adb {:unix ["platform-tools" "adb"]
+         :win ["platform-tools" "adb.exe"]}
+   :aapt {:unix ["build-tools" "17.0.0" "aapt"]
+          :win ["build-tools" "17.0.0" "aapt.exe"]}
+   :zipalign {:unix ["tools" "zipalign"]
+              :win ["tools" "zipalign.exe"]}})
 
 (defn sdk-binary
   "Given the path to SDK and the binary keyword, returns either a full
