@@ -19,7 +19,7 @@
   ;; java-only true
 
   :dependencies [[android/clojure "1.4.0"]
-                 [neko/neko "2.0.0-beta1"]]
+                 [neko/neko "2.0.0-beta3"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]]
                    :android {:aot :all-with-unused}}
              :release {:android {;; Specify the path to your private
