@@ -13,24 +13,26 @@
   []
   (= java.io.File/separator "\\"))
 
-(def sdk-binary-paths
-  "Contains relative paths to different SDK binaries for both Unix and
-  Windows platforms."
-  {:dx {:unix ["build-tools" "17.0.0" "dx"]
-        :win ["build-tools" "17.0.0" "dx.bat"]}
-   :adb {:unix ["platform-tools" "adb"]
-         :win ["platform-tools" "adb.exe"]}
-   :aapt {:unix ["build-tools" "17.0.0" "aapt"]
-          :win ["build-tools" "17.0.0" "aapt.exe"]}
-   :zipalign {:unix ["tools" "zipalign"]
-              :win ["tools" "zipalign.exe"]}})
+(defn sdk-binary-paths
+  "Returns a map of relative paths to different SDK binaries for both
+  Unix and Windows platforms."
+  [sdk-path]
+  (let [bt-dir (first (.list (file sdk-path "build-tools")))]
+   {:dx {:unix ["build-tools" bt-dir "dx"]
+         :win ["build-tools" bt-dir "dx.bat"]}
+    :adb {:unix ["platform-tools" "adb"]
+          :win ["platform-tools" "adb.exe"]}
+    :aapt {:unix ["build-tools" bt-dir "aapt"]
+           :win ["build-tools" bt-dir "aapt.exe"]}
+    :zipalign {:unix ["tools" "zipalign"]
+               :win ["tools" "zipalign.exe"]}}))
 
 (defn sdk-binary
   "Given the path to SDK and the binary keyword, returns either a full
   path to the binary as a string, or a vector with call to cmd.exe for
   batch-files."
   [sdk-path binary-kw]
-  (let [binary (get-in sdk-binary-paths
+  (let [binary (get-in (sdk-binary-paths sdk-path)
                        [binary-kw (if (windows?) :win :unix)])]
     (if (.endsWith (last binary) ".bat")
       ["cmd.exe" "/C" (str (apply file sdk-path binary))]
