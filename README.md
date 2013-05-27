@@ -5,7 +5,7 @@ platform. See Marginalia docs [here](http://clojure-android.github.io/lein-droid
 
 ## Usage
 
-Current version of lein-droid is `0.1.0-preview3`.
+Current version of lein-droid is `0.1.0-preview5`.
 
 See the
 [Tutorial](https://github.com/clojure-android/lein-droid/wiki/Tutorial)
