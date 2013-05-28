@@ -5,6 +5,9 @@ platform. See Marginalia docs [here](http://clojure-android.github.io/lein-droid
 
 ## Usage
 
+First make sure you have [Android SDK](http://developer.android.com/sdk/index.html) 
+installed, with the latest Android SDK Build-tools 17.0.0.
+
 Current version of lein-droid is `0.1.0-preview5`.
 
 See the
