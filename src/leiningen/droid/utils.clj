@@ -8,6 +8,25 @@
 
 ;; #### Convenient functions to run SDK binaries
 
+(defmacro ensure-paths
+  "Checks if the given directories or files exist. Aborts Leiningen
+  execution in case either of them doesn't or the value equals nil.
+
+  We assume paths to be strings or lists/vectors. The latter case is
+  used exclusively for Windows batch-files which are represented like
+  `cmd.exe /C batch-file`, so we test third element of the list for
+  the existence."
+  [& paths]
+  `(do
+     ~@(for [p paths]
+         `(cond (nil? ~p)
+                (abort "The value of" (str '~p) "is nil. Abort execution.")
+
+                (or
+                 (and (sequential? ~p) (not (.exists (file (nth ~p 2)))))
+                 (and (string? ~p) (not (.exists (file ~p)))))
+                (abort "The path" ~p "doesn't exist. Abort execution.")))))
+
 (defn windows?
   "Returns true if we are running on Microsoft Windows"
   []
@@ -17,6 +36,7 @@
   "Returns a map of relative paths to different SDK binaries for both
   Unix and Windows platforms."
   [sdk-path]
+  (ensure-paths sdk-path)
   (let [bt-dir (first (.list (file sdk-path "build-tools")))]
    {:dx {:unix ["build-tools" bt-dir "dx"]
          :win ["build-tools" bt-dir "dx.bat"]}
@@ -203,25 +223,6 @@
   "Checks if the current Leiningen run contains :dev profile."
   [project]
   (not (contains? (-> project meta :included-profiles set) :release)))
-
-(defmacro ensure-paths
-  "Checks if the given directories or files exist. Aborts Leiningen
-  execution in case either of them doesn't or the value equals nil.
-
-  We assume paths to be strings or lists/vectors. The latter case is
-  used exclusively for Windows batch-files which are represented like
-  `cmd.exe /C batch-file`, so we test third element of the list for
-  the existence."
-  [& paths]
-  `(do
-     ~@(for [p paths]
-         `(cond (nil? ~p)
-                (abort "The value of" (str '~p) "is nil. Abort execution.")
-
-                (or
-                 (and (sequential? ~p) (not (.exists (file (nth ~p 2)))))
-                 (and (string? ~p) (not (.exists (file ~p)))))
-                (abort "The path" ~p "doesn't exist. Abort execution.")))))
 
 (defn wrong-usage
   "Returns a string with the information about the proper function usage."
