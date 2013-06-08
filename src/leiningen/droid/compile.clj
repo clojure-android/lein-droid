@@ -95,7 +95,7 @@
   (let [nses (namespaces-to-compile project)
         dev-build (dev-build? project)
         compiler-options (if dev-build {} {:elide-meta [:doc :file :line :added
-                                                        :arglists :private]})]
+                                                        :arglists]})]
     (info (format "Build type: %s, dynamic compilation: %s, remote REPL: %s."
                   (if dev-build "debug" "release")
                   (if (or dev-build start-nrepl-server
