@@ -37,15 +37,28 @@
   Unix and Windows platforms."
   [sdk-path]
   (ensure-paths sdk-path)
+  ;; for now just try to infer whether we're having build-tools 17
   (let [bt-dir (first (.list (file sdk-path "build-tools")))]
-   {:dx {:unix ["build-tools" bt-dir "dx"]
-         :win ["build-tools" bt-dir "dx.bat"]}
-    :adb {:unix ["platform-tools" "adb"]
-          :win ["platform-tools" "adb.exe"]}
-    :aapt {:unix ["build-tools" bt-dir "aapt"]
-           :win ["build-tools" bt-dir "aapt.exe"]}
-    :zipalign {:unix ["tools" "zipalign"]
-               :win ["tools" "zipalign.exe"]}}))
+    ;; if bt-dir exists (i.e. non-nil) then, probably, it is not empty
+    ;; and therefore we can assume that we're running build-tools 17+ revision
+    (if bt-dir
+      {:dx {:unix ["build-tools" bt-dir "dx"]
+            :win ["build-tools" bt-dir "dx.bat"]}
+       :adb {:unix ["platform-tools" "adb"]
+             :win ["platform-tools" "adb.exe"]}
+       :aapt {:unix ["build-tools" bt-dir "aapt"]
+              :win ["build-tools" bt-dir "aapt.exe"]}
+       :zipalign {:unix ["tools" "zipalign"]
+                  :win ["tools" "zipalign.exe"]}}
+
+      {:dx {:unix ["platform-tools" "dx"]
+            :win ["platform-tools" "dx.bat"]}
+       :adb {:unix ["platform-tools" "adb"]
+             :win ["platform-tools" "adb.exe"]}
+       :aapt {:unix ["platform-tools" "aapt"]
+              :win ["platform-tools" "aapt.exe"]}
+       :zipalign {:unix ["tools" "zipalign"]
+                  :win ["tools" "zipalign.exe"]}})))
 
 (defn sdk-binary
   "Given the path to SDK and the binary keyword, returns either a full
@@ -53,10 +66,15 @@
   batch-files."
   [sdk-path binary-kw]
   (let [binary (get-in (sdk-binary-paths sdk-path)
-                       [binary-kw (if (windows?) :win :unix)])]
-    (if (.endsWith (last binary) ".bat")
-      ["cmd.exe" "/C" (str (apply file sdk-path binary))]
-      (str (apply file sdk-path binary)))))
+                       [binary-kw (if (windows?) :win :unix)])
+        binary-file (str (apply file sdk-path binary))]
+    (if (.exists (file binary-file))
+      (if (.endsWith (last binary) ".bat")
+        ["cmd.exe" "/C" (str binary-file)]
+        binary-file)
+      (throw (RuntimeException.
+              (format "File %s does not exists. Please check your sdk-path or, if you're running SDK rev 22 or greater ensure that build-tools are installed."
+                      binary-file))))))
 
 ;; ### Middleware section
 
