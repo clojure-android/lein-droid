@@ -153,15 +153,20 @@
   Either a debug keystore key or a release key is used based on
   whether the build type is the debug one. Creates a debug keystore if
   it is missing."
-  [{{:keys [out-apk-path keystore-path key-alias]} :android :as project}]
+  [{{:keys [out-apk-path
+            keystore-path key-alias keypass storepass]} :android :as project}]
   (info "Signing APK...")
   (let [dev-build (dev-build? project)
         suffix (if dev-build "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
-        storepass (if dev-build "android"
-                      (read-password "Enter storepass: "))
-        keypass (if dev-build "android"
-                    (read-password "Enter keypass: "))]
+        storepass (cond storepass storepass
+                        dev-build "android"
+                        :else
+                        (read-password "Enter storepass: "))
+        keypass (cond keypass keypass
+                      dev-build "android"
+                      :else
+                      (read-password "Enter keypass: "))]
     (when (and dev-build (not (.exists (io/file keystore-path))))
       ;; Create a debug keystore if there isn't one
       (create-debug-keystore keystore-path))
