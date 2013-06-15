@@ -16,7 +16,7 @@
     (.mkdirs destination-dir)
     (doseq [dep dependencies]
       (io/copy dep
-               (io/file destination-dir (.getName dep))))))
+               (io/file destination-dir (.getName ^java.io.File dep))))))
 
 (defn create-repl-port-file
   "Creates a file named `repl-port` in target directory with port

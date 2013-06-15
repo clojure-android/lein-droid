@@ -4,7 +4,8 @@
   (:require [leiningen.core.project :as pr])
   (:use [clojure.java.io :only (file reader)]
         [leiningen.core.main :only (info debug abort)]
-        [clojure.string :only (join)]))
+        [clojure.string :only (join)])
+  (:import java.io.File))
 
 ;; #### Convenient functions to run SDK binaries
 
@@ -142,7 +143,7 @@
   [{{:keys [project-dependencies]} :android, root :root :as project}]
   (reduce (fn [project dependency-path]
             (let [project-file (get-project-file root dependency-path)]
-              (if-not (.exists project-file)
+              (if-not (.exists ^File project-file)
                 (do
                   (info "WARNING:" (str project-file) "doesn't exist.")
                   project)
@@ -193,7 +194,7 @@
 (defn get-sdk-google-api-jars
   "Returns a version-specific paths to all Google SDK jars."
   [sdk-root version]
-  (map #(.getAbsolutePath %)
+  (map #(.getAbsolutePath ^File %)
        (rest ;; The first file is the directory itself, no need in it.
         (file-seq
          (file (str (get-sdk-google-api-path sdk-root version) "/libs"))))))
@@ -223,9 +224,12 @@
            output# (line-seq (reader (.getInputStream ~process-name)))]
        ~@body
        (.waitFor ~process-name)
-       (if-not (= (.exitValue ~process-name) 0)
-         (apply abort output#)
-         (apply debug output#))
+       (doseq [line# output#]
+         (if (= (.exitValue ~process-name) 0)
+           (debug line#)
+           (info line#)))
+       (when-not (= (.exitValue ~process-name) 0)
+         (abort "Abort execution."))
        output#)))
 
 (defn sh
