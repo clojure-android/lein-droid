@@ -50,7 +50,9 @@
        :aapt {:unix ["build-tools" bt-dir "aapt"]
               :win ["build-tools" bt-dir "aapt.exe"]}
        :zipalign {:unix ["tools" "zipalign"]
-                  :win ["tools" "zipalign.exe"]}}
+                  :win ["tools" "zipalign.exe"]}
+       :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
+                  :win ["tools" "proguard" "lib" "proguard.jar"]}}
 
       {:dx {:unix ["platform-tools" "dx"]
             :win ["platform-tools" "dx.bat"]}
@@ -59,7 +61,9 @@
        :aapt {:unix ["platform-tools" "aapt"]
               :win ["platform-tools" "aapt.exe"]}
        :zipalign {:unix ["tools" "zipalign"]
-                  :win ["tools" "zipalign.exe"]}})))
+                  :win ["tools" "zipalign.exe"]}
+       :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
+                  :win ["tools" "proguard" "lib" "proguard.jar"]}})))
 
 (defn sdk-binary
   "Given the path to SDK and the binary keyword, returns either a full
@@ -288,3 +292,7 @@
       "-keypass" "android"
       "-storepass" "android"
       "-dname" "CN=Android Debug,O=Android,C=US"))
+
+(defn relativize-path [^File dir ^File to-relativize]
+  (.getPath (.relativize (.toURI dir)
+                         (.toURI to-relativize))))

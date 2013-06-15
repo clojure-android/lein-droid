@@ -10,7 +10,8 @@
         [leiningen.droid.compile :only (compile clean-compile-dir code-gen)]
         [leiningen.droid
          [classpath :only [init-hooks]]
-         [build :only [create-dex crunch-resources package-resources create-apk
+         [build :only [create-dex create-obfuscated-dex
+                       crunch-resources package-resources create-apk
                        sign-apk zipalign-apk apk build jar]]
          [deploy :only [install run forward-port repl deploy]]
          [new :only [new init]]
@@ -58,10 +59,12 @@
       (execute-subtask release-project task adb-args))))
 
 (defn ^{:no-project-needed true
-        :subtasks [#'new #'init #'code-gen #'compile #'create-dex
-                   #'crunch-resources #'package-resources #'create-apk
-                   #'sign-apk #'zipalign-apk #'install #'run #'forward-port
-                   #'repl #'build #'apk #'deploy #'doall #'release #'help
+        :subtasks [#'new #'init #'code-gen #'compile
+                   #'create-dex #'create-obfuscated-dex
+                   #'crunch-resources #'package-resources
+                   #'create-apk #'sign-apk #'zipalign-apk
+                   #'install #'run #'forward-port #'repl
+                   #'build #'apk #'deploy #'doall #'release #'help
                    #'gather-dependencies]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."

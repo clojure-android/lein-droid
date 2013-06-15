@@ -4,17 +4,20 @@
   (:refer-clojure :exclude [compile])
   (:use [leiningen.core
          [classpath :only [resolve-dependencies]]
-         [main :only [debug info]]]
+         [main :only [debug info abort *debug*]]]
         [leiningen.droid
          [compile :only [code-gen compile]]
          [utils :only [get-sdk-android-jar first-matched sh dev-build?
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
-                       sdk-binary]]
+                       sdk-binary relativize-path]]
          [manifest :only [write-manifest-with-internet-permission]]])
-  (:require [clojure.java.io :as io]
+  (:require [clojure.string]
+            [clojure.set]
+            [clojure.java.io :as io]
             [leiningen.droid.sdk :as sdk]
-            leiningen.jar leiningen.javac))
+            leiningen.jar leiningen.javac)
+  (:import java.io.File))
 
 ;; ### Build-related subtasks
 
@@ -23,12 +26,14 @@
 ;; (sends SIGINT to leiningen). That is why we add a hook to the
 ;; runtime that will be triggered when Leiningen is closed.
 ;;
-(defn create-dex
-  "Creates a DEX file from the compiled .class files."
+(defn- run-dx
+  "Run dex on the given target which should be either directory with .class
+files or jar file, e.g. one produced by proguard."
   [{{:keys [sdk-path out-dex-path external-classes-paths
             force-dex-optimize dex-opts]} :android,
-    compile-path :compile-path resource-paths :resource-paths :as project}]
-  (info "Creating DEX....")
+            resource-paths :resource-paths,
+            :as project}
+   target]
   (ensure-paths sdk-path)
   (let [dx-bin (sdk-binary sdk-path :dx)
         options (or dex-opts [])
@@ -42,10 +47,85 @@
     (with-process [proc (map str
                              (flatten [dx-bin options "--dex" no-optimize
                                        "--output" out-dex-path
-                                       compile-path annotations deps
+                                       target annotations deps
                                        external-paths
                                        existing-resource-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
+
+
+(defn create-dex
+  "Creates a DEX file from the compiled .class files."
+  [{compile-path :compile-path :as project}]
+  (info "Creating DEX....")
+  (ensure-paths compile-path)
+  (run-dx project compile-path))
+
+(defn create-obfuscated-dex
+  "Creates an obfuscated DEX file from the compiled .class files."
+  [{{:keys [sdk-path out-dex-path external-classes-paths
+            force-dex-optimize dex-opts dex-aux-opts
+            proguard-conf-path target-version proguard-opts]} :android,
+            compile-path :compile-path
+            project-name :name
+            target-path :target-path
+            :as project}]
+  (info "Creating obfuscated DEX....")
+  (ensure-paths sdk-path compile-path proguard-conf-path)
+  (when-not (.isDirectory (io/file compile-path))
+    (abort (format "compile-path (%s) is not a directory" compile-path)))
+
+  (let [obfuscated-jar-file (str (io/file target-path (str project-name "-obfuscated.jar")))
+        proguard-jar (sdk-binary sdk-path :proguard)
+        android-jar (get-sdk-android-jar sdk-path target-version)
+        proguard-opts (or proguard-opts [])
+
+        annotations (str sdk-path "/tools/support/annotations.jar")
+        deps (resolve-dependencies :dependencies project)
+        external-paths (or external-classes-paths [])
+
+        compile-path-dir (io/file compile-path)
+
+        ;; to figure out what classes were thrown away by proguard
+        orig-class-files
+        (when *debug*
+          (into #{} (for [file (file-seq compile-path-dir)
+                          :when (and (.isFile ^File file)
+                                     (.endsWith (str file) ".class"))]
+                      (relativize-path compile-path-dir file))))]
+    (sh "java"
+        "-jar" proguard-jar
+        (str "@" proguard-conf-path)
+        "-injars" compile-path
+        "-outjars" obfuscated-jar-file
+        "-libraryjars" (->> (concat [annotations android-jar]
+                                    deps external-paths)
+                            (map str)
+                            (clojure.string/join ":"))
+        proguard-opts)
+    (when *debug*
+      (let [optimized-class-files
+            (for [file (binding [*debug* false]
+                         ;; Supress this output
+                         (sh "jar" "tf" obfuscated-jar-file))
+                  :let [trimmed (clojure.string/trim-newline file)]
+                  :when (.endsWith ^String trimmed ".class")]
+              trimmed)
+
+            thrown-away-classes (clojure.set/difference orig-class-files
+                                                        optimized-class-files)]
+        (cond (empty? thrown-away-classes) nil
+
+              (< (count thrown-away-classes) 30)
+              (doseq [class thrown-away-classes]
+                (debug class))
+
+              :else
+              (let [file (io/file target-path "removed-classes.txt")]
+                (debug
+                 (format "%s classes were removed by ProGuard. See list in %s."
+                         (count thrown-away-classes) file))
+                (spit file (clojure.string/join "\n" thrown-away-classes))))))
+    (run-dx project obfuscated-jar-file)))
 
 (defn crunch-resources
   "Updates the pre-processed PNG cache.
