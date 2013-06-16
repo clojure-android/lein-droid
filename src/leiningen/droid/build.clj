@@ -30,13 +30,14 @@
   "Run dex on the given target which should be either directory with .class
 files or jar file, e.g. one produced by proguard."
   [{{:keys [sdk-path out-dex-path external-classes-paths
-            force-dex-optimize dex-opts]} :android,
+            force-dex-optimize dex-opts dex-aux-opts]} :android,
             resource-paths :resource-paths,
             :as project}
    target]
   (ensure-paths sdk-path)
   (let [dx-bin (sdk-binary sdk-path :dx)
         options (or dex-opts [])
+        aux-options (or dex-aux-opts [])
         no-optimize (if (and (not force-dex-optimize) (dev-build? project))
                       "--no-optimize" [])
         annotations (str sdk-path "/tools/support/annotations.jar")
@@ -46,6 +47,7 @@ files or jar file, e.g. one produced by proguard."
                                         resource-paths)]
     (with-process [proc (map str
                              (flatten [dx-bin options "--dex" no-optimize
+                                       aux-options
                                        "--output" out-dex-path
                                        target annotations deps
                                        external-paths
