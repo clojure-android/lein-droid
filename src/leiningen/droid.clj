@@ -91,6 +91,7 @@
     "clean-compile-dir" (clean-compile-dir project)
     "compile" (compile project)
     "create-dex" (create-dex project)
+    "create-obfuscated-dex" (create-obfuscated-dex project)
     "crunch-resources" (crunch-resources project)
     "package-resources" (package-resources project)
     "create-apk" (create-apk project)
