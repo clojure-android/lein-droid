@@ -52,7 +52,7 @@
             ;; :dex-aux-opts ["--num-threads=2"]
 
             ;; Proguard config for "droid create-obfuscated-dex" task.
-            ;; :proguard-conf "proguard.cfg"
+            ;; :proguard-conf-path "proguard.cfg"
             ;; :proguard-opts ["-printseeds"]
 
             ;; Uncomment this line to be able to use Google API.
