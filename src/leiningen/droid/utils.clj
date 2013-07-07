@@ -270,7 +270,12 @@
   "Reads the password from the console without echoing the
   characters."
   [prompt]
-  (join (.readPassword (System/console) prompt nil)))
+  (if-let [console (System/console)]
+    (join (.readPassword console prompt nil))
+    (do
+      (print prompt)
+      (flush)
+      (read-line))))
 
 (defn append-suffix
   "Appends a suffix to a filename, e.g. transforming `sample.apk` into
