@@ -65,7 +65,7 @@
                    #'create-apk #'sign-apk #'zipalign-apk
                    #'install #'run #'forward-port #'repl
                    #'build #'apk #'deploy #'doall #'release #'help
-                   #'gather-dependencies]}
+                   #'gather-dependencies #'jar]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([project]
