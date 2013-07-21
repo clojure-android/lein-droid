@@ -5,11 +5,11 @@
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :min-lein-version "2.0.0"
 
-  :source-paths ["src/clojure"]
+  :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
 
-  :dependencies [[android/clojure "1.4.0"]
-                 [neko/neko "2.0.0-beta1"]]
+  :dependencies [[org.clojure-android/clojure "1.5.1-SNAPSHOT"]
+                 [neko/neko "3.0.0-SNAPSHOT"]]
 
   :android {:target-version "{{target-sdk}}"
             {{library?}}})

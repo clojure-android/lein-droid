@@ -18,14 +18,14 @@
 
 (defactivity test.leindroid.sample.MainActivity
   :def a
-  :create
+  :on-create
   (fn [this bundle]
     (on-ui
      (set-content-view! a
       (make-ui [:linear-layout {:orientation :vertical
                                 :layout-width :fill
                                 :layout-height :wrap}
-                [:edit {:def user-input
-                        :layout-width :fill}]
+                [:edit-text {:def `user-input
+                             :layout-width :fill}]
                 [:button {:text "Touch me"
                           :on-click notify-from-edit}]])))))

@@ -7,7 +7,7 @@
 
   :warn-on-reflection true
 
-  :source-paths ["src/clojure"]
+  :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
   ;; The following two definitions are optional. The default
   ;; target-path is "target", but you can change it to whatever you like.
@@ -18,9 +18,10 @@
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
-  :dependencies [[android/clojure "1.4.0"]
-                 [neko/neko "2.0.0-beta3"]]
-  :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]]
+  :dependencies [[org.clojure-android/clojure "1.5.1-SNAPSHOT"]
+                 [neko/neko "3.0.0-SNAPSHOT"]]
+  :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
+                                  [org.clojure-android/clojure-complete "0.3.0-SNAPSHOT"]]
                    :android {:aot :all-with-unused}}
              :release {:android {;; Specify the path to your private
                                  ;; keystore and the the alias of the
@@ -68,7 +69,7 @@
             ;; :native-libraries-paths ["libs"]
 
             ;; Target version affects api used for compilation.
-            :target-version "10"
+            :target-version "15"
 
             ;; Minimum supported version could be specified as well,
             ;; its meaning is similar to that in AndroidManifest.xml.

@@ -7,7 +7,7 @@
 
   :warn-on-reflection true
 
-  :source-paths ["src/clojure"]
+  :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
   ;; The following two definitions are optional. The default
   ;; target-path is "target", but you can change it to whatever you like.
@@ -16,11 +16,12 @@
 
   ;; Uncomment this line if your project doesn't use Clojure. Also
   ;; don't forget to remove respective dependencies.
-  ;; java-only true
+  ;; :java-only true
 
-  :dependencies [[android/clojure "1.4.0"]
-                 [neko/neko "2.0.0-beta1"]]
-  :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]]
+  :dependencies [[org.clojure-android/clojure "1.5.1-SNAPSHOT"]
+                 [neko/neko "3.0.0-SNAPSHOT"]]
+  :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
+                                  [org.clojure-android/clojure-complete "0.3.0-SNAPSHOT"]]
                    :android {:aot :all-with-unused}}
              :release {:android
                        {;; Specify the path to your private
@@ -34,8 +35,8 @@
             ;; here or in your ~/.lein/profiles.clj file.
             ;; :sdk-path "/home/user/path/to/android-sdk/"
 
-            ;; Uncomment this if dexer fails with OutOfMemoryException
+            ;; Uncomment this if dexer fails with OutOfMemoryException.
             ;; :force-dex-optimize true
 
             :target-version "{{target-sdk}}"
-            :aot-exclude-ns ["clojure.parallel"]})
+            :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers"]})
