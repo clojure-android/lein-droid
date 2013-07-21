@@ -24,7 +24,8 @@
       ;; For Clojure jar choose only from Android-specific versions
       ;; (if there is at least one).
       (let [same-jars (if (= name "clojure")
-                        (let [droid-clojures (filter #(= (:group %) "android/")
+                        (let [droid-clojures (filter #(= (:group %)
+                                                         "org.clojure-android/")
                                                      same-jars)]
                           (if-not (empty? droid-clojures)
                             droid-clojures

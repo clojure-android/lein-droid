@@ -221,7 +221,8 @@ files or jar file, e.g. one produced by proguard."
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
-        [clojure-jar] (filter #(re-find #"android[/\\]clojure" (str %))
+        [clojure-jar] (filter #(re-find #"org.clojure-android[/\\]clojure"
+                                        (str %))
                               (resolve-dependencies :dependencies project))
         resource-jars (if java-only [] [clojure-jar])]
     (sdk/create-apk project
