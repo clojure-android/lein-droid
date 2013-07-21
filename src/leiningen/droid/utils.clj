@@ -203,12 +203,6 @@
         (file-seq
          (file (str (get-sdk-google-api-path sdk-root version) "/libs"))))))
 
-(defn first-matched
-  "Returns the first item from the collection predicate `pred` for
-  which returns logical truth."
-  [pred coll]
-  (some (fn [item] (when (pred item) item)) coll))
-
 (defmacro with-process
   "Executes the subprocess specified in the binding list and applies
   `body` do it while it is running. The binding list consists of a var

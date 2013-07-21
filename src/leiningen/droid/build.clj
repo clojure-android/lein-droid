@@ -7,7 +7,7 @@
          [main :only [debug info abort *debug*]]]
         [leiningen.droid
          [compile :only [code-gen compile]]
-         [utils :only [get-sdk-android-jar first-matched sh dev-build?
+         [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
                        sdk-binary relativize-path]]
@@ -221,8 +221,8 @@ files or jar file, e.g. one produced by proguard."
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
-        clojure-jar (first-matched #(re-find #"android[/\\]clojure" (str %))
-                                   (resolve-dependencies :dependencies project))
+        [clojure-jar] (filter #(re-find #"android[/\\]clojure" (str %))
+                              (resolve-dependencies :dependencies project))
         resource-jars (if java-only [] [clojure-jar])]
     (sdk/create-apk project
                     :apk-name unaligned-path :resource-jars resource-jars)))
