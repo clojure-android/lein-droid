@@ -31,7 +31,6 @@
 files or jar file, e.g. one produced by proguard."
   [{{:keys [sdk-path out-dex-path external-classes-paths
             force-dex-optimize dex-opts]} :android,
-            resource-paths :resource-paths,
             :as project}
    target]
   (ensure-paths sdk-path)
@@ -41,15 +40,12 @@ files or jar file, e.g. one produced by proguard."
                       "--no-optimize" [])
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (resolve-dependencies :dependencies project)
-        external-paths (or external-classes-paths [])
-        existing-resource-paths (filter #(.exists (java.io.File. %))
-                                        resource-paths)]
+        external-classes-paths (or external-classes-paths [])]
     (with-process [proc (map str
                              (flatten [dx-bin options "--dex" no-optimize
                                        "--output" out-dex-path
                                        target annotations deps
-                                       external-paths
-                                       existing-resource-paths]))]
+                                       external-classes-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
 
 

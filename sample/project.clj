@@ -62,8 +62,10 @@
             ;; Use this property to add project dependencies.
             ;; :project-dependencies [ "/path/to/library/project" ]
 
-            ;; Sequence of external jars to "link" against, e.g. android-support-v4.jar
-            ;; :external-classes-paths ["<sdk-home>/extras/android/support/v4/android-support-v4.jar"]
+            ;; Sequence of external jars or class folders to include
+            ;; into project, e.g. android-support-v4.jar
+            ;; :external-classes-paths ["<sdk-home>/extras/android/support/v4/android-support-v4.jar"
+            ;;                          "path/to/classfiles/"]
 
             ;; sequence of paths where native libraries may be found for packaging
             ;; :native-libraries-paths ["libs"]
