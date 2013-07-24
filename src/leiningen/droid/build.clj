@@ -211,8 +211,9 @@ files or jar file, e.g. one produced by proguard."
 
   It is done by executing methods from ApkBuilder SDK class on the
   generated DEX-file and the resource package."
-  [{{:keys [sdk-path out-apk-path out-res-pkg-path out-dex-path]} :android,
-    java-only :java-only :as project}]
+  [{{:keys [sdk-path out-apk-path out-res-pkg-path
+            out-dex-path resource-jars-paths]} :android,
+            java-only :java-only :as project}]
   (info "Creating APK...")
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [suffix (if (dev-build? project) "debug-unaligned" "unaligned")
@@ -220,7 +221,8 @@ files or jar file, e.g. one produced by proguard."
         [clojure-jar] (filter #(re-find #"org.clojure-android[/\\]clojure"
                                         (str %))
                               (resolve-dependencies :dependencies project))
-        resource-jars (if java-only [] [clojure-jar])]
+        resource-jars (concat (when-not java-only [clojure-jar])
+                              resource-jars-paths)]
     (sdk/create-apk project
                     :apk-name unaligned-path :resource-jars resource-jars)))
 

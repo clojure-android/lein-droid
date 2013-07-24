@@ -67,8 +67,13 @@
             ;; :external-classes-paths ["<sdk-home>/extras/android/support/v4/android-support-v4.jar"
             ;;                          "path/to/classfiles/"]
 
-            ;; sequence of paths where native libraries may be found for packaging
-            ;; :native-libraries-paths ["libs"]
+            ;; Sequence of jars, resources from which will be added to
+            ;; application package.
+            ;; :resource-jars-paths ["path/to/resource/jar"]
+
+            ;; Sequence of native libraries files that will be added
+            ;; to application package.
+            ;; :native-libraries-paths ["path/to/native/library"]
 
             ;; Target version affects api used for compilation.
             :target-version "15"
