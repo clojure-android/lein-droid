@@ -222,7 +222,7 @@ files or jar file, e.g. one produced by proguard."
                                         (str %))
                               (resolve-dependencies :dependencies project))
         resource-jars (concat (when-not java-only [clojure-jar])
-                              resource-jars-paths)]
+                              (map #(java.io.File. %) resource-jars-paths))]
     (sdk/create-apk project
                     :apk-name unaligned-path :resource-jars resource-jars)))
 
