@@ -50,7 +50,6 @@
             ;; Options to pass to dx executable, former is for general
             ;; java-related options and later is for 'dex task'-specific options.
             ;; :dex-opts ["-JXmx4096M"]
-            ;; :dex-aux-opts ["--num-threads=2"]
 
             ;; Proguard config for "droid create-obfuscated-dex" task.
             ;; :proguard-conf-path "proguard.cfg"
@@ -77,10 +76,6 @@
 
             ;; Target version affects api used for compilation.
             :target-version "15"
-
-            ;; Minimum supported version could be specified as well,
-            ;; its meaning is similar to that in AndroidManifest.xml.
-            ;; :min-version "10"
 
             ;; Sequence of namespaces that should not be compiled.
             :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers"]

@@ -59,8 +59,8 @@ files or jar file, e.g. one produced by proguard."
 (defn create-obfuscated-dex
   "Creates an obfuscated DEX file from the compiled .class files."
   [{{:keys [sdk-path out-dex-path external-classes-paths
-            force-dex-optimize dex-opts dex-aux-opts
-            proguard-conf-path target-version proguard-opts]} :android,
+            force-dex-optimize dex-opts target-version
+            proguard-conf-path proguard-opts]} :android,
             compile-path :compile-path
             project-name :name
             target-path :target-path
