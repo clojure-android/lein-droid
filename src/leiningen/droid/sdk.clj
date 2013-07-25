@@ -25,7 +25,7 @@
         apkbuilder (make-apk-builder apk-name out-res-pkg-path out-dex-path)]
     (doseq [rj resource-jars]
       (.addResourcesFromJar apkbuilder rj))
-    (when-not (empty? native-libraries-paths)
+    (when (seq native-libraries-paths)
       (debug "Adding native libraries:" native-libraries-paths))
     (doseq [lib native-libraries-paths]
       (.addNativeLibraries apkbuilder ^File (io/file lib)))

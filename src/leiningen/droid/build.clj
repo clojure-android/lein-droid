@@ -84,10 +84,10 @@ files or jar file, e.g. one produced by proguard."
         ;; to figure out what classes were thrown away by proguard
         orig-class-files
         (when *debug*
-          (into #{} (for [file (file-seq compile-path-dir)
-                          :when (and (.isFile ^File file)
-                                     (.endsWith (str file) ".class"))]
-                      (relativize-path compile-path-dir file))))]
+          (set (for [file (file-seq compile-path-dir)
+                     :when (and (.isFile ^File file)
+                                (.endsWith (str file) ".class"))]
+                 (relativize-path compile-path-dir file))))]
     (sh "java"
         "-jar" proguard-jar
         (str "@" proguard-conf-path)
