@@ -180,10 +180,22 @@
 
 (defn proj [] (read-project "sample/project.clj"))
 
+(defn sdk-version-number [kw-or-number]
+  (if (keyword? kw-or-number)
+    (case kw-or-number
+      :froyo       8
+      :gingerbread 10
+      :honeycomb   13
+      :ics         15
+      :jelly-bean  17
+      (abort "Unknown Android SDK version: " kw-or-number))
+    kw-or-number))
+
 (defn get-sdk-platform-path
   "Returns a version-specific path to the Android platform tools."
   [sdk-root version]
-  (str (file sdk-root "platforms" (str "android-" version))))
+  (str (file sdk-root "platforms" (str "android-"
+                                       (sdk-version-number version)))))
 
 (defn get-sdk-android-jar
   "Returns a version-specific path to the `android.jar` SDK file."
@@ -193,7 +205,8 @@
 (defn get-sdk-google-api-path
   "Returns a version-specific path to the Google SDK directory."
   [sdk-root version]
-  (str (file sdk-root "add-ons" (str "addon-google_apis-google-" version))))
+  (str (file sdk-root "add-ons" (str "addon-google_apis-google-"
+                                     (sdk-version-number version)))))
 
 (defn get-sdk-google-api-jars
   "Returns a version-specific paths to all Google SDK jars."
