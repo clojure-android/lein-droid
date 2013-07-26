@@ -9,14 +9,6 @@
 
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
-  ;; The following two definitions are optional. The default
-  ;; target-path is "target", but you can change it to whatever you like.
-  ;; :target-path "bin"
-  ;; :compile-path "bin/classes"
-
-  ;; Uncomment this line if your project doesn't use Clojure. Also
-  ;; don't forget to remove respective dependencies.
-  ;; :java-only true
 
   :dependencies [[org.clojure-android/clojure "1.5.1-SNAPSHOT"]
                  [neko/neko "3.0.0-SNAPSHOT"]]
@@ -24,9 +16,10 @@
                                   [org.clojure-android/clojure-complete "0.3.0-SNAPSHOT"]]
                    :android {:aot :all-with-unused}}
              :release {:android
-                       {;; Specify the path to your private
-                        ;; keystore and the the alias of the
-                        ;; key you want to sign APKs with.
+                       {;; Specify the path to your private keystore
+                        ;; and the the alias of the key you want to
+                        ;; sign APKs with. Do it either here or in
+                        ;; ~/.lein/profiles.clj
                         ;; :keystore-path "/home/user/.android/private.keystore"
                         ;; :key-alias "mykeyalias"
                         :aot :all}}}
@@ -35,7 +28,12 @@
             ;; here or in your ~/.lein/profiles.clj file.
             ;; :sdk-path "/home/user/path/to/android-sdk/"
 
-            ;; Uncomment this if dexer fails with OutOfMemoryException.
+            ;; Uncomment this if dexer fails with
+            ;; OutOfMemoryException. Set the value according to your
+            ;; available RAM.
+            ;; :dex-opts ["-JXmx4096M"]
+
+            ;; If previous option didn't work, uncomment this as well.
             ;; :force-dex-optimize true
 
             :target-version "{{target-sdk}}"
