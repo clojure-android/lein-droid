@@ -203,6 +203,23 @@
         (file-seq
          (file (str (get-sdk-google-api-path sdk-root version) "/libs"))))))
 
+(defn get-sdk-support-jar
+  "Returns a path to the Android Support library."
+  [sdk-root version]
+  (.getAbsolutePath
+   (apply file sdk-root "extras" "android" "support"
+          (case version
+            "v4"             ["v4" "android-support-v4.jar"]
+            "v7-appcompat"   ["v7" "appcompat" "libs"
+                              "android-support-v7-appcompat.jar"]
+            "v7-gridlayout"  ["v7" "gridlayout" "libs"
+                              "android-support-v7-gridlayout.jar"]
+            "v7-mediarouter" ["v7" "mediarouter" "libs"
+                              "android-support-v7-mediarouter.jar"]
+            "v13"            ["v13" "android-support-v13.jar"]
+            (abort "Unknown support library version in :support-libraries : "
+                   version)))))
+
 (defmacro with-process
   "Executes the subprocess specified in the binding list and applies
   `body` do it while it is running. The binding list consists of a var

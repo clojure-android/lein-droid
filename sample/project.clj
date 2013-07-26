@@ -58,12 +58,18 @@
             ;; Uncomment this line to be able to use Google API.
             ;; :use-google-api true
 
+            ;; This option allows you to specify Android support
+            ;; libraries you want to use in your application.
+            ;; Available versions: "v4", "v7-appcompat",
+            ;; "v7-gridlayout", "v7-mediarouter", "v13".
+            ;; :support-libraries ["v7-appcompat" "v13"]
+
             ;; Use this property to add project dependencies.
             ;; :project-dependencies [ "/path/to/library/project" ]
 
             ;; Sequence of external jars or class folders to include
-            ;; into project, e.g. android-support-v4.jar
-            ;; :external-classes-paths ["<sdk-home>/extras/android/support/v4/android-support-v4.jar"
+            ;; into project.
+            ;; :external-classes-paths ["path/to/external/jar/file"
             ;;                          "path/to/classfiles/"]
 
             ;; Sequence of jars, resources from which will be added to
