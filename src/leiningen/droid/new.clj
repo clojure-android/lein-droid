@@ -34,6 +34,11 @@
         (.load properties rdr)
         properties))))
 
+(defn package-name-valid? [package-name]
+  (and (not (.startsWith package-name "."))
+       (> (.indexOf package-name ".") -1)
+       (= (.indexOf package-name "-") -1)))
+
 (defn init
   "Creates project.clj file in an existing Android project folder.
 
@@ -63,6 +68,9 @@
 (defn new
   "Creates new Android project given the project's name and package name."
   [project-name package-name & options]
+  (when-not (package-name-valid? package-name)
+    (abort "ERROR: Package name should have at least two levels and"
+           "not contain hyphens (you can replace them with underscores)."))
   (let [options (apply hash-map options)
         activity (get options ":activity" "MainActivity")
         target-sdk (get options ":target-sdk" "10")
