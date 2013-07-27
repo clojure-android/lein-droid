@@ -1,12 +1,12 @@
-(ns {{package}}.main
+(ns {{package-sanitized}}.main
   (:use [neko.activity :only [defactivity set-content-view!]]
         [neko.threading :only [on-ui]]
         [neko.ui :only [make-ui]]
         [neko.application :only [defapplication]]))
 
-(defapplication {{package}}.Application)
+(defapplication {{package-sanitized}}.Application)
 
-(defactivity {{package}}.{{activity}}
+(defactivity {{package-sanitized}}.{{activity}}
   :def a
   :on-create
   (fn [this bundle]
