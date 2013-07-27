@@ -34,9 +34,11 @@
   This task is necessary if you define the UI in XML and also to gain
   access to your strings and images by their ID."
   [{{:keys [sdk-path target-version manifest-path res-path gen-path
-            out-res-path external-res-paths library]} :android :as project}]
+            out-res-path external-res-paths library]} :android
+    java-only :java-only :as project}]
   (info "Generating R.java...")
-  (save-data-readers-to-resource project)
+  (when-not java-only
+    (save-data-readers-to-resource project))
   (let [aapt-bin (sdk-binary sdk-path :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         manifest-file (io/file manifest-path)
