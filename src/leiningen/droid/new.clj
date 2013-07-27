@@ -73,7 +73,7 @@
            "not contain hyphens (you can replace them with underscores)."))
   (let [options (apply hash-map options)
         activity (get options ":activity" "MainActivity")
-        target-sdk (get options ":target-sdk" "10")
+        target-sdk (get options ":target-sdk" "15")
         app-name (get options ":app-name" project-name)
         data {:name project-name
               :package package-name
