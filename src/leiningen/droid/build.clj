@@ -232,12 +232,13 @@ files or jar file, e.g. one produced by proguard."
   Either a debug keystore key or a release key is used based on
   whether the build type is the debug one. Creates a debug keystore if
   it is missing."
-  [{{:keys [out-apk-path
+  [{{:keys [out-apk-path sigalg
             keystore-path key-alias keypass storepass]} :android :as project}]
   (info "Signing APK...")
   (let [dev-build (dev-build? project)
         suffix (if dev-build "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
+        sigalg (or sigalg "MD5withRSA")
         storepass (cond storepass storepass
                         dev-build "android"
                         :else
@@ -251,7 +252,7 @@ files or jar file, e.g. one produced by proguard."
       (create-debug-keystore keystore-path))
     (ensure-paths unaligned-path keystore-path)
     (sh "jarsigner"
-        "-sigalg" "MD5withRSA"
+        "-sigalg" sigalg
         "-digestalg" "SHA1"
         "-keystore" keystore-path
         "-storepass" storepass

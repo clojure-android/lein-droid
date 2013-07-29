@@ -28,6 +28,7 @@
                                  ;; key you want to sign APKs with.
                                  ;; :keystore-path "/home/user/.android/private.keystore"
                                  ;; :key-alias "mykeyalias"
+                                 ;; :sigalg "MD5withRSA"
 
                                  ;; You can specify these to avoid
                                  ;; entering them for each rebuild,
