@@ -185,6 +185,7 @@ files or jar file, e.g. one produced by proguard."
   (let [aapt-bin (sdk-binary sdk-path :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         dev-build (dev-build? project)
+        debug-mode (if dev-build ["--debug-mode"] [])
         manifest-file (io/file manifest-path)
         backup-file (io/file (str manifest-path ".backup"))
         ;; Only add `assets` directory if it is present.
@@ -193,7 +194,7 @@ files or jar file, e.g. one produced by proguard."
     (when dev-build
       (io/copy manifest-file backup-file)
       (write-manifest-with-internet-permission manifest-path))
-    (sh aapt-bin "package" "--no-crunch" "-f" "--debug-mode" "--auto-add-overlay"
+    (sh aapt-bin "package" "--no-crunch" "-f" debug-mode "--auto-add-overlay"
         "-M" manifest-path
         "-S" out-res-path
         "-S" res-path
