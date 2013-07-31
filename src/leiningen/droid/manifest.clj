@@ -71,9 +71,7 @@
                             up up
                             (xml-> (attr :android:name)))
         pkg-name (first (xml-> manifest (attr :package)))]
-    (if (.startsWith activity-name pkg-name)
-      activity-name
-      (str pkg-name "/" activity-name))))
+    (str pkg-name "/" activity-name)))
 
 (defn write-manifest-with-internet-permission
   "Updates the manifest on disk guaranteed to have the Internet permission."
