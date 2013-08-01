@@ -178,7 +178,11 @@
 
 ;; ### General utilities
 
-(defn proj [] (read-project "sample/project.clj"))
+(defn proj [] (read-project #_"/home/unlogic/clojure/android/foreclojure-android/project.clj"
+                            #_"/home/unlogic/clojure/android/nexus/project.clj"
+                            "/home/unlogic/clojure/android/verifytest/project.clj"
+                            #_"/home/unlogic/clojure/android/neko/project.clj"
+                            ))
 
 (defn sdk-version-number [kw-or-number]
   (if (keyword? kw-or-number)
@@ -290,16 +294,20 @@
        (format "Wrong number of argumets. USAGE: %s %s"
                task-name (join (interpose " " arglist))))))
 
+(defn prompt-user
+  "Reads a string from the console until the newline character."
+  [prompt]
+  (print prompt)
+  (flush)
+  (read-line))
+
 (defn read-password
   "Reads the password from the console without echoing the
   characters."
   [prompt]
   (if-let [console (System/console)]
     (join (.readPassword console prompt nil))
-    (do
-      (print prompt)
-      (flush)
-      (read-line))))
+    (prompt-user prompt)))
 
 (defn append-suffix
   "Appends a suffix to a filename, e.g. transforming `sample.apk` into

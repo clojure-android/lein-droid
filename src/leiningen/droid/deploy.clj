@@ -1,10 +1,11 @@
 (ns leiningen.droid.deploy
   "Functions and subtasks that install and run the application on the
   device and manage its runtime."
-  (:use [leiningen.core.main :only (debug info abort)]
+  (:use [leiningen.core.main :only [debug info abort *debug*]]
         [leiningen.droid.manifest :only (get-launcher-activity
                                          get-package-name)]
-        [leiningen.droid.utils :only (sh ensure-paths dev-build? append-suffix)]
+        [leiningen.droid.utils :only [sh ensure-paths dev-build? append-suffix
+                                      prompt-user]]
         [leiningen.droid.compatibility :only (create-repl-port-file)]
         [reply.main :only (launch-nrepl)]))
 
@@ -45,6 +46,21 @@
   (or device-args
       (list "-s" (choose-device adb-bin))))
 
+(def ^{:doc "Messages which `adb install` prints as the result."
+       :private true}
+  adb-responses
+  {"Success" :success
+   "Failure [INSTALL_PARSE_FAILED_INCONSISTENT_CERTIFICATES]"
+   :inconsistent-certificates})
+
+(def ^:private uninstall-prompt
+  (str "Certificates of the installed application and the application being "
+       "installed mismatch.\nDo you want to uninstall the old application "
+       "first? (y/n): "))
+
+;; Since `adb` command always returns exit code zero, we have to
+;; manually parse its output to figure out what is going on. This is
+;; why this subtask is full of low-level stuff.
 (defn install
   "Installs the APK on the only (or specified) device or emulator."
   [{{:keys [adb-bin out-apk-path manifest-path]} :android :as project}
@@ -54,11 +70,27 @@
   (let [apk-path (if (dev-build? project)
                    (append-suffix out-apk-path "debug")
                    out-apk-path)
-        device (get-device-args adb-bin device-args)]
-    (ensure-paths apk-path)
-    ;; Uninstall old APK first.
-    ;; (sh adb-bin device "uninstall" (get-package-name manifest-path))
-    (sh adb-bin device "install" "-r" apk-path)))
+        _ (ensure-paths apk-path)
+        device (get-device-args adb-bin device-args)
+        output (java.io.StringWriter.)]
+    ;; Rebind *out* to get the output `adb` produces.
+    (binding [*out* output, *debug* true]
+      (sh adb-bin device "install" "-r" apk-path))
+    (let [output (str output)
+          status-line (last (.split output "\n"))]
+      (case (adb-responses status-line)
+        :success (debug output)
+
+        :inconsistent-certificates
+        (let [resp (prompt-user uninstall-prompt)]
+          (if (.equalsIgnoreCase "y" resp)
+            (do
+              (sh adb-bin device "uninstall" (get-package-name manifest-path))
+              (sh adb-bin device "install" apk-path))
+            (abort "Cannot proceed with installation.")))
+
+        (do (info output)
+            (abort "Abort execution."))))))
 
 (defn run
   "Launches the installed APK on the connected device."
