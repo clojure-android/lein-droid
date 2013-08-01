@@ -81,7 +81,6 @@
   [project name args]
   (when (and (nil? project) (not (#{"new" "help" "init"} name)))
     (abort "Subtask" name "should be run from the project folder."))
-  (let [project (proj)]
   (case name
     ;; Standalone tasks
     "new" (if (< (count args) 2)
@@ -117,4 +116,4 @@
     "help" (help #'droid)
 
     (println "Subtask is not recognized:" name
-             (subtask-help-for nil #'droid)))))
+             (subtask-help-for nil #'droid))))

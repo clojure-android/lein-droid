@@ -178,11 +178,7 @@
 
 ;; ### General utilities
 
-(defn proj [] (read-project #_"/home/unlogic/clojure/android/foreclojure-android/project.clj"
-                            #_"/home/unlogic/clojure/android/nexus/project.clj"
-                            "/home/unlogic/clojure/android/verifytest/project.clj"
-                            #_"/home/unlogic/clojure/android/neko/project.clj"
-                            ))
+(defn proj [] (read-project "sample/project.clj"))
 
 (defn sdk-version-number [kw-or-number]
   (if (keyword? kw-or-number)
