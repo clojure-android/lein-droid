@@ -77,8 +77,10 @@
     (binding [*out* output, *debug* true]
       (sh adb-bin device "install" "-r" apk-path))
     (let [output (str output)
-          status-line (last (.split output "\n"))]
-      (case (adb-responses status-line)
+          response (some
+                     adb-responses
+                     (.split output (System/getProperty "line.separator")))]
+      (case response
         :success (debug output)
 
         :inconsistent-certificates
