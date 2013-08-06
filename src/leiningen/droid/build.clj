@@ -239,7 +239,7 @@ files or jar file, e.g. one produced by proguard."
   (let [dev-build (dev-build? project)
         suffix (if dev-build "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
-        sigalg (or sigalg "MD5withRSA")]
+        sigalg (or sigalg "SHA1withRSA")]
     (when (and dev-build (not (.exists (io/file keystore-path))))
       ;; Create a debug keystore if there isn't one
       (create-debug-keystore keystore-path))
