@@ -239,26 +239,26 @@ files or jar file, e.g. one produced by proguard."
   (let [dev-build (dev-build? project)
         suffix (if dev-build "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
-        sigalg (or sigalg "MD5withRSA")
-        storepass (cond storepass storepass
-                        dev-build "android"
-                        :else
-                        (read-password "Enter storepass: "))
-        keypass (cond keypass keypass
-                      dev-build "android"
-                      :else
-                      (read-password "Enter keypass: "))]
+        sigalg (or sigalg "MD5withRSA")]
     (when (and dev-build (not (.exists (io/file keystore-path))))
       ;; Create a debug keystore if there isn't one
       (create-debug-keystore keystore-path))
     (ensure-paths unaligned-path keystore-path)
-    (sh "jarsigner"
-        "-sigalg" sigalg
-        "-digestalg" "SHA1"
-        "-keystore" keystore-path
-        "-storepass" storepass
-        "-keypass" keypass
-        unaligned-path key-alias)))
+    (let [storepass (cond storepass storepass
+                          dev-build "android"
+                          :else
+                          (read-password "Enter storepass: "))
+          keypass (cond keypass keypass
+                        dev-build "android"
+                        :else
+                        (read-password "Enter keypass: "))]
+      (sh "jarsigner"
+          "-sigalg" sigalg
+          "-digestalg" "SHA1"
+          "-keystore" keystore-path
+          "-storepass" storepass
+          "-keypass" keypass
+          unaligned-path key-alias))))
 
 (defn zipalign-apk
   "Aligns resources locations on 4-byte boundaries in the APK file.
