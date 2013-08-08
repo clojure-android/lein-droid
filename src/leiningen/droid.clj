@@ -4,7 +4,7 @@
 ;;
 (ns leiningen.droid
   (:refer-clojure :exclude [compile doall repl])
-  (:use [leiningen.core.project :only [merge-profiles unmerge-profiles]]
+  (:use [leiningen.core.project :only [set-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
         [leiningen.droid.compile :only (compile clean-compile-dir code-gen)]
@@ -40,6 +40,23 @@
 
 (declare execute-subtask)
 
+(defn transform-into-release
+  "Takes a project map and replaces `:dev` profile with `:release` profile."
+  [project]
+  (-> project
+      (set-profiles [:release] [:dev])
+      android-parameters))
+
+(def ^{:doc "Default set of tasks to create an application release."}
+  release-routine ["clean-compile-dir" "build" "apk" "deploy"])
+
+(defn execute-release-routine
+  "Takes a release project map and executes tasks that create a
+  release version of the application."
+  [release-project & [adb-args]]
+  (doseq [task release-routine]
+    (execute-subtask release-project task adb-args)))
+
 (defn release
   "Metatask. Builds, packs and deploys the release version of the project.
 
@@ -48,13 +65,9 @@
   [project & args]
   (let [;; adb-args should be in the end of the argument list.
         [subtasks adb-args] (split-with #(not (.startsWith % "-")) args)
-        subtasks (if (empty? subtasks)
-                   ["clean-compile-dir" "build" "apk" "deploy"]
-                   subtasks)
-        release-project (-> project
-                            (unmerge-profiles [:dev])
-                            (merge-profiles [:release])
-                            android-parameters)]
+        subtasks (if (seq subtasks)
+                   subtasks release-routine)
+        release-project (transform-into-release project)]
     (doseq [task subtasks]
       (execute-subtask release-project task adb-args))))
 
