@@ -5,7 +5,7 @@
         [leiningen.droid.manifest :only (get-launcher-activity
                                          get-package-name)]
         [leiningen.droid.utils :only [sh ensure-paths dev-build? append-suffix
-                                      prompt-user]]
+                                      prompt-user sdk-binary]]
         [leiningen.droid.compatibility :only (create-repl-port-file)]
         [reply.main :only (launch-nrepl)]))
 
@@ -63,11 +63,11 @@
 ;; why this subtask is full of low-level stuff.
 (defn install
   "Installs the APK on the only (or specified) device or emulator."
-  [{{:keys [adb-bin out-apk-path manifest-path]} :android :as project}
+  [{{:keys [sdk-path out-apk-path manifest-path]} :android :as project}
    & device-args]
   (info "Installing APK...")
-  (ensure-paths adb-bin)
-  (let [apk-path (if (dev-build? project)
+  (let [adb-bin (sdk-binary sdk-path :adb)
+        apk-path (if (dev-build? project)
                    (append-suffix out-apk-path "debug")
                    out-apk-path)
         _ (ensure-paths apk-path)
@@ -96,10 +96,11 @@
 
 (defn run
   "Launches the installed APK on the connected device."
-  [{{:keys [adb-bin manifest-path]} :android} & device-args]
+  [{{:keys [sdk-path manifest-path]} :android} & device-args]
   (info "Launching APK...")
-  (ensure-paths adb-bin manifest-path)
-  (let [device (get-device-args adb-bin device-args)]
+  (ensure-paths manifest-path)
+  (let [adb-bin (sdk-binary sdk-path :adb)
+        device (get-device-args adb-bin device-args)]
     (sh adb-bin device "shell" "am" "start" "-n"
         (get-launcher-activity manifest-path))))
 
@@ -107,13 +108,13 @@
   "Binds a port on the local machine to the port on the device.
 
   This allows to connect to the remote REPL from the current machine."
-  [{{:keys [adb-bin repl-device-port repl-local-port]} :android :as project}
+  [{{:keys [sdk-path repl-device-port repl-local-port]} :android :as project}
    & device-args]
   (info "Binding device port" repl-device-port
         "to local port" repl-local-port "...")
-  (ensure-paths adb-bin)
   (create-repl-port-file project)
-  (let [device (get-device-args adb-bin device-args)]
+  (let [adb-bin (sdk-binary sdk-path :adb)
+        device (get-device-args adb-bin device-args)]
     (sh adb-bin device "forward"
         (str "tcp:" repl-local-port)
         (str "tcp:" repl-device-port))))
@@ -125,8 +126,9 @@
 
 (defn deploy
   "Metatask. Runs `install, `run`, `forward-port`."
-  [{{:keys [adb-bin]} :android :as project} & device-args]
-  (let [device (get-device-args adb-bin device-args)]
+  [{{:keys [sdk-path]} :android :as project} & device-args]
+  (let [adb-bin (sdk-binary sdk-path :adb)
+        device (get-device-args adb-bin device-args)]
     (apply install project device)
     (apply run project device)
     (apply forward-port project device)))

@@ -118,7 +118,6 @@
    :out-res-pkg-path (str target-path "/" name ".ap_")
    :out-apk-path (str target-path "/" name ".apk")
    :keystore-path (str (file (System/getProperty "user.home") ".android" "debug.keystore"))
-   :adb-bin (sdk-binary sdk-path :adb)
    :key-alias "androiddebugkey"
    :repl-device-port 9999
    :repl-local-port 9999
