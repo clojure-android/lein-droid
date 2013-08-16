@@ -4,7 +4,7 @@
 ;;
 (ns leiningen.droid
   (:refer-clojure :exclude [compile doall repl])
-  (:use [leiningen.core.project :only [set-profiles]]
+  (:use [leiningen.core.project :only [merge-profiles unmerge-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
         [leiningen.droid.compile :only (compile clean-compile-dir code-gen)]
@@ -44,7 +44,8 @@
   "Takes a project map and replaces `:dev` profile with `:release` profile."
   [project]
   (-> project
-      (set-profiles [:release] [:dev])
+      (unmerge-profiles [:dev])
+      (merge-profiles [:release])
       android-parameters))
 
 (def ^{:doc "Default set of tasks to create an application release."}
