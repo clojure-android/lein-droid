@@ -114,6 +114,7 @@
    :res-path "res"
    :gen-path "gen"
    :out-res-path (str target-path "/res")
+   :library-res-path (str target-path "/library-res")
    :assets-path "assets"
    :out-res-pkg-path (str target-path "/" name ".ap_")
    :out-apk-path (str target-path "/" name ".apk")

@@ -16,6 +16,7 @@
             [clojure.set]
             [clojure.java.io :as io]
             [leiningen.droid.sdk :as sdk]
+            [leiningen.droid.library :as lib]
             leiningen.jar leiningen.javac)
   (:import java.io.File))
 
@@ -172,6 +173,8 @@ files or jar file, e.g. one produced by proguard."
 (defn package-resources
   "Packages application resources.
 
+  Also extracts resources from JAR dependencies.
+
   If this task is run with :dev profile, then it ensures that
   AndroidManifest.xml has Internet permission for running the REPL
   server. This is achieved by backing up the original manifest file
@@ -190,7 +193,9 @@ files or jar file, e.g. one produced by proguard."
         backup-file (io/file (str manifest-path ".backup"))
         ;; Only add `assets` directory if it is present.
         assets (if (.exists (io/file assets-path)) ["-A" assets-path] [])
-        external-resources (for [res external-res-paths] ["-S" res])]
+        external-resources (for [res external-res-paths] ["-S" res])
+        library-resources (for [res (lib/extract-resources-from-deps project)]
+                            ["-S" (str res)])]
     (when dev-build
       (io/copy manifest-file backup-file)
       (write-manifest-with-internet-permission manifest-path))
@@ -199,6 +204,7 @@ files or jar file, e.g. one produced by proguard."
         "-S" out-res-path
         "-S" res-path
         external-resources
+        library-resources
         assets
         "-I" android-jar
         "-F" out-res-pkg-path
