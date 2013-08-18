@@ -266,6 +266,17 @@
   [& args]
   (with-process [process (flatten args)]))
 
+(defn read-binary-file
+  "Reads all contents of a binary file from `in` and writes it into `out`."
+  [in out]
+  (let [buffer (byte-array 4096)]
+    (loop []
+      (let [r (.read in buffer)]
+        (if-not (= r -1)
+          (do (.write out buffer 0 r)
+              (recur))
+          out)))))
+
 (defn dev-build?
   "Checks if the current Leiningen run contains :dev profile."
   [project]

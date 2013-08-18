@@ -1,9 +1,37 @@
 (ns leiningen.droid.library
   "Provides functions to work with library files."
   (:require [clojure.java.io :as io]
-            [leiningen.core.classpath :as cpath])
+            [leiningen.core.classpath :as cpath]
+            leiningen.jar
+            [leiningen.droid.utils :refer [read-binary-file relativize-path]])
   (:import java.io.File
            [java.util.zip ZipEntry ZipInputStream]))
+
+;; ## Resource packing
+
+(defn make-res-filespec
+  "Terrible crutch to make Leiningen package resource under res/
+  folder without unwinding."
+  [res-dir]
+  (for [f (file-seq res-dir)
+        :when (.isFile f)]
+    {:type :bytes
+     :bytes (.toByteArray
+             (with-open [in (io/input-stream f)
+                         out (java.io.ByteArrayOutputStream.)]
+              (read-binary-file in out)))
+     :path (str (io/file "res" (relativize-path res-dir f)))}))
+
+(defn filespecs-hook
+  "Takes original `leiningen.jar/filespecs` function and appends
+  resource specs to its result."
+  [f project]
+  (let [fspec (f project)]
+    (concat fspec (make-res-filespec (io/file (:root project) "res")))))
+
+(robert.hooke/add-hook #'leiningen.jar/filespecs #'filespecs-hook)
+
+;; ## Resource extraction
 
 (defn- extract-file
   "Takes a ZipInputStream and writes its current entry to the

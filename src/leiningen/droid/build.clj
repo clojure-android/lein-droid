@@ -160,11 +160,13 @@ files or jar file, e.g. one produced by proguard."
       build-project-dependencies code-gen compile create-dex)))
 
 (defn jar
-  "Metatask. Packages compiled Java files and Clojure sources into JAR.
+  "Metatask. Packages compiled Java files, Clojure sources and
+  resources into JAR.
 
   Same as `lein jar` but appends Android libraries to the classpath
   while compiling Java files."
   [project]
+  (code-gen project)
   (leiningen.javac/javac project)
   (leiningen.jar/jar project))
 
