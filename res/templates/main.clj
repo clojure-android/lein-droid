@@ -4,8 +4,6 @@
         [neko.ui :only [make-ui]]
         [neko.application :only [defapplication]]))
 
-(defapplication {{package}}.Application)
-
 (defactivity {{package}}.{{activity}}
   :def a
   :on-create
