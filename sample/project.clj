@@ -19,7 +19,7 @@
   ;; :java-only true
 
   :dependencies [[org.clojure-android/clojure "1.5.1-SNAPSHOT"]
-                 [neko/neko "3.0.0-SNAPSHOT"]]
+                 [neko/neko "3.0.0-beta3"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
                                   [org.clojure-android/clojure-complete "0.3.0-SNAPSHOT"]]
                    :android {:aot :all-with-unused}}

@@ -8,10 +8,6 @@
 (declare ^android.app.Activity a
          ^android.widget.EditText user-input)
 
-;; This line defines the Application class and automatically
-;; initializies neko and nREPL.
-(defapplication test.leindroid.sample.Application)
-
 (defn notify-from-edit [_]
   (toast (str "Your input: " (.getText user-input))
          :long))
