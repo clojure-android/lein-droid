@@ -88,9 +88,15 @@
      "assets"
      ["AndroidManifest.xml" (render "AndroidManifest.xml" data)]
      ["project.clj" (render "project.clj" data)]
+     ["res/drawable-hdpi/splash_circle.png" (render "splash_circle.png")]
+     ["res/drawable-hdpi/splash_droid.png" (render "splash_droid.png")]
+     ["res/drawable-hdpi/splash_hands.png" (render "splash_hands.png")]
      ["res/drawable-hdpi/ic_launcher.png" (render "ic_launcher_hdpi.png")]
      ["res/drawable-mdpi/ic_launcher.png" (render "ic_launcher_mdpi.png")]
      ["res/drawable-ldpi/ic_launcher.png" (render "ic_launcher_ldpi.png")]
+     ["res/drawable/splash_background.xml" (render "splash_background.xml")]
+     ["res/anim/splash_rotation.xml" (render "splash_rotation.xml")]
+     ["res/layout/splashscreen.xml" (render "splashscreen.xml")]
      ["res/values/strings.xml" (render "strings.xml" data)]
-     "src/java"
+     ["src/java/{{path}}/SplashActivity.java" (render "SplashActivity.java" data)]
      ["src/clojure/{{path}}/main.clj" (render "main.clj" data)])))
