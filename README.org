@@ -1,0 +1,38 @@
+
+* lein-droid
+
+  A Leiningen plugin to simplify Clojure development for Android
+  platform. It acts as a build-tool for Clojure/Android projects.
+
+** Usage
+
+   First make sure you have [[http://developer.android.com/sdk/index.html][Android SDK]] installed, with the latest
+   Android SDK Build-tools (>=17.0.0).
+
+   Follow the [[https://github.com/clojure-android/lein-droid/wiki/Tutorial][Tutorial]] to start using lein-droid.
+
+   The current version of lein-droid is =0.2.0-beta1=. You can also
+   check [[https://clojars.org/lein-droid][Clojars]] to see what is the latest non-snapshot version.
+
+** Documentation
+
+   Tutorial mentioned earlier is enough to get you started with
+   lein-droid. To know more about =project.clj= options lein-droid
+   supports, consult [[https://github.com/clojure-android/lein-droid/wiki/project.clj-options][this page]].
+
+   If you'd like to read the code, Marginalia docs are [[http://clojure-android.github.io/lein-droid/][here]].
+
+** Contributors
+
+   I thank the following people for their help in extending and
+   improving lein-droid:
+
+   - [[https://github.com/oakes][Zach Oakes]]
+   - [[https://github.com/ayamada][Atsuo Yamada]]
+   - [[https://github.com/sergv][Sergey Vinokurov]]
+   - [[https://github.com/clojure-android/lein-droid/graphs/contributors][and others]]
+
+** License
+
+   Copyright © 2012-2013 Alexander Yakushev. Distributed under the
+   Eclipse Public License, the same as Clojure. See the file [[ttps://github.com/clojure-android/lein-droid/blob/master/COPYING][COPYING]].
