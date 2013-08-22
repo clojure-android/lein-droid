@@ -114,7 +114,6 @@
    :res-path "res"
    :gen-path "gen"
    :out-res-path (str target-path "/res")
-   :library-res-path (str target-path "/library-res")
    :assets-path "assets"
    :out-res-pkg-path (str target-path "/" name ".ap_")
    :out-apk-path (str target-path "/" name ".apk")
@@ -265,17 +264,6 @@
   given list."
   [& args]
   (with-process [process (flatten args)]))
-
-(defn read-binary-file
-  "Reads all contents of a binary file from `in` and writes it into `out`."
-  [in out]
-  (let [buffer (byte-array 4096)]
-    (loop []
-      (let [r (.read in buffer)]
-        (if-not (= r -1)
-          (do (.write out buffer 0 r)
-              (recur))
-          out)))))
 
 (defn dev-build?
   "Checks if the current Leiningen run contains :dev profile."
