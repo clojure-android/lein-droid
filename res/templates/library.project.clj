@@ -8,7 +8,7 @@
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
 
-  :dependencies [[org.clojure-android/clojure "1.5.1-SNAPSHOT"]
+  :dependencies [[org.clojure-android/clojure "1.5.1-jb"]
                  [neko/neko "3.0.0-beta3"]]
 
   :android {:target-version "{{target-sdk}}"

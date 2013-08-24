@@ -18,7 +18,7 @@
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
-  :dependencies [[org.clojure-android/clojure "1.5.1-SNAPSHOT"]
+  :dependencies [[org.clojure-android/clojure "1.5.1-jb"]
                  [neko/neko "3.0.0-beta5"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
                                   [org.clojure-android/clojure-complete "0.3.0-SNAPSHOT"]]
