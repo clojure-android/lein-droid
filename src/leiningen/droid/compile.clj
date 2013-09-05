@@ -102,7 +102,7 @@
   subsequently project code depends on them to eliminate
   debug-specific code when building the release."
   [{{:keys [enable-dynamic-compilation start-nrepl-server
-            manifest-path]} :android :as project}]
+            manifest-path repl-device-port]} :android :as project}]
   (info "Compiling Clojure files...")
   (ensure-paths manifest-path)
   (debug "Project classpath:" (get-classpath project))
@@ -121,6 +121,7 @@
                      o/*start-nrepl-server* ~start-nrepl-server
                      o/*enable-dynamic-compilation* ~enable-dynamic-compilation
                      o/*package-name* ~(get-package-name manifest-path)
+                     o/*nrepl-port* ~repl-device-port
                      *compiler-options* ~compiler-options]
              (doseq [namespace# '~nses]
                (println "Compiling" namespace#)
