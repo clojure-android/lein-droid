@@ -11,9 +11,9 @@
   :java-source-paths ["src/java" "gen"]
 
   :dependencies [[org.clojure-android/clojure "1.5.1-jb"]
-                 [neko/neko "3.0.0-beta5"]]
+                 [neko/neko "3.0.0-beta6"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
-                                  [org.clojure-android/clojure-complete "0.3.0-SNAPSHOT"]]
+                                  [compliment "0.0.2"]]
                    :android {:aot :all-with-unused}}
              :release {:android
                        {;; Specify the path to your private keystore
