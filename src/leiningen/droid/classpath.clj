@@ -4,7 +4,7 @@
   (:use [robert.hooke :only [add-hook]]
         [leiningen.droid.utils :only [get-sdk-android-jar
                                       get-sdk-google-api-jars
-                                      get-sdk-support-jar]])
+                                      get-sdk-support-jars]])
   (:import org.sonatype.aether.util.version.GenericVersionScheme))
 
 ;; Since `dx` and `ApkBuilder` utilities fail when they are feeded
@@ -72,9 +72,7 @@
                              (when use-google-api
                                (get-sdk-google-api-jars sdk-path
                                                         target-version))
-                             (when support-libraries
-                               (map #(get-sdk-support-jar sdk-path %)
-                                    support-libraries)))
+                             (get-sdk-support-jars sdk-path support-libraries))
                      (get-sdk-android-jar sdk-path target-version)
                      (str sdk-path "/tools/support/annotations.jar"))]
     result))

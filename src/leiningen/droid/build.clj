@@ -10,7 +10,7 @@
          [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
-                       sdk-binary relativize-path]]
+                       sdk-binary relativize-path get-sdk-support-jars]]
          [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.string]
             [clojure.set]
@@ -30,7 +30,7 @@
   "Run dex on the given target which should be either directory with .class
 files or jar file, e.g. one produced by proguard."
   [{{:keys [sdk-path out-dex-path external-classes-paths
-            force-dex-optimize dex-opts]} :android,
+            force-dex-optimize dex-opts support-libraries]} :android,
             :as project}
    target]
   (ensure-paths sdk-path)
@@ -40,11 +40,13 @@ files or jar file, e.g. one produced by proguard."
                       "--no-optimize" [])
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (resolve-dependencies :dependencies project)
+        support-jars (get-sdk-support-jars sdk-path support-libraries)
         external-classes-paths (or external-classes-paths [])]
     (with-process [proc (map str
                              (flatten [dx-bin options "--dex" no-optimize
                                        "--output" out-dex-path
                                        target annotations deps
+                                       support-jars
                                        external-classes-paths]))]
       (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
 

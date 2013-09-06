@@ -215,7 +215,7 @@
         (file-seq
          (file (str (get-sdk-google-api-path sdk-root version) "/libs"))))))
 
-(defn get-sdk-support-jar
+(defn- get-sdk-support-jar
   "Returns a path to the Android Support library."
   [sdk-root version]
   (.getAbsolutePath
@@ -231,6 +231,12 @@
             "v13"            ["v13" "android-support-v13.jar"]
             (abort "Unknown support library version in :support-libraries : "
                    version)))))
+
+(defn get-sdk-support-jars
+  "Takes a list of support library versions and returns a list of JAR
+  files."
+  [sdk-root version-list]
+  (map #(get-sdk-support-jar sdk-root %) version-list))
 
 (defmacro with-process
   "Executes the subprocess specified in the binding list and applies
