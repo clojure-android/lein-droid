@@ -10,7 +10,7 @@
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
 
-  :dependencies [[org.clojure-android/clojure "1.5.1-jb"]
+  :dependencies [[org.clojure-android/clojure "1.5.1-jb" :use-resources true]
                  [neko/neko "3.0.0-beta6"]]
   :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.0-bigstack"]
                                   [compliment "0.0.2"]]
