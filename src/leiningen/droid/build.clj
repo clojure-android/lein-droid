@@ -10,7 +10,8 @@
          [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
-                       sdk-binary relativize-path get-sdk-support-jars]]
+                       sdk-binary relativize-path get-sdk-support-jars
+                       get-resource-jars]]
          [manifest :only [write-manifest-with-internet-permission]]])
   (:require [clojure.string]
             [clojure.set]
@@ -221,10 +222,7 @@ files or jar file, e.g. one produced by proguard."
   (ensure-paths sdk-path out-res-pkg-path out-dex-path)
   (let [suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
-        [clojure-jar] (filter #(re-find #"org.clojure-android[/\\]clojure"
-                                        (str %))
-                              (resolve-dependencies :dependencies project))
-        resource-jars (concat (when-not java-only [clojure-jar])
+        resource-jars (concat (get-resource-jars project)
                               (map #(java.io.File. %) resource-jars-paths))]
     (sdk/create-apk project
                     :apk-name unaligned-path :resource-jars resource-jars)))

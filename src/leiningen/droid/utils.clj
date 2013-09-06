@@ -4,6 +4,7 @@
   (:require [leiningen.core.project :as pr])
   (:use [clojure.java.io :only (file reader)]
         [leiningen.core.main :only (info debug abort)]
+        [leiningen.core.classpath :only [resolve-dependencies]]
         [clojure.string :only (join)])
   (:import java.io.File))
 
@@ -237,6 +238,16 @@
   files."
   [sdk-root version-list]
   (map #(get-sdk-support-jar sdk-root %) version-list))
+
+(defn get-resource-jars
+  "Get the list of dependency libraries that has `:use-resources true`
+  in their definition."
+  [{:keys [dependencies] :as project}]
+  (let [res-deps (for [[_ _ & options :as dep] (:dependencies project)
+                       :when (:use-resources (apply hash-map options))]
+                   dep)
+        mod-proj (assoc project :dependencies res-deps)]
+    (resolve-dependencies :dependencies mod-proj)))
 
 (defmacro with-process
   "Executes the subprocess specified in the binding list and applies

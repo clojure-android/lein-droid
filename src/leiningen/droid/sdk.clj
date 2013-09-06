@@ -23,10 +23,12 @@
   (pomegranate/add-classpath (io/file sdk-path "tools" "lib" "sdklib.jar"))
   (let [apkbuilder-class (Class/forName "com.android.sdklib.build.ApkBuilder")
         apkbuilder (make-apk-builder apk-name out-res-pkg-path out-dex-path)]
+    (when (seq resource-jars)
+      (debug "Adding resource libraries: " resource-jars))
     (doseq [rj resource-jars]
       (.addResourcesFromJar apkbuilder rj))
     (when (seq native-libraries-paths)
-      (debug "Adding native libraries:" native-libraries-paths))
+      (debug "Adding native libraries: " native-libraries-paths))
     (doseq [lib native-libraries-paths]
       (.addNativeLibraries apkbuilder ^File (io/file lib)))
     (.sealApk apkbuilder)))
