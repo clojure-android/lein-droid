@@ -243,8 +243,10 @@
   "Get the list of dependency libraries that has `:use-resources true`
   in their definition."
   [{:keys [dependencies] :as project}]
-  (let [res-deps (for [[_ _ & options :as dep] (:dependencies project)
-                       :when (:use-resources (apply hash-map options))]
+  (let [res-deps (for [[lib _ & options :as dep] (:dependencies project)
+                       :when (or (:use-resources (apply hash-map options))
+                                 ;; Should be removed in final release
+                                 (= lib 'org.clojure-android/clojure))]
                    dep)
         mod-proj (assoc project :dependencies res-deps)]
     (resolve-dependencies :dependencies mod-proj)))
