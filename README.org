@@ -1,4 +1,3 @@
-
 * lein-droid
 
   A Leiningen plugin to simplify Clojure development for Android
@@ -13,7 +12,7 @@
 
    Latest release:
 
-   [[https://clojars.org/lein-droid][http://hatchery.bytopia.org/clojars/lein-droid.svg]]
+   [[https://clojars.org/lein-droid][http://hatchery.bytopia.org/clojars/lein-droid.png]]
 
 ** Documentation
 
