@@ -11,8 +11,9 @@
 
    Follow the [[https://github.com/clojure-android/lein-droid/wiki/Tutorial][Tutorial]] to start using lein-droid.
 
-   The current version of lein-droid is =0.2.0-beta1=. You can also
-   check [[https://clojars.org/lein-droid][Clojars]] to see what is the latest non-snapshot version.
+   Latest release:
+
+   [[https://clojars.org/lein-droid][http://hatchery.bytopia.org/clojars/lein-droid.svg]]
 
 ** Documentation
 
