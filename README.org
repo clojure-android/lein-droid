@@ -12,7 +12,7 @@
 
    Latest release:
 
-   [[https://clojars.org/lein-droid][http://hatchery.bytopia.org/clojars/lein-droid.svg]]
+   : [lein-droid "0.2.0-beta3"]
 
 ** Documentation
 
