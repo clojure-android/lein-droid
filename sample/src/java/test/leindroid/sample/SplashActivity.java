@@ -8,6 +8,8 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.os.AsyncTask;
+import android.util.Log;
 
 import clojure.lang.Symbol;
 import clojure.lang.Var;
@@ -18,6 +20,7 @@ import test.leindroid.sample.R;
 public class SplashActivity extends Activity {
 
     private static boolean firstLaunch = true;
+    private String TAG = "Splash";
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -44,8 +47,31 @@ public class SplashActivity extends Activity {
     }
 
     public void proceed() {
-        startActivity(new Intent("test.leindroid.sample.MAIN"));
+        new ActivityLoaderTask().execute("test.leindroid.sample.MainActivity");
         finish();
+    }
+
+    private class ActivityLoaderTask extends AsyncTask<String, Void, Class> {
+    
+        @Override
+        protected Class doInBackground(String... className) {           
+            try {
+                return Class.forName(className[0]);
+            } catch (ClassNotFoundException e) {
+                Log.e(TAG, "Received an exception", e);
+            }
+            return null;
+        }
+    
+        @Override
+        protected void onPostExecute(Class result) {
+            try {
+                startActivity(new Intent(SplashActivity.this, result));
+                finish();
+            }  catch (Exception e) {
+                Log.e(TAG, "Received an exception", e);
+            }
+        }
     }
 
     public void loadClojure() {
