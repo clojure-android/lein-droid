@@ -19,7 +19,7 @@ import test.leindroid.sample.R;
 public class SplashActivity extends Activity {
 
     private static boolean firstLaunch = true;
-    private String TAG = "Splash";
+    private static String TAG = "Splash";
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -61,9 +61,8 @@ public class SplashActivity extends Activity {
                     Var INIT = RT.var("neko.application", "init-application");
                     INIT.invoke(SplashActivity.this.getApplication());
 
-                    Class cl = null;
                     try {
-                        cl = Class.forName("test.leindroid.sample.MainActivity");
+                        Class.forName("test.leindroid.sample.MainActivity");
                     } catch (ClassNotFoundException e) {
                         Log.e(TAG, "Failed loading MainActivity", e);
                     }
