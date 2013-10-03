@@ -41,7 +41,7 @@ files or jar file, e.g. one produced by proguard."
                       "--no-optimize" [])
         annotations (str sdk-path "/tools/support/annotations.jar")
         deps (resolve-dependencies :dependencies project)
-        support-jars (get-sdk-support-jars sdk-path support-libraries)
+        support-jars (get-sdk-support-jars sdk-path support-libraries true)
         external-classes-paths (or external-classes-paths [])]
     (with-process [proc (map str
                              (flatten [dx-bin options "--dex" no-optimize

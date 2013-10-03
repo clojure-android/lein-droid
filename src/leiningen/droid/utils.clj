@@ -236,8 +236,14 @@
 (defn get-sdk-support-jars
   "Takes a list of support library versions and returns a list of JAR
   files."
-  [sdk-root version-list]
-  (map #(get-sdk-support-jar sdk-root %) version-list))
+  [sdk-root version-list & [warn?]]
+  (let [message "WARNING: Support library V4 is redundant if you use V13."
+        versions (set version-list)
+        versions (if (every? versions ["v4" "v13"])
+                   (do (when warn? (info message))
+                       (disj versions "v4"))
+                   versions)]
+   (map #(get-sdk-support-jar sdk-root %) (seq versions))))
 
 (defn get-resource-jars
   "Get the list of dependency libraries that has `:use-resources true`
