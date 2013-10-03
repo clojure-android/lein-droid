@@ -8,6 +8,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.util.Log;
 
 import clojure.lang.Symbol;
 import clojure.lang.Var;
@@ -18,6 +19,7 @@ import test.leindroid.sample.R;
 public class SplashActivity extends Activity {
 
     private static boolean firstLaunch = true;
+    private String TAG = "Splash";
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -58,6 +60,13 @@ public class SplashActivity extends Activity {
 
                     Var INIT = RT.var("neko.application", "init-application");
                     INIT.invoke(SplashActivity.this.getApplication());
+
+                    Class cl = null;
+                    try {
+                        cl = Class.forName("test.leindroid.sample.MainActivity");
+                    } catch (ClassNotFoundException e) {
+                        Log.e(TAG, "Failed loading MainActivity", e);
+                    }
 
                     proceed();
                 }
