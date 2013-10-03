@@ -54,11 +54,11 @@ public class SplashActivity extends Activity {
         new Thread(new Runnable(){
                 @Override
                 public void run() {
-                    Symbol CLOJURE_MAIN = Symbol.intern("neko.application");
+                    Symbol CLOJURE_MAIN = Symbol.intern("neko.init");
                     Var REQUIRE = RT.var("clojure.core", "require");
                     REQUIRE.invoke(CLOJURE_MAIN);
 
-                    Var INIT = RT.var("neko.application", "init-application");
+                    Var INIT = RT.var("neko.init", "init");
                     INIT.invoke(SplashActivity.this.getApplication());
 
                     try {

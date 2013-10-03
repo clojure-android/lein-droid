@@ -71,8 +71,8 @@
 ;; compiled anyway.
 ;;
 (def ^:private always-compile-ns
-  (set '(clojure.core clojure.core.protocols clojure.string
-                      clojure.java.io neko.init.options)))
+  '#{clojure.core clojure.core.protocols clojure.string
+     clojure.java.io neko.init neko.init.options})
 
 (defn namespaces-to-compile
   "Takes project and returns a set of namespaces that should be AOT-compiled."
