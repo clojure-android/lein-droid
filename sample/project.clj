@@ -38,6 +38,7 @@
                                  ;; :keypass "android"
                                  ;; :storepass "android"
 
+                                 :ignore-log-priority [:debug :verbose]
                                  :aot :all}}}
 
   :android {;; Specify the path to the Android SDK directory either

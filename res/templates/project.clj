@@ -23,6 +23,8 @@
                         ;; ~/.lein/profiles.clj
                         ;; :keystore-path "/home/user/.android/private.keystore"
                         ;; :key-alias "mykeyalias"
+
+                        :ignore-log-priority [:debug :verbose]
                         :aot :all}}}
 
   :android {;; Specify the path to the Android SDK directory either
