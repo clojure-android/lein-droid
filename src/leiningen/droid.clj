@@ -44,7 +44,7 @@
   "Takes a project map and replaces `:dev` profile with `:release` profile."
   [project]
   (-> project
-      (unmerge-profiles [:dev])
+      (unmerge-profiles [:dev :base])
       (merge-profiles [:release])
       android-parameters))
 
@@ -86,9 +86,10 @@
      (help #'droid))
   ([project & [cmd & args]]
      (init-hooks)
-     (let [;; Poor man's middleware here
-           project (when project (android-parameters project))]
-       (execute-subtask project cmd args))))
+     (some-> project
+             (unmerge-profiles [:base])
+             android-parameters   ;; Poor man's middleware here
+             (execute-subtask cmd args))))
 
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."
