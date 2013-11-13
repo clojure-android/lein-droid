@@ -9,7 +9,6 @@
 
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
-  :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
   ;; The following two definitions are optional. The default
   ;; target-path is "target", but you can change it to whatever you like.
