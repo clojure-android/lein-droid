@@ -4,7 +4,8 @@
   (:require [clojure.java.io :as io])
   (:use [leiningen.core
          [main :only [info]]
-         [classpath :only [resolve-dependencies]]]))
+         [classpath :only [resolve-dependencies]]]
+        [leiningen.droid.utils :only [ensure-paths]]))
 
 (defn gather-dependencies
   "Compatibility task. Copies the dependency libraries into the libs/ folder."
@@ -22,4 +23,5 @@
   "Creates a file named `repl-port` in target directory with port
   number inside, so fireplace.vim can connect to the REPL."
   [{{:keys [repl-local-port]} :android, target-path :target-path :as project}]
+  (ensure-paths target-path)
   (spit (io/file target-path "repl-port") repl-local-port))
