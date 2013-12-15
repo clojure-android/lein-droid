@@ -235,7 +235,7 @@ files or jar file, e.g. one produced by proguard."
   it is missing."
   [{{:keys [out-apk-path sigalg
             keystore-path key-alias keypass storepass]} :android :as project}]
-  (info "Signing APK...")
+  (info "Signing APK with" keystore-path "...")
   (let [dev-build (dev-build? project)
         suffix (if dev-build "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
