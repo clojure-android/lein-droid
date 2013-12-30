@@ -12,11 +12,10 @@
          :long))
 
 (defactivity test.leindroid.sample.MainActivity
-  :def a
   :on-create
   (fn [this bundle]
     (on-ui
-     (set-content-view! a
+     (set-content-view! this
       (make-ui [:linear-layout {:orientation :vertical
                                 :layout-width :fill
                                 :layout-height :wrap}
