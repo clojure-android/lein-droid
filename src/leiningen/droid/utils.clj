@@ -40,7 +40,13 @@
   [sdk-path]
   (ensure-paths sdk-path)
   ;; for now just try to infer whether we're having build-tools 17
-  (let [bt-dir (first (.list (file sdk-path "build-tools")))]
+  (let [bt-root-dir (file sdk-path "build-tools")
+        ;; build-tools directory contains a subdir which name we don't
+        ;; know that has all the tools. Let's grab the first directory
+        ;; inside build-tools/ and hope it is the one we need.
+        bt-dir (->> (.list bt-root-dir)
+                    (filter #(.isDirectory (file bt-root-dir %)))
+                    first)]
     ;; if bt-dir exists (i.e. non-nil) then, probably, it is not empty
     ;; and therefore we can assume that we're running build-tools 17+ revision
     (if bt-dir
