@@ -73,7 +73,8 @@ files or jar file, e.g. one produced by proguard."
   (when-not (.isDirectory (io/file compile-path))
     (abort (format "compile-path (%s) is not a directory" compile-path)))
 
-  (let [obfuscated-jar-file (str (io/file target-path (str project-name "-obfuscated.jar")))
+  (let [obfuscated-jar-file (str (io/file target-path
+                                          (str project-name "-obfuscated.jar")))
         proguard-jar (sdk-binary sdk-path :proguard)
         android-jar (get-sdk-android-jar sdk-path target-version)
         proguard-opts (or proguard-opts [])

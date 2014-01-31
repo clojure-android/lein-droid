@@ -124,7 +124,8 @@
    :assets-path "assets"
    :out-res-pkg-path (str target-path "/" name ".ap_")
    :out-apk-path (str target-path "/" name ".apk")
-   :keystore-path (str (file (System/getProperty "user.home") ".android" "debug.keystore"))
+   :keystore-path (str (file (System/getProperty "user.home")
+                             ".android" "debug.keystore"))
    :key-alias "androiddebugkey"
    :repl-device-port 9999
    :repl-local-port 9999
@@ -186,7 +187,11 @@
 
 (defn proj [] (read-project "sample/project.clj"))
 
-(defn sdk-version-number [kw-or-number]
+(defn sdk-version-number
+  "If version keyword is passed (for example, =:ics= or
+  =:jelly-bean=), resolves it to the version number. Otherwise just
+  returns the input."
+  [kw-or-number]
   (if (keyword? kw-or-number)
     (case kw-or-number
       :froyo       8
