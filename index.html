@@ -2865,7 +2865,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>lein-droid/lein-droid -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">lein-droid/lein-droid</h1><h2 class="project-version">0.2.0</h2><br /><p>Plugin for easy Clojure/Android development and deployment</p>
+</script><title>lein-droid/lein-droid -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">lein-droid/lein-droid</h1><h2 class="project-version">0.2.1</h2><br /><p>Plugin for easy Clojure/Android development and deployment</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">robert/hooke</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">org.clojure/data.zip</td><td class="dotted"><hr /></td><td class="dep-version">0.1.1</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#leiningen.droid">leiningen.droid</a></li><li><a href="#leiningen.droid.build">leiningen.droid.build</a></li><li><a href="#leiningen.droid.classpath">leiningen.droid.classpath</a></li><li><a href="#leiningen.droid.compatibility">leiningen.droid.compatibility</a></li><li><a href="#leiningen.droid.compile">leiningen.droid.compile</a></li><li><a href="#leiningen.droid.deploy">leiningen.droid.deploy</a></li><li><a href="#leiningen.droid.manifest">leiningen.droid.manifest</a></li><li><a href="#leiningen.droid.new">leiningen.droid.new</a></li><li><a href="#leiningen.droid.sdk">leiningen.droid.sdk</a></li><li><a href="#leiningen.droid.utils">leiningen.droid.utils</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.droid" name="leiningen.droid"><h1 class="project-name">leiningen.droid</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Clojure is simple. Android should also be.</h2>
 
 <p>This plugin is intended to make your Clojure/Android development as
@@ -3183,7 +3183,7 @@ runtime that will be triggered when Leiningen is closed.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sign-apk
   [{{:keys [out-apk-path sigalg
             keystore-path key-alias keypass storepass]} :android :as project}]
-  (info &quot;Signing APK...&quot;)
+  (info &quot;Signing APK with&quot; keystore-path &quot;...&quot;)
   (let [dev-build (dev-build? project)
         suffix (if dev-build &quot;debug-unaligned&quot; &quot;unaligned&quot;)
         unaligned-path (append-suffix out-apk-path suffix)
@@ -3303,7 +3303,8 @@ solve this we hack into <code>get-classpath</code> function.</p>
   (:require [clojure.java.io :as io])
   (:use [leiningen.core
          [main :only [info]]
-         [classpath :only [resolve-dependencies]]]))</pre></td></tr><tr><td class="docs"><p>Compatibility task. Copies the dependency libraries into the libs/ folder.</p>
+         [classpath :only [resolve-dependencies]]]
+        [leiningen.droid.utils :only [ensure-paths]]))</pre></td></tr><tr><td class="docs"><p>Compatibility task. Copies the dependency libraries into the libs/ folder.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn gather-dependencies
   [{:keys [root] :as project} &amp; {dir &quot;:dir&quot;, :or {dir &quot;libs&quot;} :as other}]
   (println (class (first (keys other))))
@@ -3317,6 +3318,7 @@ solve this we hack into <code>get-classpath</code> function.</p>
   number inside, so fireplace.vim can connect to the REPL.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn create-repl-port-file
   [{{:keys [repl-local-port]} :android, target-path :target-path :as project}]
+  (ensure-paths target-path)
   (spit (io/file target-path &quot;repl-port&quot;) repl-local-port))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.droid.compile" name="leiningen.droid.compile"><h1 class="project-name">leiningen.droid.compile</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><p>This part of the plugin is responsible for the project compilation.</p>
 </td><td class="codes"><pre class="brush: clojure">(ns leiningen.droid.compile
   (:refer-clojure :exclude [compile])
@@ -3777,7 +3779,13 @@ why this subtask is full of low-level stuff.</p>
   [sdk-path]
   (ensure-paths sdk-path)
   ;; for now just try to infer whether we're having build-tools 17
-  (let [bt-dir (first (.list (file sdk-path &quot;build-tools&quot;)))]
+  (let [bt-root-dir (file sdk-path &quot;build-tools&quot;)
+        ;; build-tools directory contains a subdir which name we don't
+        ;; know that has all the tools. Let's grab the first directory
+        ;; inside build-tools/ and hope it is the one we need.
+        bt-dir (-&gt;&gt; (.list bt-root-dir)
+                    (filter #(.isDirectory (file bt-root-dir %)))
+                    first)]
     ;; if bt-dir exists (i.e. non-nil) then, probably, it is not empty
     ;; and therefore we can assume that we're running build-tools 17+ revision
     (if bt-dir
@@ -3895,7 +3903,7 @@ why this subtask is full of low-level stuff.</p>
         absolutize-android-paths)))</pre></td></tr><tr><td class="docs"><h3>General utilities</h3>
 </td><td class="codes"></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn proj [] (read-project &quot;sample/project.clj&quot;))</pre></td></tr><tr><td class="docs"><p>If version keyword is passed (for example, =:ics= or
-  =:jelly-bean=), resolves it to the version number. Othervise just
+  =:jelly-bean=), resolves it to the version number. Otherwise just
   returns the input.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sdk-version-number
   [kw-or-number]
@@ -4039,7 +4047,7 @@ why this subtask is full of low-level stuff.</p>
       &quot;-dname&quot; &quot;CN=Android Debug,O=Android,C=US&quot;))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn relativize-path [^File dir ^File to-relativize]
   (.getPath (.relativize (.toURI dir)
-                         (.toURI to-relativize))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a></div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+                         (.toURI to-relativize))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a>marginalia.html$floating_toc_html@8f01a26</div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
