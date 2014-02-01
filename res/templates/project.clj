@@ -13,7 +13,7 @@
 
   :dependencies [[org.clojure-android/clojure "1.5.1-jb" :use-resources true]
                  [neko/neko "3.0.0"]]
-  :profiles {:dev {:dependencies [[android/tools.nrepl "0.2.3"]
+  :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.3"]
                                   [compliment "0.0.3"]]
                    :android {:aot :all-with-unused}}
              :release {:android
