@@ -26,7 +26,7 @@
     (when (seq resource-jars)
       (debug "Adding resource libraries: " resource-jars))
     (doseq [rj resource-jars]
-      (.addResourcesFromJar apkbuilder rj))    
+      (.addResourcesFromJar apkbuilder rj))
     (when (seq native-libraries-paths)
       (debug "Adding native libraries: " native-libraries-paths))
     (doseq [lib native-libraries-paths]
