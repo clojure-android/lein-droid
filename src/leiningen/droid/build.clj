@@ -7,6 +7,7 @@
          [main :only [debug info abort *debug*]]]
         [leiningen.droid
          [compile :only [code-gen compile]]
+         [native :only [extract-so-from-uberjars]]
          [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
@@ -280,6 +281,6 @@ files or jar file, e.g. one produced by proguard."
 (defn apk
   "Metatask. Crunches and packages resources, creates, signs and aligns an APK."
   [project]
-  (doto project
+  (doto (-> project extract-so-from-uberjars)
     crunch-resources package-resources
     create-apk sign-apk zipalign-apk))
