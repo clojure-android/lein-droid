@@ -18,7 +18,7 @@
 (defn create-apk
   "Delegates APK creation to ApkBuilder class in sdklib.jar."
   [{{:keys [sdk-path out-res-pkg-path out-dex-path native-libraries-paths]}
-    :android :as project} & {:keys [apk-name resource-jars]}]
+    :android} & {:keys [apk-name resource-jars]}]
   ;; Dynamically load sdklib.jar
   (pomegranate/add-classpath (io/file sdk-path "tools" "lib" "sdklib.jar"))
   (let [apkbuilder-class (Class/forName "com.android.sdklib.build.ApkBuilder")
@@ -26,8 +26,7 @@
     (when (seq resource-jars)
       (debug "Adding resource libraries: " resource-jars))
     (doseq [rj resource-jars]
-      (.addResourcesFromJar apkbuilder rj))
-    
+      (.addResourcesFromJar apkbuilder rj))    
     (when (seq native-libraries-paths)
       (debug "Adding native libraries: " native-libraries-paths))
     (doseq [lib native-libraries-paths]
