@@ -65,13 +65,13 @@
   manifest that belongs to the _launcher_ category."
   [manifest-path]
   (let [manifest (load-manifest manifest-path)
-        [activity-name] (-> manifest
+        [activity-name] (some-> manifest
                             get-all-launcher-activities
                             first
                             up up
                             (xml-> (attr :android:name)))
         pkg-name (first (xml-> manifest (attr :package)))]
-    (str pkg-name "/" activity-name)))
+    (when activity-name (str pkg-name "/" activity-name))))
 
 (defn write-manifest-with-internet-permission
   "Updates the manifest on disk guaranteed to have the Internet permission."
