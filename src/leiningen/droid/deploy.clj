@@ -96,13 +96,13 @@
 
 (defn run
   "Launches the installed APK on the connected device."
-  [{{:keys [sdk-path manifest-path]} :android} & device-args]
-  (info "Launching APK...")
+  [{{:keys [sdk-path manifest-path launch-activity]} :android} & device-args]
   (ensure-paths manifest-path)
-  (let [adb-bin (sdk-binary sdk-path :adb)
-        device (get-device-args adb-bin device-args)]
-    (sh adb-bin device "shell" "am" "start" "-n"
-        (get-launcher-activity manifest-path))))
+  (when-let [activity (or launch-activity (get-launcher-activity manifest-path))]
+    (info "Launching APK...")
+    (let [adb-bin (sdk-binary sdk-path :adb)
+          device (get-device-args adb-bin device-args)]
+      (sh adb-bin device "shell" "am" "start" "-n" activity))))
 
 (defn forward-port
   "Binds a port on the local machine to the port on the device.
