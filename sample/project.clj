@@ -20,6 +20,13 @@
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
+
+  ;; 1.6 is STILL REQUIRED even with rev 19 tools. Otherwise, you get
+  ;; java.lang.RuntimeException: Unable to instantiate activity ComponentInfo{sample.sample/sample.sample.SplashActivity}: java.lang.ClassNotFoundException: sample.sample.SplashActivity
+  
+  :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
+
+  
   :dependencies [[org.clojure-android/clojure "1.5.1-jb" :use-resources true]
                  [neko/neko "3.0.0"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.3"]
