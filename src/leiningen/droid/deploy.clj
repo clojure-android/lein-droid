@@ -63,10 +63,10 @@
 ;; why this subtask is full of low-level stuff.
 (defn install
   "Installs the APK on the only (or specified) device or emulator."
-  [{{:keys [sdk-path out-apk-path manifest-path]} :android :as project}
+  [{{:keys [out-apk-path manifest-path]} :android :as project}
    & device-args]
   (info "Installing APK...")
-  (let [adb-bin (sdk-binary sdk-path :adb)
+  (let [adb-bin (sdk-binary project :adb)
         apk-path (if (dev-build? project)
                    (append-suffix out-apk-path "debug")
                    out-apk-path)
@@ -96,11 +96,12 @@
 
 (defn run
   "Launches the installed APK on the connected device."
-  [{{:keys [sdk-path manifest-path launch-activity]} :android} & device-args]
+  [{{:keys [manifest-path launch-activity]} :android :as project}
+   & device-args]
   (ensure-paths manifest-path)
   (when-let [activity (or launch-activity (get-launcher-activity manifest-path))]
     (info "Launching APK...")
-    (let [adb-bin (sdk-binary sdk-path :adb)
+    (let [adb-bin (sdk-binary project :adb)
           device (get-device-args adb-bin device-args)]
       (sh adb-bin device "shell" "am" "start" "-n" activity))))
 
@@ -108,12 +109,12 @@
   "Binds a port on the local machine to the port on the device.
 
   This allows to connect to the remote REPL from the current machine."
-  [{{:keys [sdk-path repl-device-port repl-local-port]} :android :as project}
+  [{{:keys [repl-device-port repl-local-port]} :android :as project}
    & device-args]
   (info "Binding device port" repl-device-port
         "to local port" repl-local-port "...")
   (create-repl-port-file project)
-  (let [adb-bin (sdk-binary sdk-path :adb)
+  (let [adb-bin (sdk-binary project :adb)
         device (get-device-args adb-bin device-args)]
     (sh adb-bin device "forward"
         (str "tcp:" repl-local-port)
@@ -126,8 +127,8 @@
 
 (defn deploy
   "Metatask. Runs `install, `run`, `forward-port`."
-  [{{:keys [sdk-path]} :android :as project} & device-args]
-  (let [adb-bin (sdk-binary sdk-path :adb)
+  [project & device-args]
+  (let [adb-bin (sdk-binary project :adb)
         device (get-device-args adb-bin device-args)]
     (apply install project device)
     (apply run project device)

@@ -34,8 +34,7 @@ files or jar file, e.g. one produced by proguard."
             force-dex-optimize dex-opts support-libraries]} :android,
             :as project}
    target]
-  (ensure-paths sdk-path)
-  (let [dx-bin (sdk-binary sdk-path :dx)
+  (let [dx-bin (sdk-binary project :dx)
         options (or dex-opts [])
         no-optimize (if (and (not force-dex-optimize) (dev-build? project))
                       "--no-optimize" [])
@@ -69,13 +68,13 @@ files or jar file, e.g. one produced by proguard."
             target-path :target-path
             :as project}]
   (info "Creating obfuscated DEX....")
-  (ensure-paths sdk-path compile-path proguard-conf-path)
+  (ensure-paths compile-path proguard-conf-path)
   (when-not (.isDirectory (io/file compile-path))
     (abort (format "compile-path (%s) is not a directory" compile-path)))
 
   (let [obfuscated-jar-file (str (io/file target-path
                                           (str project-name "-obfuscated.jar")))
-        proguard-jar (sdk-binary sdk-path :proguard)
+        proguard-jar (sdk-binary project :proguard)
         android-jar (get-sdk-android-jar sdk-path target-version)
         proguard-opts (or proguard-opts [])
 
@@ -131,10 +130,10 @@ files or jar file, e.g. one produced by proguard."
   "Updates the pre-processed PNG cache.
 
   Calls `aapt` binary with the _crunch_ task."
-  [{{:keys [sdk-path res-path out-res-path]} :android}]
+  [{{:keys [res-path out-res-path]} :android :as project}]
   (info "Crunching resources...")
-  (ensure-paths sdk-path res-path)
-  (let [aapt-bin (sdk-binary sdk-path :aapt)]
+  (ensure-paths res-path)
+  (let [aapt-bin (sdk-binary project :aapt)]
     (sh aapt-bin "crunch -v"
         "-S" res-path
         "-C" out-res-path)))
@@ -186,7 +185,7 @@ files or jar file, e.g. one produced by proguard."
             :as project}]
   (info "Packaging resources...")
   (ensure-paths sdk-path manifest-path res-path)
-  (let [aapt-bin (sdk-binary sdk-path :aapt)
+  (let [aapt-bin (sdk-binary project :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         dev-build (dev-build? project)
         debug-mode (if dev-build ["--debug-mode"] [])
@@ -216,11 +215,11 @@ files or jar file, e.g. one produced by proguard."
 
   It is done by executing methods from ApkBuilder SDK class on the
   generated DEX-file and the resource package."
-  [{{:keys [sdk-path out-apk-path out-res-pkg-path
+  [{{:keys [out-apk-path out-res-pkg-path
             out-dex-path resource-jars-paths]} :android,
             java-only :java-only :as project}]
   (info "Creating APK...")
-  (ensure-paths sdk-path out-res-pkg-path out-dex-path)
+  (ensure-paths out-res-pkg-path out-dex-path)
   (let [suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path suffix)
         resource-jars (concat (get-resource-jars project)
@@ -267,13 +266,13 @@ files or jar file, e.g. one produced by proguard."
   Done by calling `zipalign` binary on APK file."
   [{{:keys [sdk-path out-apk-path]} :android :as project}]
   (info "Aligning APK...")
-  (let [zipalign-bin (sdk-binary sdk-path :zipalign)
+  (let [zipalign-bin (sdk-binary project :zipalign)
         unaligned-suffix (if (dev-build? project) "debug-unaligned" "unaligned")
         unaligned-path (append-suffix out-apk-path unaligned-suffix)
         aligned-path (if (dev-build? project)
                        (append-suffix out-apk-path "debug")
                        out-apk-path)]
-    (ensure-paths sdk-path unaligned-path)
+    (ensure-paths unaligned-path)
     (.delete (io/file aligned-path))
     (sh zipalign-bin "4" unaligned-path aligned-path)))
 

@@ -37,16 +37,17 @@
 (defn sdk-binary-paths
   "Returns a map of relative paths to different SDK binaries for both
   Unix and Windows platforms."
-  [sdk-path]
+  [sdk-path build-tools-version]
   (ensure-paths sdk-path)
   ;; for now just try to infer whether we're having build-tools 17
   (let [bt-root-dir (file sdk-path "build-tools")
         ;; build-tools directory contains a subdir which name we don't
         ;; know that has all the tools. Let's grab the first directory
         ;; inside build-tools/ and hope it is the one we need.
-        bt-dir (->> (.list bt-root-dir)
-                    (filter #(.isDirectory (file bt-root-dir %)))
-                    first)]
+        bt-dir (or build-tools-version
+                   (->> (.list bt-root-dir)
+                        (filter #(.isDirectory (file bt-root-dir %)))
+                        last))]
     ;; if bt-dir exists (i.e. non-nil) then, probably, it is not empty
     ;; and therefore we can assume that we're running build-tools 17+ revision
     (if bt-dir
@@ -73,11 +74,11 @@
                   :win ["tools" "proguard" "lib" "proguard.jar"]}})))
 
 (defn sdk-binary
-  "Given the path to SDK and the binary keyword, returns either a full
+  "Given the project map and the binary keyword, returns either a full
   path to the binary as a string, or a vector with call to cmd.exe for
   batch-files."
-  [sdk-path binary-kw]
-  (let [binary (get-in (sdk-binary-paths sdk-path)
+  [{{:keys [sdk-path build-tools-version]} :android} binary-kw]
+  (let [binary (get-in (sdk-binary-paths sdk-path build-tools-version)
                        [binary-kw (if (windows?) :win :unix)])
         binary-str (str (apply file sdk-path binary))]
     (ensure-paths binary-str)

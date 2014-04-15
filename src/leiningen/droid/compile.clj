@@ -37,12 +37,12 @@
             out-res-path external-res-paths library]} :android
     java-only :java-only :as project}]
   (info "Generating R.java...")
-  (let [aapt-bin (sdk-binary sdk-path :aapt)
+  (let [aapt-bin (sdk-binary project :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         manifest-file (io/file manifest-path)
         library-specific (if library "--non-constant-id" "--auto-add-overlay")
         external-resources (for [res external-res-paths] ["-S" res])]
-    (ensure-paths sdk-path manifest-path res-path aapt-bin android-jar)
+    (ensure-paths manifest-path res-path android-jar)
     (.mkdirs (io/file gen-path))
     (.mkdirs (io/file out-res-path))
     (sh aapt-bin "package" library-specific "-f" "-m"
