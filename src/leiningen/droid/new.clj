@@ -86,6 +86,8 @@
     (->files
      data
      "assets"
+     [".gitignore" (render "gitignore")]
+     ["LICENSE" (render "LICENSE" data)]
      ["AndroidManifest.xml" (render "AndroidManifest.xml" data)]
      ["project.clj" (render "project.clj" data)]
      ["res/drawable-hdpi/splash_circle.png" (render "splash_circle.png")]
