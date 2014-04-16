@@ -9,8 +9,8 @@
   :java-source-paths ["src/java" "gen"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  :dependencies [[org.clojure-android/clojure "1.5.1-jb"]
-                 [neko/neko "3.0.0"]]
+  :dependencies [[org.clojure-android/clojure "1.6.0-RC1"]
+                 [neko/neko "3.0.1"]]
 
   :android {:target-version "{{target-sdk}}"
             {{library?}}})
