@@ -3,7 +3,6 @@
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
-  :min-lein-version "2.0.0"
 
   :global-vars {*warn-on-reflection* true}
 
@@ -11,16 +10,11 @@
   :java-source-paths ["src/java" "gen"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  ;; The following two definitions are optional. The default
-  ;; target-path is "target", but you can change it to whatever you like.
-  ;; :target-path "bin"
-  ;; :compile-path "bin/classes"
-
   ;; Uncomment this line if your project doesn't use Clojure. Also
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
-  :dependencies [[org.clojure-android/clojure "1.5.1-jb" :use-resources true]
+  :dependencies [[org.clojure-android/clojure "1.6.0-RC1" :use-resources true]
                  [neko/neko "3.0.0"]]
   :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.3"]
                                   [compliment "0.0.3"]]
@@ -45,14 +39,17 @@
             ;; here or in your ~/.lein/profiles.clj file.
             ;; :sdk-path "/home/user/path/to/android-sdk/"
 
+            ;; Use this if you don't want to use the latest version of
+            ;; Android Build Tools.
+            ;; :build-tools-version "19.0.3"
+
             ;; Specify this if your project is a library.
-            ;; :library false
+            ;; :library true
 
             ;; Uncomment this if dexer fails with OutOfMemoryException.
             ;; :force-dex-optimize true
 
-            ;; Options to pass to dx executable, former is for general
-            ;; java-related options and later is for 'dex task'-specific options.
+            ;; Options to pass to dx executable.
             ;; :dex-opts ["-JXmx4096M"]
 
             ;; Proguard config for "droid create-obfuscated-dex" task.
