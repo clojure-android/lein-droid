@@ -116,7 +116,7 @@
 
 (defn get-default-android-params
   "Returns a map of the default android-specific parameters."
-  [{{sdk-path :sdk-path} :android, name :name, target-path :target-path}]
+  [{name :name, target-path :target-path}]
   {:out-dex-path (str target-path "/classes.dex")
    :manifest-path "AndroidManifest.xml"
    :res-path "res"
