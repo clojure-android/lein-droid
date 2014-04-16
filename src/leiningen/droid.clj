@@ -40,12 +40,25 @@
 
 (declare execute-subtask)
 
+(defn apply-profiles
+  "Takes a project map, reconfigures some of the profiles to work with
+  Android and adds some extra ones."
+  [project]
+  (-> project
+      (unmerge-profiles [:base :user])
+      ;; Remove some possibly incompatible options from :user profile
+      ;; and merge it back.
+      (vary-meta update-in [:profiles :user]
+                 dissoc :dependencies :injections :repl-options)
+      (merge-profiles [:user :android-dev])
+      android-parameters))
+
 (defn transform-into-release
   "Takes a project map and replaces `:dev` profile with `:release` profile."
   [project]
   (-> project
-      (unmerge-profiles [:dev :base])
-      (merge-profiles [:release])
+      (unmerge-profiles [:dev :base :android-dev])
+      (merge-profiles [:release :android-release])
       android-parameters))
 
 (def ^{:doc "Default set of tasks to create an application release."}
@@ -87,8 +100,7 @@
   ([project & [cmd & args]]
      (init-hooks)
      (some-> project
-             (unmerge-profiles [:base])
-             android-parameters   ;; Poor man's middleware here
+             apply-profiles
              (execute-subtask cmd args))))
 
 (defn execute-subtask
