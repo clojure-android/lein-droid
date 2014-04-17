@@ -47,7 +47,7 @@
         bt-dir (or build-tools-version
                    (->> (.list bt-root-dir)
                         (filter #(.isDirectory (file bt-root-dir %)))
-                        last))]
+                        sort last))]
     ;; if bt-dir exists (i.e. non-nil) then, probably, it is not empty
     ;; and therefore we can assume that we're running build-tools 17+ revision
     (if bt-dir
