@@ -7,8 +7,8 @@
   (:use [leiningen.core.project :only [merge-profiles unmerge-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
-        [leiningen.clean :only clean]
-        [leiningen.droid.compile :only (compile clean-compile-dir code-gen)]
+        [leiningen.clean :only [clean]]
+        [leiningen.droid.compile :only [compile code-gen]]
         [leiningen.droid
          [classpath :only [init-hooks]]
          [build :only [create-dex create-obfuscated-dex
@@ -116,7 +116,6 @@
             (apply new args))
     "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
     "code-gen" (code-gen project)
-    "clean-compile-dir" (clean-compile-dir project)
     "compile" (compile project)
     "create-dex" (create-dex project)
     "create-obfuscated-dex" (create-obfuscated-dex project)
