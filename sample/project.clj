@@ -8,6 +8,7 @@
 
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
+  :clean-targets ["target" "gen"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
   ;; Uncomment this line if your project doesn't use Clojure. Also

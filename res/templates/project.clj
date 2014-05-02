@@ -9,6 +9,7 @@
 
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java" "gen"]
+  :clean-targets ["target" "gen"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
   :dependencies [[org.clojure-android/clojure "1.6.0-RC1" :use-resources true]

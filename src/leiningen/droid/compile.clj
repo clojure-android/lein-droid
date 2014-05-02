@@ -1,7 +1,7 @@
 (ns leiningen.droid.compile
   "This part of the plugin is responsible for the project compilation."
   (:refer-clojure :exclude [compile])
-  (:require [leiningen compile javac clean]
+  (:require [leiningen compile javac]
             [clojure.java.io :as io]
             [clojure.set :as sets]
             [leiningen.core.eval :as eval])
@@ -53,14 +53,6 @@
         "-I" android-jar
         "-J" gen-path
         "--generate-dependencies")))
-
-(defn clean-compile-dir
-  "Deletes all files in the project directory where files are compiled to.
-
-  Used by `release` subtask to remove unused compiled files before
-  doing clean compilation."
-  [{:keys [compile-path]} & _]
-  (leiningen.clean/delete-file-recursively compile-path :silently))
 
 ;; ### Compilation
 

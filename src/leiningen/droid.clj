@@ -7,6 +7,7 @@
   (:use [leiningen.core.project :only [merge-profiles unmerge-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
+        [leiningen.clean :only clean]
         [leiningen.droid.compile :only (compile clean-compile-dir code-gen)]
         [leiningen.droid
          [classpath :only [init-hooks]]
@@ -62,7 +63,7 @@
       android-parameters))
 
 (def ^{:doc "Default set of tasks to create an application release."}
-  release-routine ["clean-compile-dir" "build" "apk" "deploy"])
+  release-routine ["clean" "build" "apk" "deploy"])
 
 (defn execute-release-routine
   "Takes a release project map and executes tasks that create a
@@ -129,6 +130,7 @@
     "forward-port" (apply forward-port project args)
     "repl" (repl project)
     "gather-dependencies" (apply gather-dependencies project args)
+    "clean" (clean project)
 
     ;; Meta tasks
     "build" (build project)
