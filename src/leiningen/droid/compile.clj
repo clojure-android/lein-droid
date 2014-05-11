@@ -95,7 +95,9 @@
   debug-specific code when building the release."
   [{{:keys [enable-dynamic-compilation start-nrepl-server
             manifest-path repl-device-port ignore-log-priority]}
-    :android :as project}]
+    :android
+    {:keys [nrepl-middleware]} :repl-options
+    :as project}]
   (info "Compiling Clojure files...")
   (ensure-paths manifest-path)
   (debug "Project classpath:" (get-classpath project))
@@ -107,6 +109,7 @@
                       :neko.init/enable-dynamic-compilation
                       enable-dynamic-compilation
                       :neko.init/ignore-log-priority ignore-log-priority
+                      :neko.init/nrepl-middleware (list 'quote nrepl-middleware)
                       :neko.init/package-name (get-package-name manifest-path)}
                      (not dev-build) (assoc :elide-meta
                                        [:doc :file :line :added :arglists]))]
