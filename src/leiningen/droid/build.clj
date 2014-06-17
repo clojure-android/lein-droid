@@ -181,7 +181,7 @@ files or jar file, e.g. one produced by proguard."
   and creating a new one with Internet permission appended to it.
   After the packaging the original manifest file is restored."
   [{{:keys [sdk-path target-version manifest-path assets-path res-path
-            out-res-path external-res-paths out-res-pkg-path]} :android
+            out-res-path external-res-paths out-res-pkg-path apk-package-name]} :android
             :as project}]
   (info "Packaging resources...")
   (ensure-paths sdk-path manifest-path res-path)
@@ -197,15 +197,17 @@ files or jar file, e.g. one produced by proguard."
     (when dev-build
       (io/copy manifest-file backup-file)
       (write-manifest-with-internet-permission manifest-path))
-    (sh aapt-bin "package" "--no-crunch" "-f" debug-mode "--auto-add-overlay"
-        "-M" manifest-path
-        "-S" out-res-path
-        "-S" res-path
-        external-resources
-        assets
-        "-I" android-jar
-        "-F" out-res-pkg-path
-        "--generate-dependencies")
+    (sh aapt-bin
+           "package" "--no-crunch" "-f" debug-mode "--auto-add-overlay"
+           "-M" manifest-path
+           "-S" out-res-path
+           "-S" res-path
+           external-resources
+           assets
+           "-I" android-jar
+           "-F" out-res-pkg-path
+           "--generate-dependencies"
+           (if apk-package-name ["--rename-manifest-package" apk-package-name] []))
     (when dev-build
       (io/copy backup-file manifest-file)
       (io/delete-file backup-file))))

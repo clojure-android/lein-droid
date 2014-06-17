@@ -7,7 +7,7 @@
             [leiningen.core.eval :as eval])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar sdk-binary
                                       ensure-paths sh dev-build?]]
-        [leiningen.droid.manifest :only [get-package-name]]
+        [leiningen.droid.manifest :only [get-package-name generate-manifest]]
         [leiningen.core
          [main :only [debug info abort]]
          [classpath :only [get-classpath]]]
@@ -28,7 +28,7 @@
                           [k# (symbol (subs (str v#) 2))])
                         *data-readers*)))))
 
-(defn code-gen
+(defn generate-resource-code
   "Generates the R.java file from the resources.
 
   This task is necessary if you define the UI in XML and also to gain
@@ -52,7 +52,14 @@
         external-resources
         "-I" android-jar
         "-J" gen-path
-        "--generate-dependencies")))
+        "--generate-dependencies"))
+  project)
+
+(defn code-gen
+  "Generates R.java and builds a manifest with the appropriate version
+  code and substitutions."
+  [project]
+  (-> project generate-manifest generate-resource-code))
 
 ;; ### Compilation
 
