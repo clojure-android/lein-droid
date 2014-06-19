@@ -244,14 +244,14 @@ files or jar file, e.g. one produced by proguard."
       ;; Create a debug keystore if there isn't one
       (create-debug-keystore keystore-path))
     (ensure-paths unaligned-path keystore-path)
-    (let [storepass (cond storepass storepass
-                          dev-build "android"
-                          :else
-                          (read-password "Enter storepass: "))
-          keypass (cond keypass keypass
-                        dev-build "android"
-                        :else
-                        (read-password "Enter keypass: "))]
+    (let [storepass     (or (when dev-build "android")
+                            storepass
+                            (System/getenv "STOREPASS")
+                            (read-password "Enter storepass: "))
+          keypass       (or (when dev-build "android")
+                            keypass
+                            (System/getenv "KEYPASS")
+                            (read-password "Enter keypass: "))]
       (sh "jarsigner"
           "-sigalg" sigalg
           "-digestalg" "SHA1"
