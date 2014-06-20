@@ -197,17 +197,16 @@ files or jar file, e.g. one produced by proguard."
     (when dev-build
       (io/copy manifest-file backup-file)
       (write-manifest-with-internet-permission manifest-path))
-    (sh aapt-bin
-           "package" "--no-crunch" "-f" debug-mode "--auto-add-overlay"
-           "-M" manifest-path
-           "-S" out-res-path
-           "-S" res-path
-           external-resources
-           assets
-           "-I" android-jar
-           "-F" out-res-pkg-path
-           "--generate-dependencies"
-           (if apk-package-name ["--rename-manifest-package" apk-package-name] []))
+    (sh aapt-bin "package" "--no-crunch" "-f" debug-mode "--auto-add-overlay"
+        "-M" manifest-path
+        "-S" out-res-path
+        "-S" res-path
+        external-resources
+        assets
+        "-I" android-jar
+        "-F" out-res-pkg-path
+        "--generate-dependencies"
+        (if apk-package-name ["--rename-manifest-package" apk-package-name] []))
     (when dev-build
       (io/copy backup-file manifest-file)
       (io/delete-file backup-file))))
