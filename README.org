@@ -30,6 +30,7 @@
    I thank the following people for their help in extending and
    improving lein-droid:
 
+   - [[https://github.com/AdamClements][Adam Clements]]
    - [[https://github.com/oakes][Zach Oakes]]
    - [[https://github.com/ayamada][Atsuo Yamada]]
    - [[https://github.com/sergv][Sergey Vinokurov]]
