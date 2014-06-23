@@ -303,9 +303,10 @@
   (with-process [process (flatten args)]))
 
 (defn dev-build?
-  "Checks if the current Leiningen run contains :dev profile."
+  "Checks the build type of the current project, assuming dev build if
+  not a release build"
   [project]
-  (not (contains? (-> project meta :included-profiles set) :release)))
+  (not= (get-in project [:android :build-type]) :release))
 
 (defn wrong-usage
   "Returns a string with the information about the proper function usage."

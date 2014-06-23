@@ -4,7 +4,7 @@
 ;;
 (ns leiningen.droid
   (:refer-clojure :exclude [compile doall repl])
-  (:use [leiningen.core.project :only [merge-profiles unmerge-profiles]]
+  (:use [leiningen.core.project :only [set-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
         [leiningen.clean :only [clean]]
@@ -30,50 +30,27 @@
   [project & args]
   (println project))
 
-(defn doall
-  "Metatask. Performs all Android tasks from compilation to the deployment."
-  [{{:keys [library]} :android :as project} & device-args]
-  (if library
-    (build project)
-    (do (doto project
-          build apk)
-        (apply deploy project device-args))))
-
 (declare execute-subtask)
 
-(defn apply-profiles
-  "Takes a project map, reconfigures some of the profiles to work with
-  Android and adds some extra ones."
-  [project]
-  (-> project
-      (unmerge-profiles [:base :user])
-      ;; Remove some possibly incompatible options from :user profile
-      ;; and merge it back.
-      (vary-meta update-in [:profiles :user]
-                 dissoc :dependencies :injections :repl-options)
-      (merge-profiles [:user :android-dev])
-      android-parameters))
-
-(defn transform-into-release
-  "Takes a project map and replaces `:dev` profile with `:release` profile."
-  [project]
-  (-> project
-      (unmerge-profiles [:dev :base :android-dev])
-      (merge-profiles [:release :android-release])
-      android-parameters))
+(defn doall
+  "Metatask. Performs all Android tasks from compilation to the
+  deployment using the default android-dev and android-config
+  profiles"
+  [{{:keys [library]} :android :as project} & device-args]
+  (let [dev-project (-> project
+                        (set-profiles [:android-dev :android-config])
+                        android-parameters)
+        build-steps (if library ["build"] ["build" "apk" "deploy"])]
+    (doseq [task build-steps]
+      (execute-subtask dev-project task device-args))))
 
 (def ^{:doc "Default set of tasks to create an application release."}
   release-routine ["clean" "build" "apk" "deploy"])
 
-(defn execute-release-routine
-  "Takes a release project map and executes tasks that create a
-  release version of the application."
-  [release-project & [adb-args]]
-  (doseq [task release-routine]
-    (execute-subtask release-project task adb-args)))
-
 (defn release
-  "Metatask. Builds, packs and deploys the release version of the project.
+  "Metatask. Builds, packs and deploys the release version of the
+  project using the default android-release and android-config
+  profiles.
 
   Can also take optional list of subtasks to execute (instead of
   executing all of them) and arguments to `adb` for deploying."
@@ -82,7 +59,10 @@
         [subtasks adb-args] (split-with #(not (.startsWith % "-")) args)
         subtasks (if (seq subtasks)
                    subtasks release-routine)
-        release-project (transform-into-release project)]
+        release-project (-> project
+                            (set-profiles [:android-release :android-config])
+                            (assoc-in [:android :build-type] :release)
+                            android-parameters)]
     (doseq [task subtasks]
       (execute-subtask release-project task adb-args))))
 
@@ -101,7 +81,7 @@
   ([project & [cmd & args]]
      (init-hooks)
      (some-> project
-             apply-profiles
+             android-parameters
              (execute-subtask cmd args))))
 
 (defn execute-subtask

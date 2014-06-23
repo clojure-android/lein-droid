@@ -15,28 +15,61 @@
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
+  :aliases {"doall-trial" ["with-profile" "trial-version-dev" "do" ["droid" "build"] ["droid" "apk"] ["droid" "deploy"]]}
+  
   :dependencies [[org.clojure-android/clojure "1.6.0-RC1" :use-resources true]
                  [neko/neko "3.0.1"]]
-  :profiles {:dev {:dependencies [[org.clojure/tools.nrepl "0.2.3"]
-                                  [compliment "0.0.3"]]
-                   :android {:aot :all-with-unused}}
-             :release {:android {;; Specify the path to your private
-                                 ;; keystore and the the alias of the
-                                 ;; key you want to sign APKs with.
-                                 ;; :keystore-path "/home/user/.android/private.keystore"
-                                 ;; :key-alias "mykeyalias"
-                                 ;; :sigalg "MD5withRSA"
+  :profiles {:android-dev [:android-config ; :android-config should be
+                                           ; specified in your
+                                           ; .lein/profiles.clj and
+                                           ; contain machine-specific
+                                           ; options such as
+                                           ; {:android {:sdk-path ""}}
+                           {:dependencies [[org.clojure/tools.nrepl "0.2.3"]
+                                           [compliment "0.0.3"]]
+                            :android {:aot :all-with-unused
 
-                                 ;; You can specify these to avoid
-                                 ;; entering them for each rebuild,
-                                 ;; but generally it's a bad idea.
-                                 ;; :keypass "android"
-                                 ;; :storepass "android"
+                                      ;; The namespace of the app
+                                      ;; package - having a different
+                                      ;; one for dev and release allows
+                                      ;; you to install both at the
+                                      ;; same time
+                                      :apk-package-name "my.sample.app.dev"}}]
+             :android-release [:android-config
+                               {:android { ;; Specify the path to your private
+                                          ;; keystore and the the alias of the
+                                          ;; key you want to sign APKs with.
+                                          ;; :keystore-path "/home/user/.android/private.keystore"
+                                          ;; :key-alias "mykeyalias"
+                                          ;; :sigalg "MD5withRSA"
 
-                                 :ignore-log-priority [:debug :verbose]
-                                 :aot :all}}}
+                                          ;; You can specify these to avoid
+                                          ;; entering them for each rebuild,
+                                          ;; but generally it's a bad idea.
+                                          ;; :keypass "android"
+                                          ;; :storepass "android"
 
-  :android {;; Specify the path to the Android SDK directory either
+                                          :ignore-log-priority [:debug :verbose]
+                                          :aot :all
+
+                                          ;; This tells lein-droid to
+                                          ;; build in release mode,
+                                          ;; disabling debugging and
+                                          ;; signing the resulting
+                                          ;; package
+                                          :build-type :release}}]
+
+             ;; Here's an example of using different profiles
+             :trial-version-dev [:android-config
+                                 :android-dev
+                                 {:android {:apk-package-name "my.sample.app.dev.trial"
+                                            ;And then some options which might be
+                                            ;additional/different source-paths to pull in different
+                                            ;code, or a manifest option which configures some aspect
+                                            ;of your application
+                                            }}]}
+
+  :android { ;; Specify the path to the Android SDK directory either
             ;; here or in your ~/.lein/profiles.clj file.
             ;; :sdk-path "/home/user/path/to/android-sdk/"
 
@@ -88,4 +121,10 @@
             ;; Sequence of namespaces that should not be compiled.
             :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers"]
 
+            ;; This specifies replacements which are inserted into
+            ;; AndroidManifest.xml at build time. See cloustache for
+            ;; more advanced substitution syntax. Version name and
+            ;; code are automatically inserted
+            :manifest {:manifest-package "my.sample.app"
+                       :app-name         "Sample App"}
             })
