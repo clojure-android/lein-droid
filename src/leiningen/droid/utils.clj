@@ -48,7 +48,7 @@
                    (->> (.list bt-root-dir)
                         (filter #(.isDirectory (file bt-root-dir %)))
                         sort last))
-        bt-ver (Integer/parseInt (get (re-find #"(\d+)\..*" bt-dir) 1 -1))]
+        bt-ver (Integer/parseInt (get (re-find #"(\d+)\..*" bt-dir) 1 "-1"))]
     ;; if bt-ver is non-negative we have a definite numeric version number
     ;; assume the latest build-tools dir is not empty
     (cond
