@@ -119,7 +119,7 @@
                       :neko.init/nrepl-middleware (list 'quote nrepl-middleware)
                       :neko.init/package-name (get-package-name manifest-path)}
                      (not dev-build) (assoc :elide-meta
-                                       [:doc :file :line :added :arglists]))]
+                                       [:doc :file :line :column :added :arglists]))]
     (info (format "Build type: %s, dynamic compilation: %s, remote REPL: %s."
                   (if dev-build "debug" "release")
                   (if (or dev-build start-nrepl-server
