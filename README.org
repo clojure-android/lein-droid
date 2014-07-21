@@ -39,4 +39,4 @@
 ** License
 
    Copyright © 2012-2013 Alexander Yakushev. Distributed under the
-   Eclipse Public License, the same as Clojure. See the file [[ttps://github.com/clojure-android/lein-droid/blob/master/COPYING][COPYING]].
+   Eclipse Public License, the same as Clojure. See the file [[https://github.com/clojure-android/lein-droid/blob/master/COPYING][COPYING]].
