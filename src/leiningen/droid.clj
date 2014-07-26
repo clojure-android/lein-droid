@@ -4,6 +4,7 @@
 ;;
 (ns leiningen.droid
   (:refer-clojure :exclude [compile doall repl])
+  (:require clojure.pprint)
   (:use [leiningen.core.project :only [set-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
@@ -25,10 +26,14 @@
           (println "lein-droid is a plugin for Clojure/Android development."
                    (subtask-help-for nil droid-var))))
 
-(defn foo
-  "This function just prints the project map."
-  [project & args]
-  (println project))
+(defn pprint
+  "Pretty-prints a representation of the project map."
+  [project & keys]
+  (if (seq keys)
+    (doseq [k keys]
+      (clojure.pprint/pprint (get project (read-string k))))
+    (clojure.pprint/pprint project))
+  (flush))
 
 (declare execute-subtask)
 
@@ -73,7 +78,7 @@
                    #'create-apk #'sign-apk #'zipalign-apk
                    #'install #'run #'forward-port #'repl
                    #'build #'apk #'deploy #'doall #'release #'help
-                   #'gather-dependencies #'jar]}
+                   #'gather-dependencies #'jar #'pprint]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([project]
@@ -120,7 +125,7 @@
     "jar" (jar project)
 
     ;; Help tasks
-    "foo" (foo project)
+    "pprint" (pprint project)
     "help" (help #'droid)
 
     (println "Subtask is not recognized:" name
