@@ -47,10 +47,25 @@
         bt-dir (or build-tools-version
                    (->> (.list bt-root-dir)
                         (filter #(.isDirectory (file bt-root-dir %)))
-                        sort last))]
-    ;; if bt-dir exists (i.e. non-nil) then, probably, it is not empty
-    ;; and therefore we can assume that we're running build-tools 17+ revision
-    (if bt-dir
+                        sort last))
+        bt-ver (Integer/parseInt (get (re-find #"(\d+)\..*" bt-dir) 1 "-1"))]
+    ;; if bt-ver is non-negative we have a definite numeric version number
+    ;; assume the latest build-tools dir is not empty
+    (cond
+     ;; build-tools v20 moved zipalign into build-tools
+     (>= 20 bt-ver)
+      {:dx {:unix ["build-tools" bt-dir "dx"]
+            :win ["build-tools" bt-dir "dx.bat"]}
+       :adb {:unix ["platform-tools" "adb"]
+             :win ["platform-tools" "adb.exe"]}
+       :aapt {:unix ["build-tools" bt-dir "aapt"]
+              :win ["build-tools" bt-dir "aapt.exe"]}
+       :zipalign {:unix ["build-tools" bt-dir "zipalign"]
+                  :win ["build-tools" bt-dir "zipalign.exe"]}
+       :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
+                  :win ["tools" "proguard" "lib" "proguard.jar"]}}
+
+     (>= 17 bt-ver)
       {:dx {:unix ["build-tools" bt-dir "dx"]
             :win ["build-tools" bt-dir "dx.bat"]}
        :adb {:unix ["platform-tools" "adb"]
@@ -62,6 +77,7 @@
        :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
                   :win ["tools" "proguard" "lib" "proguard.jar"]}}
 
+     :else
       {:dx {:unix ["platform-tools" "dx"]
             :win ["platform-tools" "dx.bat"]}
        :adb {:unix ["platform-tools" "adb"]
