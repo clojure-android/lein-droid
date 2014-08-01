@@ -39,7 +39,6 @@
   Unix and Windows platforms."
   [sdk-path build-tools-version]
   (ensure-paths sdk-path)
-  ;; for now just try to infer whether we're having build-tools 17
   (let [bt-root-dir (file sdk-path "build-tools")
         ;; build-tools directory contains a subdir which name we don't
         ;; know that has all the tools. Let's grab the first directory
@@ -47,31 +46,23 @@
         bt-dir (or build-tools-version
                    (->> (.list bt-root-dir)
                         (filter #(.isDirectory (file bt-root-dir %)))
-                        sort last))]
-    ;; if bt-dir exists (i.e. non-nil) then, probably, it is not empty
-    ;; and therefore we can assume that we're running build-tools 17+ revision
-    (if bt-dir
-      {:dx {:unix ["build-tools" bt-dir "dx"]
-            :win ["build-tools" bt-dir "dx.bat"]}
-       :adb {:unix ["platform-tools" "adb"]
-             :win ["platform-tools" "adb.exe"]}
-       :aapt {:unix ["build-tools" bt-dir "aapt"]
-              :win ["build-tools" bt-dir "aapt.exe"]}
-       :zipalign {:unix ["tools" "zipalign"]
-                  :win ["tools" "zipalign.exe"]}
-       :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
-                  :win ["tools" "proguard" "lib" "proguard.jar"]}}
-
-      {:dx {:unix ["platform-tools" "dx"]
-            :win ["platform-tools" "dx.bat"]}
-       :adb {:unix ["platform-tools" "adb"]
-             :win ["platform-tools" "adb.exe"]}
-       :aapt {:unix ["platform-tools" "aapt"]
-              :win ["platform-tools" "aapt.exe"]}
-       :zipalign {:unix ["tools" "zipalign"]
-                  :win ["tools" "zipalign.exe"]}
-       :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
-                  :win ["tools" "proguard" "lib" "proguard.jar"]}})))
+                        sort last))
+        bt-ver (Integer/parseInt (get (re-find #"(\d+)\..*" bt-dir) 1 "-1"))]
+    ;; if bt-ver is non-negative we have a definite numeric version number
+    ;; assume the latest build-tools dir is not empty
+    {:dx {:unix ["build-tools" bt-dir "dx"]
+          :win ["build-tools" bt-dir "dx.bat"]}
+     :adb {:unix ["platform-tools" "adb"]
+           :win ["platform-tools" "adb.exe"]}
+     :aapt {:unix ["build-tools" bt-dir "aapt"]
+            :win ["build-tools" bt-dir "aapt.exe"]}
+     :zipalign (if (>= bt-ver 20)
+                 {:unix ["build-tools" bt-dir "zipalign"]
+                  :win ["build-tools" bt-dir "zipalign.exe"]}
+                 {:unix ["tools" "zipalign"]
+                  :win ["tools" "zipalign.exe"]})
+     :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
+                :win ["tools" "proguard" "lib" "proguard.jar"]}}))
 
 (defn sdk-binary
   "Given the project map and the binary keyword, returns either a full
@@ -107,10 +98,10 @@
   (assoc project :android
          (into {} (for [[key val] android]
                     [key (cond (re-find #"-path$" (name key))
-                                      (absolutize root val)
+                               (absolutize root val)
 
                                (re-find #"-paths$" (name key))
-                                      (map (partial absolutize root) val)
+                               (map (partial absolutize root) val)
 
                                :else val)]))))
 
@@ -255,7 +246,7 @@
                    (do (when warn? (info message))
                        (disj versions "v4"))
                    versions)]
-   (map #(get-sdk-support-jar sdk-root %) (seq versions))))
+    (map #(get-sdk-support-jar sdk-root %) (seq versions))))
 
 (defn get-resource-jars
   "Get the list of dependency libraries that has `:use-resources true`
