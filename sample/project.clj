@@ -7,9 +7,9 @@
   :global-vars {*warn-on-reflection* true}
 
   :source-paths ["src/clojure" "src"]
-  :java-source-paths ["src/java" "gen"]
-  :clean-targets ["target" "gen"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
+
+  :plugins [[lein-droid "0.3.0-SNAPSHOT"]]
 
   ;; Uncomment this line if your project doesn't use Clojure. Also
   ;; don't forget to remove respective dependencies.
@@ -26,16 +26,19 @@
               ;; "/path/to/sdk"}}. :android-user profile is for global
               ;; dev-related options like CIDER configuration.
               {:dependencies [[org.clojure/tools.nrepl "0.2.3"]]
+               :target-path "target/debug"
                :android {:aot :all-with-unused
                          ;; The namespace of the app package - having a
                          ;; different one for dev and release allows you to
                          ;; install both at the same time.
                          :rename-manifest-package "test.leindroid.sample.debug"
-                         :manifest-options {:app-name "Android Clojure! - debug"}}}]
+                         :manifest-options {:app-name "Android sample debug"}
+                         }}]
 
              :release
              [:android-common
-              {:android {;; Specify the path to your private keystore and the
+              {:target-path "target/release"
+               :android { ;; Specify the path to your private keystore and the
                          ;; the alias of the key you want to sign APKs with.
                          ;; :keystore-path "/home/user/.android/private.keystore"
                          ;; :key-alias "mykeyalias"

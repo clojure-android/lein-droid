@@ -7,9 +7,8 @@
   :global-vars {*warn-on-reflection* true}
 
   :source-paths ["src/clojure" "src"]
-  :java-source-paths ["src/java" "gen"]
-  :clean-targets ["target" "gen"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
+  :plugins [[lein-droid "0.3.0-SNAPSHOT"]]
 
   :dependencies [[org.clojure-android/clojure "1.6.0-RC1" :use-resources true]
                  [neko/neko "3.0.2"]]
@@ -18,12 +17,14 @@
              :dev
              [;; :android-common :android-user
               {:dependencies [[org.clojure/tools.nrepl "0.2.3"]]
+               :target-path "target/debug"
                :android {:aot :all-with-unused
                          :rename-manifest-package "{{package-sanitized}}.debug"
                          :manifest-options {:app-name "{{app-name}} - debug"}}}]
              :release
              [;; :android-common
-              {:android
+              {:target-path "target/release"
+               :android
                { ;; Specify the path to your private keystore
                 ;; and the the alias of the key you want to
                 ;; sign APKs with.
