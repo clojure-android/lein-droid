@@ -107,21 +107,27 @@
 
 (defn get-default-android-params
   "Returns a map of the default android-specific parameters."
-  [{name :name, target-path :target-path}]
-  {:out-dex-path (str target-path "/classes.dex")
-   :manifest-path "AndroidManifest.xml"
-   :res-path "res"
-   :gen-path "gen"
-   :out-res-path (str target-path "/res")
-   :assets-path "assets"
-   :out-res-pkg-path (str target-path "/" name ".ap_")
-   :out-apk-path (str target-path "/" name ".apk")
-   :keystore-path (str (file (System/getProperty "user.home")
-                             ".android" "debug.keystore"))
-   :key-alias "androiddebugkey"
-   :repl-device-port 9999
-   :repl-local-port 9999
-   :target-version 10})
+  [{root :root, name :name, target-path :target-path}]
+  (let [manifest-template "AndroidManifest.template.xml"
+        manifest-template-file (file (absolutize root manifest-template))
+        has-template (.exists manifest-template-file)]
+    {:out-dex-path (str (file target-path "classes.dex"))
+     :manifest-path (if has-template
+                      (str (file target-path "AndroidManifest.xml"))
+                      "AndroidManifest.xml")
+     :manifest-template-path manifest-template
+     :res-path "res"
+     :gen-path (str (file target-path "gen"))
+     :out-res-path (str (file target-path "res"))
+     :assets-path "assets"
+     :out-res-pkg-path (str (file target-path (str name ".ap_")))
+     :out-apk-path (str (file target-path (str name ".apk")))
+     :keystore-path (str (file (System/getProperty "user.home")
+                               ".android" "debug.keystore"))
+     :key-alias "androiddebugkey"
+     :repl-device-port 9999
+     :repl-local-port 9999
+     :target-version 10}))
 
 (declare android-parameters)
 

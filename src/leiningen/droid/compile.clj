@@ -59,7 +59,7 @@
   "Generates R.java and builds a manifest with the appropriate version
   code and substitutions."
   [project]
-  (-> project generate-manifest generate-resource-code))
+  (doto project generate-manifest generate-resource-code))
 
 ;; ### Compilation
 

@@ -18,7 +18,8 @@
          [deploy :only [install run forward-port repl deploy]]
          [new :only [new init]]
          [compatibility :only [gather-dependencies]]
-         [utils :only [proj wrong-usage android-parameters ensure-paths]]]))
+         [utils :only [proj wrong-usage android-parameters ensure-paths
+                       dev-build?]]]))
 
 (defn help
   "Shows the list of possible `lein droid` subtasks."
@@ -38,38 +39,19 @@
 (declare execute-subtask)
 
 (defn doall
-  "Metatask. Performs all Android tasks from compilation to the
-  deployment using the default android-dev and android-config
-  profiles"
+  "Metatask. Performs all Android tasks from compilation to deployment."
   [{{:keys [library]} :android :as project} & device-args]
-  (let [dev-project (-> project
-                        (set-profiles [:android-dev :android-config])
-                        android-parameters)
-        build-steps (if library ["build"] ["build" "apk" "deploy"])]
+  (let [build-steps (if library ["build"] ["build" "apk" "deploy"])
+        build-steps (if (dev-build? project)
+                      build-steps (cons build-steps "clean"))]
     (doseq [task build-steps]
-      (execute-subtask dev-project task device-args))))
-
-(def ^{:doc "Default set of tasks to create an application release."}
-  release-routine ["clean" "build" "apk" "deploy"])
+      (execute-subtask project task device-args))))
 
 (defn release
-  "Metatask. Builds, packs and deploys the release version of the
-  project using the default android-release and android-config
-  profiles.
-
-  Can also take optional list of subtasks to execute (instead of
-  executing all of them) and arguments to `adb` for deploying."
+  "DEPRECATED. Metatask. Builds, packs and deploys the release version of the
+  project."
   [project & args]
-  (let [;; adb-args should be in the end of the argument list.
-        [subtasks adb-args] (split-with #(not (.startsWith % "-")) args)
-        subtasks (if (seq subtasks)
-                   subtasks release-routine)
-        release-project (-> project
-                            (set-profiles [:android-release :android-config])
-                            (assoc-in [:android :build-type] :release)
-                            android-parameters)]
-    (doseq [task subtasks]
-      (execute-subtask release-project task adb-args))))
+  (abort "Release subtask is deprecated, please use 'lein with-profile release droid doall'"))
 
 (defn ^{:no-project-needed true
         :subtasks [#'new #'init #'code-gen #'compile

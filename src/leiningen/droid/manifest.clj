@@ -1,12 +1,13 @@
 (ns leiningen.droid.manifest
   "Contains functions to manipulate AndroidManifest.xml file"
-  (:require [clojure.xml :as xml]
-            [clostache.parser :as clostache])
-  (:use [clojure.zip :only (xml-zip up node append-child)]
-        [clojure.data.zip.xml]
-        [leiningen.release :only [parse-semantic-version]]
-        [leiningen.core.main :only [debug info abort *debug*]])
-  (:import java.io.FileWriter))
+  (:require [clojure.data.zip.xml :refer :all]
+            [clojure.xml :as xml]
+            [clojure.java.io :as jio]
+            [clojure.zip :refer [append-child node up xml-zip]]
+            [clostache.parser :as clostache]
+            [leiningen.core.main :refer [info]]
+            [leiningen.release :refer [parse-semantic-version]])
+  (:import (java.io FileWriter)))
 
 ;; ### Constants
 
@@ -122,8 +123,8 @@
    priority (multiple builds of the same android apk where one takes
    precedence over another, for instance in the case where higher
    resolution assets are available, but a fallback is made available
-   for devices which do not support the configuration)
-  
+   for devices which do not support the configuration).
+
    Largest possible version number: v512.512.512 (32)"
   [version-map]
   (->> version-map
@@ -132,28 +133,21 @@
        (map * version-coefficients)
        (reduce +)))
 
-(defn extract-semantic-version
-  [project]
-  (let [version (parse-semantic-version (:version project))]
-    (update-in project [:semantic-version] (partial merge version {:code (version-code version)}))))
-
-(defn process-manifest-template
-  "If a :manifest-template is specified, perform template substitution
-  with the values in :android :manifest, including the version-name
-  and version-code which are automatically generated, placing the
-  output in :manifest-path"
-  [{{:keys [manifest-path manifest-template manifest target-path]} :android :as project}]
-  (let [manifest-path (or manifest-path (str (or target-path "target/") "AndroidManifest.xml"))
-        full-manifest-map (merge {:version-code (-> project :semantic-version :code)
-                                  :version-name (-> project :version)}
-                                 manifest)]
-   (when manifest-template
-     (clojure.java.io/make-parents manifest-path)
-     (spit manifest-path (clostache/render (slurp manifest-template) full-manifest-map))))
-  (assoc-in project [:android :manifest-path] manifest-path))
-
-(defn generate-manifest [project]
+(defn generate-manifest
+  "If a :manifest-template-file is specified, perform template substitution with
+  the values in :android :manifest, including the version-name and version-code
+  which are automatically generated, placing the output in :manifest-path."
+  [{{:keys [manifest-path manifest-template-path manifest-options target-path
+            build-type]} :android, version :version :as project}]
   (info "Generating manifest...")
-  (-> project
-    extract-semantic-version
-    process-manifest-template))
+  (let [full-manifest-map (merge {:version-name version
+                                  :version-code (-> version
+                                                    parse-semantic-version
+                                                    version-code)
+                                  :debug-build (not build-type)}
+                                 manifest-options)]
+    (when (.exists (jio/file manifest-template-path))
+      (clojure.java.io/make-parents manifest-path)
+      (->> full-manifest-map
+           (clostache/render (slurp manifest-template-path))
+           (spit manifest-path)))))
