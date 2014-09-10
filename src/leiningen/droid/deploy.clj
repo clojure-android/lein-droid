@@ -99,7 +99,7 @@
   [{{:keys [manifest-path launch-activity]} :android :as project}
    & device-args]
   (ensure-paths manifest-path)
-  (when-let [activity (or launch-activity (get-launcher-activity manifest-path))]
+  (when-let [activity (or launch-activity (get-launcher-activity project))]
     (info "Launching APK...")
     (let [adb-bin (sdk-binary project :adb)
           device (get-device-args adb-bin device-args)]

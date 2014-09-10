@@ -67,7 +67,7 @@
 (defn get-launcher-activity
   "Returns the package-qualified name of the first activity from the
   manifest that belongs to the _launcher_ category."
-  [manifest-path]
+  [{{:keys [manifest-path rename-manifest-package]} :android}]
   (let [manifest (load-manifest manifest-path)
         [activity-name] (some-> manifest
                             get-all-launcher-activities
@@ -75,7 +75,9 @@
                             up up
                             (xml-> (attr :android:name)))
         pkg-name (first (xml-> manifest (attr :package)))]
-    (when activity-name (str pkg-name "/" activity-name))))
+    (when activity-name
+      (str (or rename-manifest-package pkg-name) "/"
+           (str pkg-name activity-name)))))
 
 (defn write-manifest-with-internet-permission
   "Updates the manifest on disk guaranteed to have the Internet permission."
