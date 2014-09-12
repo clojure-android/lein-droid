@@ -4,7 +4,6 @@
             [clostache.parser :as clostache])
   (:use [clojure.zip :only (xml-zip up node append-child)]
         [clojure.data.zip.xml]
-        [leiningen.release :only [parse-semantic-version]]
         [leiningen.core.main :only [debug info abort *debug*]])
   (:import java.io.FileWriter))
 
@@ -131,6 +130,27 @@
        (map (fnil assert> 0 0) version-maximums)
        (map * version-coefficients)
        (reduce +)))
+
+
+(defn string->semantic-version [version-string]
+  "Create map representing the given version string. Returns nil if the
+  string does not follow guidelines setforth by Semantic Versioning 2.0.0,
+  http://semver.org/"
+  ;; <MajorVersion>.<MinorVersion>.<PatchVersion>[-<BuildNumber | Qualifier >]
+  (let [version-map (->> (re-matches #"(\d+)\.(\d+)\.(\d+).*" version-string)
+                         (drop 1)
+                         (map #(Integer/parseInt %))
+                         (zipmap [:major :minor :patch]))
+        qualifier (last (re-matches #".*-(.+)?" version-string))]
+    (if-not (empty? version-map)
+      (merge version-map {:qualifier qualifier}))))
+
+(defn parse-semantic-version [version-string]
+  "Create map representing the given version string. Aborts with exit code 1
+  if the string does not follow guidelines setforth by Semantic Versioning 2.0.0,
+  http://semver.org/"
+  (or (string->semantic-version version-string)
+      (do (println "Unrecognized version string:" version-string) (System/exit 1))))
 
 (defn extract-semantic-version
   [project]
