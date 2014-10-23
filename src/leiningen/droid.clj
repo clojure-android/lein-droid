@@ -31,8 +31,7 @@
   "Pretty-prints a representation of the project map."
   [project & keys]
   (if (seq keys)
-    (doseq [k keys]
-      (clojure.pprint/pprint (get project (read-string k))))
+    (clojure.pprint/pprint (select-keys project (map read-string keys)))
     (clojure.pprint/pprint project))
   (flush))
 
@@ -107,7 +106,7 @@
     "jar" (jar project)
 
     ;; Help tasks
-    "pprint" (pprint project)
+    "pprint" (apply pprint project args)
     "help" (help #'droid)
 
     (println "Subtask is not recognized:" name

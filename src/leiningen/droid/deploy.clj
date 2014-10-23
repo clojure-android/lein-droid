@@ -35,8 +35,10 @@
         (print (format "Enter the number 1..%d to choose the device: "
                        (count devices)))
         (flush)
-        (let [answer (dec (Integer/parseInt (read-line)))]
-          (:serial (nth devices answer)))))))
+        (if-let [answer (try (Integer/parseInt (read-line))
+                             (catch Exception ex))]
+          (:serial (nth devices (dec answer)))
+          (abort "Cannot recognize device number."))))))
 
 (defn get-device-args
   "Returns a list of adb arguments that specify the device adb should be
