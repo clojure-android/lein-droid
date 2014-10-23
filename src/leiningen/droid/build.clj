@@ -180,9 +180,9 @@ files or jar file, e.g. one produced by proguard."
   server. This is achieved by backing up the original manifest file
   and creating a new one with Internet permission appended to it.
   After the packaging the original manifest file is restored."
-  [{{:keys [sdk-path target-version manifest-path assets-path res-path
+  [{{:keys [sdk-path target-version manifest-path assets-paths res-path
             out-res-path external-res-paths out-res-pkg-path
-            rename-manifest-package]} :android :as project}]
+            rename-manifest-package assets-gen-path]} :android :as project}]
   (info "Packaging resources...")
   (ensure-paths sdk-path manifest-path res-path)
   (let [aapt-bin (sdk-binary project :aapt)
@@ -192,7 +192,8 @@ files or jar file, e.g. one produced by proguard."
         manifest-file (io/file manifest-path)
         backup-file (io/file (str manifest-path ".backup"))
         ;; Only add `assets` directory if it is present.
-        assets (if (.exists (io/file assets-path)) ["-A" assets-path] [])
+        assets (mapcat #(when (.exists (io/file %)) ["-A" %])
+                       (conj assets-paths assets-gen-path))
         external-resources (for [res external-res-paths] ["-S" res])]
     (when dev-build
       (io/copy manifest-file backup-file)

@@ -19,11 +19,11 @@
   "Save project's *data-readers* value to application's resources so
   it can be later retrieved in runtime. This is necessary to be able
   to use data readers when developing in REPL on the device."
-  [{{:keys [assets-path]} :android :as project}]
-  (.mkdirs (io/file assets-path))
+  [{{:keys [assets-gen-path]} :android :as project}]
+  (.mkdirs (io/file assets-gen-path))
   (eval/eval-in-project
    project
-   `(spit (io/file ~assets-path "data_readers.clj")
+   `(spit (io/file ~assets-gen-path "data_readers.clj")
           (into {} (map (fn [[k# v#]]
                           [k# (symbol (subs (str v#) 2))])
                         *data-readers*)))))
@@ -141,10 +141,11 @@
 
 (defn compile
   "Compiles both Java and Clojure source files."
-  [{{:keys [sdk-path]} :android, java-only :java-only :as project} & args]
+  [{{:keys [sdk-path gen-path]} :android, java-only :java-only :as project} & args]
   (ensure-paths sdk-path)
-  (when-not java-only
-    (save-data-readers-to-resource project))
-  (apply leiningen.javac/javac project args)
-  (when-not java-only
-   (compile-clojure project)))
+  (let [project (update-in project [:java-source-paths] conj gen-path)]
+    (when-not java-only
+      (save-data-readers-to-resource project))
+    (apply leiningen.javac/javac project args)
+    (when-not java-only
+      (compile-clojure project))))

@@ -107,19 +107,23 @@
 
 (defn get-default-android-params
   "Returns a map of the default android-specific parameters."
-  [{root :root, name :name, target-path :target-path}]
+  [{root :root, name :name, target-path :target-path
+    java-paths :java-source-paths}]
   (let [manifest-template "AndroidManifest.template.xml"
         manifest-template-file (file (absolutize root manifest-template))
+        gen-path (str (file target-path "gen"))
         has-template (.exists manifest-template-file)]
     {:out-dex-path (str (file target-path "classes.dex"))
      :manifest-path (if has-template
                       (str (file target-path "AndroidManifest.xml"))
                       "AndroidManifest.xml")
      :manifest-template-path manifest-template
+     :manifest-options {:app-name "@string/app_name"}
      :res-path "res"
-     :gen-path (str (file target-path "gen"))
+     :gen-path gen-path
      :out-res-path (str (file target-path "res"))
-     :assets-path "assets"
+     :assets-paths ["assets"]
+     :assets-gen-path (str (file target-path "assets-gen"))
      :out-res-pkg-path (str (file target-path (str name ".ap_")))
      :out-apk-path (str (file target-path (str name ".apk")))
      :keystore-path (str (file (System/getProperty "user.home")
