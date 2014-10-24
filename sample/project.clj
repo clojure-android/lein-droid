@@ -7,6 +7,7 @@
   :global-vars {*warn-on-reflection* true}
 
   :source-paths ["src/clojure" "src"]
+  :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
   :plugins [[lein-droid "0.3.0-SNAPSHOT"]]
@@ -16,7 +17,7 @@
   ;; :java-only true
 
   :dependencies [[org.clojure-android/clojure "1.6.0-RC1" :use-resources true]
-                 [neko/neko "3.0.2"]]
+                 [neko/neko "3.1.0-beta1"]]
   :profiles {:default [:dev]
 
              :dev

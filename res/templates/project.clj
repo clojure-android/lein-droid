@@ -11,7 +11,7 @@
   :plugins [[lein-droid "0.3.0-SNAPSHOT"]]
 
   :dependencies [[org.clojure-android/clojure "1.6.0-RC1" :use-resources true]
-                 [neko/neko "3.0.2"]]
+                 [neko/neko "3.1.0-beta1"]]
   :profiles {:default [:dev]
 
              :dev
