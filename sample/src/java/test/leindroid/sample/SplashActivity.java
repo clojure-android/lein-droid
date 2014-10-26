@@ -1,3 +1,19 @@
+package test.leindroid.sample;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Bundle;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.util.Log;
+
+import clojure.lang.Symbol;
+import clojure.lang.Var;
+import clojure.lang.RT;
+
 import test.leindroid.sample.R;
 
 public class SplashActivity extends Activity {
