@@ -1,14 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="{{package-sanitized}}"
-          android:versionCode="1"
-          android:versionName="1.0" >
+          {{={[ ]}=}}
+          android:versionCode="{{version-code}}"
+          android:versionName="{{version-name}}" >
+          {[={{ }}=]}
 
   <uses-sdk android:minSdkVersion="{{target-sdk}}" />
 
   <application
       android:icon="@drawable/ic_launcher"
-      android:label="@string/app_name">
+      android:label="{{app-name}}">
     <activity android:name=".SplashActivity"
               android:theme="@android:style/Theme.Translucent.NoTitleBar">
       <intent-filter>
@@ -16,7 +18,7 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
-    <activity android:name=".{{activity}}">
+    <activity android:name=".MainActivity">
       <intent-filter>
         <action android:name='{{package-sanitized}}.MAIN'/>
         <category android:name='android.intent.category.DEFAULT'/>
@@ -24,4 +26,12 @@
     </activity>
   </application>
 
+  {{={[ ]}=}}
+  {{#debug-build}}
+  <!-- Inside this section the permission will work only in debug builds (this is -->
+  <!-- needed for remote REPL). If your application logic requires Internet -->
+  <!-- permission too, move it out of the section. -->
+  <uses-pemission android:name="android.permission.INTERNET"/>
+  {{/debug-build}}
+  {[={{ }}=]}
 </manifest>

@@ -72,21 +72,21 @@
     (abort "ERROR: Package name should have at least two levels and"
            "not contain hyphens (you can replace them with underscores)."))
   (let [options (apply hash-map options)
-        activity (get options ":activity" "MainActivity")
-        target-sdk (get options ":target-sdk" "15")
-        app-name (get options ":app-name" project-name)
         data {:name project-name
               :package package-name
               :package-sanitized (sanitize package-name)
               :path (package-to-path (sanitize package-name))
-              :activity activity
-              :target-sdk target-sdk
-              :app-name app-name}
+              :activity (get options ":activity" "MainActivity")
+              :target-sdk (get options ":target-sdk" "15")
+              :app-name (get options ":app-name" project-name)}
         render (renderer "templates")]
+    (info "Creating project" project-name "...")
     (->files
      data
      "assets"
-     ["AndroidManifest.xml" (render "AndroidManifest.xml" data)]
+     [".gitignore" (render "gitignore")]
+     ["LICENSE" (render "LICENSE" data)]
+     ["AndroidManifest.template.xml" (render "AndroidManifest.template.xml" data)]
      ["project.clj" (render "project.clj" data)]
      ["res/drawable-hdpi/splash_circle.png" (render "splash_circle.png")]
      ["res/drawable-hdpi/splash_droid.png" (render "splash_droid.png")]

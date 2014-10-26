@@ -4,10 +4,12 @@
 ;;
 (ns leiningen.droid
   (:refer-clojure :exclude [compile doall repl])
-  (:use [leiningen.core.project :only [merge-profiles unmerge-profiles]]
+  (:require clojure.pprint)
+  (:use [leiningen.core.project :only [set-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
-        [leiningen.droid.compile :only (compile clean-compile-dir code-gen)]
+        [leiningen.clean :only [clean]]
+        [leiningen.droid.compile :only [compile code-gen]]
         [leiningen.droid
          [classpath :only [init-hooks]]
          [build :only [create-dex create-obfuscated-dex
@@ -16,7 +18,8 @@
          [deploy :only [install run forward-port repl deploy]]
          [new :only [new init]]
          [compatibility :only [gather-dependencies]]
-         [utils :only [proj wrong-usage android-parameters ensure-paths]]]))
+         [utils :only [proj wrong-usage android-parameters ensure-paths
+                       dev-build?]]]))
 
 (defn help
   "Shows the list of possible `lein droid` subtasks."
@@ -24,53 +27,30 @@
           (println "lein-droid is a plugin for Clojure/Android development."
                    (subtask-help-for nil droid-var))))
 
-(defn foo
-  "This function just prints the project map."
-  [project & args]
-  (println project))
-
-(defn doall
-  "Metatask. Performs all Android tasks from compilation to the deployment."
-  [{{:keys [library]} :android :as project} & device-args]
-  (if library
-    (build project)
-    (do (doto project
-          build apk)
-        (apply deploy project device-args))))
+(defn pprint
+  "Pretty-prints a representation of the project map."
+  [project & keys]
+  (if (seq keys)
+    (clojure.pprint/pprint (select-keys project (map read-string keys)))
+    (clojure.pprint/pprint project))
+  (flush))
 
 (declare execute-subtask)
 
-(defn transform-into-release
-  "Takes a project map and replaces `:dev` profile with `:release` profile."
-  [project]
-  (-> project
-      (unmerge-profiles [:dev])
-      (merge-profiles [:release])
-      android-parameters))
-
-(def ^{:doc "Default set of tasks to create an application release."}
-  release-routine ["clean-compile-dir" "build" "apk" "deploy"])
-
-(defn execute-release-routine
-  "Takes a release project map and executes tasks that create a
-  release version of the application."
-  [release-project & [adb-args]]
-  (doseq [task release-routine]
-    (execute-subtask release-project task adb-args)))
+(defn doall
+  "Metatask. Performs all Android tasks from compilation to deployment."
+  [{{:keys [library]} :android :as project} & device-args]
+  (let [build-steps (if library ["build"] ["build" "apk" "deploy"])
+        build-steps (if (dev-build? project)
+                      build-steps (cons build-steps "clean"))]
+    (doseq [task build-steps]
+      (execute-subtask project task device-args))))
 
 (defn release
-  "Metatask. Builds, packs and deploys the release version of the project.
-
-  Can also take optional list of subtasks to execute (instead of
-  executing all of them) and arguments to `adb` for deploying."
+  "DEPRECATED. Metatask. Builds, packs and deploys the release version of the
+  project."
   [project & args]
-  (let [;; adb-args should be in the end of the argument list.
-        [subtasks adb-args] (split-with #(not (.startsWith % "-")) args)
-        subtasks (if (seq subtasks)
-                   subtasks release-routine)
-        release-project (transform-into-release project)]
-    (doseq [task subtasks]
-      (execute-subtask release-project task adb-args))))
+  (abort "Release subtask is deprecated, please use 'lein with-profile release droid doall'"))
 
 (defn ^{:no-project-needed true
         :subtasks [#'new #'init #'code-gen #'compile
@@ -79,16 +59,16 @@
                    #'create-apk #'sign-apk #'zipalign-apk
                    #'install #'run #'forward-port #'repl
                    #'build #'apk #'deploy #'doall #'release #'help
-                   #'gather-dependencies #'jar]}
+                   #'gather-dependencies #'jar #'pprint]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([project]
      (help #'droid))
   ([project & [cmd & args]]
      (init-hooks)
-     (let [;; Poor man's middleware here
-           project (when project (android-parameters project))]
-       (execute-subtask project cmd args))))
+     (some-> project
+             android-parameters
+             (execute-subtask cmd args))))
 
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."
@@ -102,7 +82,6 @@
             (apply new args))
     "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
     "code-gen" (code-gen project)
-    "clean-compile-dir" (clean-compile-dir project)
     "compile" (compile project)
     "create-dex" (create-dex project)
     "create-obfuscated-dex" (create-obfuscated-dex project)
@@ -116,6 +95,7 @@
     "forward-port" (apply forward-port project args)
     "repl" (repl project)
     "gather-dependencies" (apply gather-dependencies project args)
+    "clean" (clean project)
 
     ;; Meta tasks
     "build" (build project)
@@ -126,7 +106,7 @@
     "jar" (jar project)
 
     ;; Help tasks
-    "foo" (foo project)
+    "pprint" (apply pprint project args)
     "help" (help #'droid)
 
     (println "Subtask is not recognized:" name

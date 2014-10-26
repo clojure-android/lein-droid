@@ -1,9 +1,13 @@
 (ns leiningen.droid.manifest
   "Contains functions to manipulate AndroidManifest.xml file"
-  (:require [clojure.xml :as xml])
-  (:use [clojure.zip :only (xml-zip up node append-child)]
-        [clojure.data.zip.xml])
-  (:import java.io.FileWriter))
+  (:require [clojure.data.zip.xml :refer :all]
+            [clojure.xml :as xml]
+            [clojure.java.io :as jio]
+            [clojure.zip :refer [append-child node up xml-zip]]
+            [clostache.parser :as clostache]
+            [leiningen.core.main :refer [info]]
+            [leiningen.release :refer [parse-semantic-version]])
+  (:import (java.io FileWriter)))
 
 ;; ### Constants
 
@@ -63,15 +67,17 @@
 (defn get-launcher-activity
   "Returns the package-qualified name of the first activity from the
   manifest that belongs to the _launcher_ category."
-  [manifest-path]
+  [{{:keys [manifest-path rename-manifest-package]} :android}]
   (let [manifest (load-manifest manifest-path)
-        [activity-name] (-> manifest
+        [activity-name] (some-> manifest
                             get-all-launcher-activities
                             first
                             up up
                             (xml-> (attr :android:name)))
         pkg-name (first (xml-> manifest (attr :package)))]
-    (str pkg-name "/" activity-name)))
+    (when activity-name
+      (str (or rename-manifest-package pkg-name) "/"
+           (str pkg-name activity-name)))))
 
 (defn write-manifest-with-internet-permission
   "Updates the manifest on disk guaranteed to have the Internet permission."
@@ -95,3 +101,55 @@
   "Extracts the project version name from the provided manifest file."
   [manifest-path]
   (first (xml-> (load-manifest manifest-path) (attr version-name-attribute))))
+
+(def ^:private version-bit-sizes    [9 9 9 5])
+(def ^:private version-maximums     (mapv (partial bit-shift-left 1) version-bit-sizes))
+(def ^:private version-coefficients (mapv (fn [offset] (bit-shift-left 1 (- 32 offset))) (reductions + version-bit-sizes)))
+
+(defn- assert>
+  "Asserts that a>b in version segments"
+  [a b]
+  (assert (> a b) (str "Version number segment too large to fit in the
+  version-code scheme " b ">" a ", maximum version in each segment
+  is " (clojure.string/join "." version-maximums)))
+  b)
+
+(defn version-code
+  "Given a version map containing :major :minor :patch
+   :build and :priority version numbers, returns an integer which is
+   guaranteed to be greater for semantically larger version numbers.
+
+   Splitting the 32 bit version code into 5 segments such that each
+   semantically greater version will have a larger version code. The
+   segments represent major, minor, patch, build and package
+   priority (multiple builds of the same android apk where one takes
+   precedence over another, for instance in the case where higher
+   resolution assets are available, but a fallback is made available
+   for devices which do not support the configuration).
+
+   Largest possible version number: v512.512.512 (32)"
+  [version-map]
+  (->> version-map
+       ((juxt :major :minor :patch :priority))
+       (map (fnil assert> 0 0) version-maximums)
+       (map * version-coefficients)
+       (reduce +)))
+
+(defn generate-manifest
+  "If a :manifest-template-file is specified, perform template substitution with
+  the values in :android :manifest, including the version-name and version-code
+  which are automatically generated, placing the output in :manifest-path."
+  [{{:keys [manifest-path manifest-template-path manifest-options target-path
+            build-type]} :android, version :version :as project}]
+  (info "Generating manifest...")
+  (let [full-manifest-map (merge {:version-name version
+                                  :version-code (-> version
+                                                    parse-semantic-version
+                                                    version-code)
+                                  :debug-build (not build-type)}
+                                 manifest-options)]
+    (when (.exists (jio/file manifest-template-path))
+      (clojure.java.io/make-parents manifest-path)
+      (->> full-manifest-map
+           (clostache/render (slurp manifest-template-path))
+           (spit manifest-path)))))

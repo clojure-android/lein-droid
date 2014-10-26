@@ -2,8 +2,7 @@
   (:use [neko.activity :only [defactivity set-content-view!]]
         [neko.notify :only [toast]]
         [neko.ui :only [make-ui]]
-        [neko.threading :only [on-ui]]
-        [neko.application :only [defapplication]]))
+        [neko.threading :only [on-ui]]))
 
 (declare ^android.app.Activity a
          ^android.widget.EditText user-input)

@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="test.leindroid.sample"
-          android:versionCode="1"
-          android:versionName="1.0" >
+          android:versionCode="{{version-code}}"
+          android:versionName="{{version-name}}" >
 
-  <uses-sdk android:minSdkVersion="10" />
+  <uses-sdk android:minSdkVersion="15" />
 
   <application
       android:icon="@drawable/ic_launcher"
-      android:label="@string/app_name">
+      android:label="{{app-name}}">
     <activity android:name=".SplashActivity"
               android:theme="@android:style/Theme.Translucent.NoTitleBar">
       <intent-filter>
@@ -24,4 +24,10 @@
     </activity>
   </application>
 
+  {{#debug-build}}
+  <!-- Inside this section the permission will work only in debug builds (this is -->
+  <!-- needed for remote REPL). If your application logic requires Internet -->
+  <!-- permission too, move it out of the section. -->
+  <uses-pemission android:name="android.permission.INTERNET"/>
+  {{/debug-build}}
 </manifest>

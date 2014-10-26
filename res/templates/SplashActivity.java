@@ -8,6 +8,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.util.Log;
 
 import clojure.lang.Symbol;
 import clojure.lang.Var;
@@ -18,6 +19,7 @@ import {{package}}.R;
 public class SplashActivity extends Activity {
 
     private static boolean firstLaunch = true;
+    private static String TAG = "Splash";
 
     @Override
     public void onCreate(Bundle bundle) {
@@ -52,12 +54,18 @@ public class SplashActivity extends Activity {
         new Thread(new Runnable(){
                 @Override
                 public void run() {
-                    Symbol CLOJURE_MAIN = Symbol.intern("neko.application");
+                    Symbol CLOJURE_MAIN = Symbol.intern("neko.init");
                     Var REQUIRE = RT.var("clojure.core", "require");
                     REQUIRE.invoke(CLOJURE_MAIN);
 
-                    Var INIT = RT.var("neko.application", "init-application");
+                    Var INIT = RT.var("neko.init", "init");
                     INIT.invoke(SplashActivity.this.getApplication());
+
+                    try {
+                        Class.forName("{{package}}.{{activity}}");
+                    } catch (ClassNotFoundException e) {
+                        Log.e(TAG, "Failed loading {{activity}}", e);
+                    }
 
                     proceed();
                 }

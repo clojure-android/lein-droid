@@ -11,8 +11,8 @@
    Follow the [[https://github.com/clojure-android/lein-droid/wiki/Tutorial][Tutorial]] to start using lein-droid.
 
    Latest release:
-
-   : [lein-droid "0.2.0-beta3"]
+   
+[[https://clojars.org/lein-droid][https://clojars.org/lein-droid/latest-version.svg]]
 
 ** Documentation
 
@@ -21,12 +21,16 @@
    supports, consult [[https://github.com/clojure-android/lein-droid/wiki/project.clj-options][this page]].
 
    If you'd like to read the code, Marginalia docs are [[http://clojure-android.github.io/lein-droid/][here]].
+   
+   [[https://github.com/krisc][Kris Calabio]] put together [[https://github.com/krisc/events/blob/master/tutorial.md][an amazing tutorial]] 
+   on how to write your first real Clojure/Android application.
 
 ** Contributors
 
    I thank the following people for their help in extending and
    improving lein-droid:
 
+   - [[https://github.com/AdamClements][Adam Clements]]
    - [[https://github.com/oakes][Zach Oakes]]
    - [[https://github.com/ayamada][Atsuo Yamada]]
    - [[https://github.com/sergv][Sergey Vinokurov]]
@@ -35,4 +39,4 @@
 ** License
 
    Copyright © 2012-2013 Alexander Yakushev. Distributed under the
-   Eclipse Public License, the same as Clojure. See the file [[ttps://github.com/clojure-android/lein-droid/blob/master/COPYING][COPYING]].
+   Eclipse Public License, the same as Clojure. See the file [[https://github.com/clojure-android/lein-droid/blob/master/COPYING][COPYING]].
