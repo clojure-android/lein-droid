@@ -12,7 +12,7 @@
         constructor (. apkbuilder-class getConstructor
                        (into-array [File File File String PrintStream]))]
     (.newInstance constructor (into-array [(io/file apk-name) (io/file res-path)
-                                           (io/file dex-path) nil nil]))))
+                                           nil nil nil]))))
 
 (defn- get-unpacked-natives-paths
   "Returns paths to unpacked native libraries if they exist, nil otherwise."
@@ -29,7 +29,9 @@
   (pomegranate/add-classpath (io/file sdk-path "tools" "lib" "sdklib.jar"))
   (let [apkbuilder (make-apk-builder apk-name out-res-pkg-path out-dex-path)
         all-native-libraries (concat native-libraries-paths
-                                     (get-unpacked-natives-paths))]
+                                     (get-unpacked-natives-paths))
+        dexes (filter #(re-matches #".*dex" (.getName %))
+                      (.listFiles (io/file out-dex-path)))]
     (when (seq resource-jars)
       (debug "Adding resource libraries: " resource-jars)
       (doseq [rj resource-jars]
@@ -38,4 +40,7 @@
       (debug "Adding native libraries: " all-native-libraries)
       (doseq [lib all-native-libraries]
         (.addNativeLibraries apkbuilder ^File (io/file lib))))
+    (when-not (empty? dexes)
+      (doseq [dex dexes]
+        (.addFile apkbuilder dex (.getName dex))))
     (.sealApk apkbuilder)))

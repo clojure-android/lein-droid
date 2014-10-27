@@ -113,7 +113,7 @@
         manifest-template-file (file (absolutize root manifest-template))
         gen-path (str (file target-path "gen"))
         has-template (.exists manifest-template-file)]
-    {:out-dex-path (str (file target-path "classes.dex"))
+    {:out-dex-path target-path
      :manifest-path (if has-template
                       (str (file target-path "AndroidManifest.xml"))
                       "AndroidManifest.xml")
