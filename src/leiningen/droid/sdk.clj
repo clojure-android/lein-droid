@@ -40,7 +40,8 @@
       (debug "Adding native libraries: " all-native-libraries)
       (doseq [lib all-native-libraries]
         (.addNativeLibraries apkbuilder ^File (io/file lib))))
-    (when-not (empty? dexes)
+    (when (seq dexes)
+      (debug "Adding DEX files: " dexes)
       (doseq [dex dexes]
         (.addFile apkbuilder dex (.getName dex))))
     (.sealApk apkbuilder)))
