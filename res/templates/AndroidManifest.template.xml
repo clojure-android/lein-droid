@@ -6,7 +6,7 @@
           android:versionName="{{version-name}}" >
           {[={{ }}=]}
 
-  <uses-sdk android:minSdkVersion="{{target-sdk}}" />
+  <uses-sdk android:minSdkVersion="15" />
 
   <application
       android:icon="@drawable/ic_launcher"
