@@ -42,7 +42,7 @@
   [{{:keys [library]} :android :as project} & device-args]
   (let [build-steps (if library ["build"] ["build" "apk" "deploy"])
         build-steps (if (dev-build? project)
-                      build-steps (cons build-steps "clean"))]
+                      build-steps (cons "clean" build-steps))]
     (doseq [task build-steps]
       (execute-subtask project task device-args))))
 
