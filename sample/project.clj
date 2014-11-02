@@ -10,14 +10,14 @@
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  :plugins [[lein-droid "0.3.0-SNAPSHOT"]]
+  :plugins [[lein-droid "0.3.0-beta2"]]
 
   ;; Uncomment this line if your project doesn't use Clojure. Also
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
-  :dependencies [[org.clojure-android/clojure "1.6.0-RC1" :use-resources true]
-                 [neko/neko "3.1.0-beta1"]]
+  :dependencies [[org.clojure-android/clojure "1.7.0-SNAPSHOT" :use-resources true]
+                 [neko/neko "3.1.0-beta2"]]
   :profiles {:default [:dev]
 
              :dev
@@ -26,7 +26,7 @@
               ;; contain machine-specific options such as {:android {:sdk-path
               ;; "/path/to/sdk"}}. :android-user profile is for global
               ;; dev-related options like CIDER configuration.
-              {:dependencies [[org.clojure/tools.nrepl "0.2.3"]]
+              {:dependencies [[org.clojure-android/tools.nrepl "0.2.7-SNAPSHOT"]]
                :target-path "target/debug"
                :android {:aot :all-with-unused
                          ;; The namespace of the app package - having a
@@ -113,10 +113,7 @@
             :target-version :jelly-bean
 
             ;; Sequence of namespaces that should not be compiled.
-            :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers"
-                             "cljs-tooling.complete" "cljs-tooling.info"
-                             "cljs-tooling.util.analysis" "cljs-tooling.util.misc"
-                             "cider.nrepl" "cider-nrepl.plugin"]
+            :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers"]
 
             ;; This specifies replacements which are inserted into
             ;; AndroidManifest-template.xml at build time. See Clostache for

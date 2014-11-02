@@ -1,26 +1,28 @@
 (ns test.leindroid.sample.main
-  (:use [neko.activity :only [defactivity set-content-view!]]
-        [neko.notify :only [toast]]
-        [neko.ui :only [make-ui]]
-        [neko.threading :only [on-ui]]))
+  (:require [neko.activity :refer [defactivity set-content-view! *a]]
+            [neko.notify :refer [toast]]
+            [neko.find-view :refer [find-view]]
+            [neko.threading :refer [on-ui]])
+  (:import android.widget.TextView))
 
-(declare ^android.app.Activity a
-         ^android.widget.EditText user-input)
-
-(defn notify-from-edit [_]
-  (toast (str "Your input: " (.getText user-input))
-         :long))
+(defn notify-from-edit [activity]
+  (let [^TextView input (.getText (find-view activity ::user-input))]
+    (toast activity
+           (if (empty? input)
+             "Your input is empty"
+             (str "Your input: " input))
+           :long)))
 
 (defactivity test.leindroid.sample.MainActivity
-  :def a
+  :key :main
   :on-create
   (fn [this bundle]
     (on-ui
-     (set-content-view! a
-      (make-ui [:linear-layout {:orientation :vertical
-                                :layout-width :fill
-                                :layout-height :wrap}
-                [:edit-text {:def `user-input
-                             :layout-width :fill}]
-                [:button {:text "Touch me"
-                          :on-click notify-from-edit}]])))))
+      (set-content-view! (*a)
+        [:linear-layout {:orientation :vertical
+                         :layout-width :fill
+                         :layout-height :wrap}
+         [:edit-text {:id ::user-input
+                      :layout-width :fill}]
+         [:button {:text "Touch me"
+                   :on-click (fn [_] (notify-from-edit (*a)))}]]))))
