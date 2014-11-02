@@ -9,15 +9,15 @@
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
-  :plugins [[lein-droid "0.3.0-beta2"]]
+  :plugins [[lein-droid "0.3.0-beta3"]]
 
-  :dependencies [[org.clojure-android/clojure "1.7.0-SNAPSHOT" :use-resources true]
-                 [neko/neko "3.1.0-beta2"]]
+  :dependencies [[org.clojure-android/clojure "1.7.0-alpha3" :use-resources true]
+                 [neko/neko "3.1.0-preview1"]]
   :profiles {:default [:dev]
 
              :dev
              [;; :android-common :android-user
-              {:dependencies [[org.clojure-android/tools.nrepl "0.2.7-SNAPSHOT"]]
+              {:dependencies [[org.clojure-android/tools.nrepl "0.2.6"]]
                :target-path "target/debug"
                :android {:aot :all-with-unused
                          :rename-manifest-package "{{package-sanitized}}.debug"
