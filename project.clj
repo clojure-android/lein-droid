@@ -1,4 +1,4 @@
-(defproject lein-droid/lein-droid "0.3.0-beta2"
+(defproject lein-droid/lein-droid "0.3.0-beta3"
   :description "Plugin for easy Clojure/Android development and deployment"
   :url "https://github.com/clojure-android/lein-droid"
   :license {:name "Eclipse Public License"
