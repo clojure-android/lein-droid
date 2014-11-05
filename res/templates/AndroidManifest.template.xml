@@ -18,7 +18,7 @@
         <category android:name="android.intent.category.LAUNCHER"/>
       </intent-filter>
     </activity>
-    <activity android:name=".MainActivity">
+    <activity android:name=".{{activity}}">
       <intent-filter>
         <action android:name='{{package-sanitized}}.MAIN'/>
         <category android:name='android.intent.category.DEFAULT'/>
