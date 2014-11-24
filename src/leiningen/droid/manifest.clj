@@ -136,7 +136,7 @@
        (reduce +)))
 
 (defn generate-manifest
-  "If a :manifest-template-file is specified, perform template substitution with
+  "If a :manifest-template-path is specified, perform template substitution with
   the values in :android :manifest, including the version-name and version-code
   which are automatically generated, placing the output in :manifest-path."
   [{{:keys [manifest-path manifest-template-path manifest-options target-path
