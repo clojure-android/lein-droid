@@ -16,14 +16,14 @@
   :profiles {:default [:dev]
 
              :dev
-             [;; :android-common :android-user
+             [:android-common :android-user
               {:dependencies [[org.clojure-android/tools.nrepl "0.2.6"]]
                :target-path "target/debug"
                :android {:aot :all-with-unused
                          :rename-manifest-package "{{package-sanitized}}.debug"
                          :manifest-options {:app-name "{{app-name}} - debug"}}}]
              :release
-             [;; :android-common
+             [:android-common
               {:target-path "target/release"
                :android
                { ;; Specify the path to your private keystore
