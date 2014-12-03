@@ -71,7 +71,7 @@
 ;;
 (def ^:private always-compile-ns
   '#{clojure.core clojure.core.protocols clojure.string
-     clojure.java.io neko.init})
+     clojure.java.io})
 
 (defn namespaces-to-compile
   "Takes project and returns a set of namespaces that should be AOT-compiled."
