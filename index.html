@@ -2865,7 +2865,7 @@ net.brehaut.ClojureTools = (function (SH) {
     build_tree: build_tree
   };
 })(SyntaxHighlighter);
-</script><title>lein-droid/lein-droid -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">lein-droid/lein-droid</h1><h2 class="project-version">0.3.0</h2><br /><p>Plugin for easy Clojure/Android development and deployment</p>
+</script><title>lein-droid/lein-droid -- Marginalia</title></head><body><table><tr><td class="docs"><div class="header"><h1 class="project-name">lein-droid/lein-droid</h1><h2 class="project-version">0.3.1-SNAPSHOT</h2><br /><p>Plugin for easy Clojure/Android development and deployment</p>
 </div><div class="dependencies"><h3>dependencies</h3><table><tr><td class="dep-name">robert/hooke</td><td class="dotted"><hr /></td><td class="dep-version">1.3.0</td></tr><tr><td class="dep-name">org.clojure/data.zip</td><td class="dotted"><hr /></td><td class="dep-version">0.1.1</td></tr><tr><td class="dep-name">de.ubercode.clostache/clostache</td><td class="dotted"><hr /></td><td class="dep-version">1.4.0</td></tr></table></div></td><td class="codes" style="text-align: center; vertical-align: middle;color: #666;padding-right:20px"><br /><br /><br />(this space intentionally left almost blank)</td></tr><tr><td class="docs"><div class="toc"><a name="toc"><h3>namespaces</h3></a><ul><li><a href="#leiningen.droid">leiningen.droid</a></li><li><a href="#leiningen.droid.build">leiningen.droid.build</a></li><li><a href="#leiningen.droid.classpath">leiningen.droid.classpath</a></li><li><a href="#leiningen.droid.compatibility">leiningen.droid.compatibility</a></li><li><a href="#leiningen.droid.compile">leiningen.droid.compile</a></li><li><a href="#leiningen.droid.deploy">leiningen.droid.deploy</a></li><li><a href="#leiningen.droid.manifest">leiningen.droid.manifest</a></li><li><a href="#leiningen.droid.new">leiningen.droid.new</a></li><li><a href="#leiningen.droid.sdk">leiningen.droid.sdk</a></li><li><a href="#leiningen.droid.utils">leiningen.droid.utils</a></li></ul></div></td><td class="codes">&nbsp;</td></tr><tr><td class="docs"><div class="docs-header"><a class="anchor" href="#leiningen.droid" name="leiningen.droid"><h1 class="project-name">leiningen.droid</h1><a class="toc-link" href="#toc">toc</a></a></div></td><td class="codes" /></tr><tr><td class="docs"><h2>Clojure is simple. Android should also be.</h2>
 
 <p>This plugin is intended to make your Clojure/Android development as
@@ -2909,7 +2909,8 @@ seamless and efficient as when developing ordinar Clojure JVM programs.</p>
   project.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn release
   [project &amp; args]
-  (abort &quot;Release subtask is deprecated, please use 'lein with-profile release droid doall'&quot;))</pre></td></tr><tr><td class="docs"><p>Supertask for Android-related tasks (see <code>lein droid</code> for list).</p>
+  (abort (str &quot;\&quot;release\&quot; subtask is deprecated, &quot;
+              &quot;please use 'lein with-profile release droid doall'&quot;)))</pre></td></tr><tr><td class="docs"><p>Supertask for Android-related tasks (see <code>lein droid</code> for list).</p>
 </td><td class="codes"><pre class="brush: clojure">(defn ^{:no-project-needed true
         :subtasks [#'new #'init #'code-gen #'compile
                    #'create-dex #'create-obfuscated-dex
@@ -3624,9 +3625,12 @@ why this subtask is full of low-level stuff.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-project-version
   [manifest-path]
   (first (xml-&gt; (load-manifest manifest-path) (attr version-name-attribute))))</pre></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(def ^:private version-bit-sizes    [9 9 9 5])
-(def ^:private version-maximums     (mapv (partial bit-shift-left 1) version-bit-sizes))
-(def ^:private version-coefficients (mapv (fn [offset] (bit-shift-left 1 (- 32 offset))) (reductions + version-bit-sizes)))</pre></td></tr><tr><td class="docs"><p>Asserts that a>b in version segments</p>
+</td><td class="codes"><pre class="brush: clojure">(def ^:private version-bit-sizes [9 9 9 5])</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:private version-maximums
+  (mapv (partial bit-shift-left 1) version-bit-sizes))</pre></td></tr><tr><td class="docs">
+</td><td class="codes"><pre class="brush: clojure">(def ^:private version-coefficients
+  (mapv (fn [offset] (bit-shift-left 1 (- 32 offset)))
+        (reductions + version-bit-sizes)))</pre></td></tr><tr><td class="docs"><p>Asserts that a>b in version segments</p>
 </td><td class="codes"><pre class="brush: clojure">(defn- assert&gt;
   [a b]
   (assert (&gt; a b) (str &quot;Version number segment too large to fit in the
@@ -3960,18 +3964,16 @@ why this subtask is full of low-level stuff.</p>
         process-project-dependencies
         absolutize-android-paths)))</pre></td></tr><tr><td class="docs"><h3>General utilities</h3>
 </td><td class="codes"></td></tr><tr><td class="docs">
-</td><td class="codes"><pre class="brush: clojure">(defn proj [] (read-project &quot;sample/project.clj&quot;))</pre></td></tr><tr><td class="docs"><p>If version keyword is passed (for example, =:ics= or
-  =:jelly-bean=), resolves it to the version number. Otherwise just
-  returns the input.</p>
+</td><td class="codes"><pre class="brush: clojure">(defn proj [] (read-project &quot;sample/project.clj&quot;))</pre></td></tr><tr><td class="docs"><p>If version keyword is passed (for example, <code>:ics</code> or <code>:jelly-bean</code>), resolves
+  it to the version number. Otherwise just returns the input.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn sdk-version-number
   [kw-or-number]
   (if (keyword? kw-or-number)
     (case kw-or-number
-      :froyo       8
-      :gingerbread 10
-      :honeycomb   13
       :ics         15
-      :jelly-bean  17
+      :jelly-bean  18
+      :kitkat      19
+      :lollipop    21
       (abort &quot;Unknown Android SDK version: &quot; kw-or-number))
     kw-or-number))</pre></td></tr><tr><td class="docs"><p>Returns a version-specific path to the Android platform tools.</p>
 </td><td class="codes"><pre class="brush: clojure">(defn get-sdk-platform-path
@@ -4106,7 +4108,7 @@ why this subtask is full of low-level stuff.</p>
       &quot;-dname&quot; &quot;CN=Android Debug,O=Android,C=US&quot;))</pre></td></tr><tr><td class="docs">
 </td><td class="codes"><pre class="brush: clojure">(defn relativize-path [^File dir ^File to-relativize]
   (.getPath (.relativize (.toURI dir)
-                         (.toURI to-relativize))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a>marginalia.html$floating_toc_html@3af15adb</div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
+                         (.toURI to-relativize))))</pre></td></tr><tr><td class="spacer docs">&nbsp;</td><td class="codes" /></tr></table><div class="footer">Generated by <a href="https://github.com/fogus/marginalia">Marginalia</a>.&nbsp;&nbsp;Syntax highlighting provided by Alex Gorbatchev's <a href="http://alexgorbatchev.com/SyntaxHighlighter/">SyntaxHighlighter</a>marginalia.html$floating_toc_html@dd544ab</div><script type="text/javascript">SyntaxHighlighter.defaults['gutter'] = false;
 SyntaxHighlighter.all();
 
 // hackity hack
