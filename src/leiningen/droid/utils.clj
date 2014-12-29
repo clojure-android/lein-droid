@@ -192,17 +192,15 @@
 (defn proj [] (read-project "sample/project.clj"))
 
 (defn sdk-version-number
-  "If version keyword is passed (for example, =:ics= or
-  =:jelly-bean=), resolves it to the version number. Otherwise just
-  returns the input."
+  "If version keyword is passed (for example, `:ics` or `:jelly-bean`), resolves
+  it to the version number. Otherwise just returns the input."
   [kw-or-number]
   (if (keyword? kw-or-number)
     (case kw-or-number
-      :froyo       8
-      :gingerbread 10
-      :honeycomb   13
       :ics         15
-      :jelly-bean  17
+      :jelly-bean  18
+      :kitkat      19
+      :lollipop    21
       (abort "Unknown Android SDK version: " kw-or-number))
     kw-or-number))
 
