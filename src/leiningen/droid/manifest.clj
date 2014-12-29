@@ -102,9 +102,14 @@
   [manifest-path]
   (first (xml-> (load-manifest manifest-path) (attr version-name-attribute))))
 
-(def ^:private version-bit-sizes    [9 9 9 5])
-(def ^:private version-maximums     (mapv (partial bit-shift-left 1) version-bit-sizes))
-(def ^:private version-coefficients (mapv (fn [offset] (bit-shift-left 1 (- 32 offset))) (reductions + version-bit-sizes)))
+(def ^:private version-bit-sizes [9 9 9 5])
+
+(def ^:private version-maximums
+  (mapv (partial bit-shift-left 1) version-bit-sizes))
+
+(def ^:private version-coefficients
+  (mapv (fn [offset] (bit-shift-left 1 (- 32 offset)))
+        (reductions + version-bit-sizes)))
 
 (defn- assert>
   "Asserts that a>b in version segments"

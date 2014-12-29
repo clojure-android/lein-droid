@@ -50,7 +50,8 @@
   "DEPRECATED. Metatask. Builds, packs and deploys the release version of the
   project."
   [project & args]
-  (abort "Release subtask is deprecated, please use 'lein with-profile release droid doall'"))
+  (abort (str "\"release\" subtask is deprecated, "
+              "please use 'lein with-profile release droid doall'")))
 
 (defn ^{:no-project-needed true
         :subtasks [#'new #'init #'code-gen #'compile
