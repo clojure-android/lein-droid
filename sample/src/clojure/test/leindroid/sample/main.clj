@@ -1,5 +1,6 @@
 (ns test.leindroid.sample.main
-  (:require [neko.activity :refer [defactivity set-content-view! *a]]
+  (:require [neko.activity :refer [defactivity set-content-view!]]
+            [neko.debug :refer [*a]]
             [neko.notify :refer [toast]]
             [neko.find-view :refer [find-view]]
             [neko.threading :refer [on-ui]])
