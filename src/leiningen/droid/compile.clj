@@ -101,7 +101,8 @@
   subsequently project code depends on them to eliminate
   debug-specific code when building the release."
   [{{:keys [enable-dynamic-compilation start-nrepl-server
-            manifest-path repl-device-port ignore-log-priority]}
+            manifest-path repl-device-port ignore-log-priority
+            lean-compile skummet-skip-vars]}
     :android
     {:keys [nrepl-middleware]} :repl-options
     :as project}]
@@ -119,20 +120,38 @@
                       :neko.init/nrepl-middleware (list 'quote nrepl-middleware)
                       :neko.init/package-name (get-package-name manifest-path)}
                      (not dev-build) (assoc :elide-meta
-                                       [:doc :file :line :column :added :arglists]))]
+                                       [:doc :file :line :column :added :author
+                                        :static :arglists :forms]))]
     (info (format "Build type: %s, dynamic compilation: %s, remote REPL: %s."
-                  (if dev-build "debug" "release")
+                  (if dev-build "debug" (if lean-compile "lean" "release"))
                   (if (or dev-build start-nrepl-server
                           enable-dynamic-compilation)
                     "enabled" "disabled")
                   (if (or dev-build start-nrepl-server) "enabled" "disabled")))
     (let [form
-          `(binding [*compiler-options* ~opts]
-             (doseq [namespace# '~nses]
-               (println "Compiling" namespace#)
-               (clojure.core/compile namespace#)))
-          project (update-in project [:prep-tasks]
-                             (partial remove #{"compile"}))]
+          (if lean-compile
+            `(let [lean-var?# (fn [var#]
+                                (not (#{~@skummet-skip-vars}
+                                      (str var#))))]
+               (push-thread-bindings {#'clojure.core/*loaded-libs*
+                                      (ref (sorted-set))})
+               (try
+                 (binding [~'*lean-var?* lean-var?#
+                           ~'*lean-compile* true
+                           *compiler-options* ~opts]
+                   (doseq [namespace# '~nses]
+                     (println "Compiling" namespace#)
+                     (clojure.core/compile namespace#)))
+                 (finally (pop-thread-bindings))))
+            `(binding [*compiler-options* ~opts]
+               (doseq [namespace# '~nses]
+                 (println "Compiling" namespace#)
+                 (clojure.core/compile namespace#))))
+          lean-opt "-Dclojure.compile.ignore-lean-classes=true"
+          project (cond-> project
+                          :always (update-in [:prep-tasks]
+                                             (partial remove #{"compile"}))
+                          lean-compile (update-in [:jvm-opts] conj lean-opt))]
       (.mkdirs (io/file (:compile-path project)))
       (try (eval/eval-in-project project form)
            (info "Compilation succeeded.")
@@ -144,8 +163,8 @@
   [{{:keys [sdk-path gen-path]} :android, java-only :java-only :as project} & args]
   (ensure-paths sdk-path)
   (let [project (update-in project [:java-source-paths] conj gen-path)]
-    (when-not java-only
-      (save-data-readers-to-resource project))
+    ;; (when-not java-only
+    ;;   (save-data-readers-to-resource project))
     (apply leiningen.javac/javac project args)
     (when-not java-only
       (compile-clojure project))))

@@ -58,6 +58,19 @@
                          ;; package.
                          :build-type :release}}]
 
+             :lean
+             [:release
+              {:dependencies ^:replace [[org.bytopia/clojure "1.7.0-skummet-SNAPSHOT" :use-resources true]
+                                        [neko/neko "3.1.1-SNAPSHOT" :exclusions [[org.clojure-android/clojure]]]]
+               :android {:lean-compile true
+                         :skummet-skip-vars ["#'neko.init/init"
+                                             "#'neko.context/context"
+                                             "#'neko.resource/package-name"
+                                             "#'neko.-utils/keyword->static-field"
+                                             "#'neko.-utils/keyword->setter"
+                                             "#'neko.ui.traits/get-display-metrics"
+                                             "#'test.leindroid.sample.main/MainActivity-onCreate"]}}]
+
              ;; Here's an example of using different profiles
              :trial-version-dev
              [:dev ; Inherits from :dev profile
