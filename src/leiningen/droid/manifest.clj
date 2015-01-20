@@ -6,6 +6,7 @@
             [clojure.zip :refer [append-child node up xml-zip]]
             [clostache.parser :as clostache]
             [leiningen.core.main :refer [info]]
+            [leiningen.droid.utils :refer [dev-build?]]
             [leiningen.release :refer [parse-semantic-version]])
   (:import (java.io FileWriter)))
 
@@ -144,14 +145,14 @@
   "If a :manifest-template-path is specified, perform template substitution with
   the values in :android :manifest, including the version-name and version-code
   which are automatically generated, placing the output in :manifest-path."
-  [{{:keys [manifest-path manifest-template-path manifest-options target-path
-            build-type]} :android, version :version :as project}]
+  [{{:keys [manifest-path manifest-template-path manifest-options
+            target-path]} :android, version :version :as project}]
   (info "Generating manifest...")
   (let [full-manifest-map (merge {:version-name version
                                   :version-code (-> version
                                                     parse-semantic-version
                                                     version-code)
-                                  :debug-build (not build-type)}
+                                  :debug-build (dev-build? project)}
                                  manifest-options)]
     (when (.exists (jio/file manifest-template-path))
       (clojure.java.io/make-parents manifest-path)
