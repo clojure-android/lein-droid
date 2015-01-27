@@ -28,6 +28,6 @@
   <!-- Inside this section the permission will work only in debug builds (this is -->
   <!-- needed for remote REPL). If your application logic requires Internet -->
   <!-- permission too, move it out of the section. -->
-  <uses-pemission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.INTERNET"/>
   {{/debug-build}}
 </manifest>
