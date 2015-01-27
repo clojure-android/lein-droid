@@ -10,14 +10,14 @@
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  :plugins [[lein-droid "0.3.0"]]
+  :plugins [[lein-droid "0.3.1"]]
 
   ;; Uncomment this line if your project doesn't use Clojure. Also
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
   :dependencies [[org.clojure-android/clojure "1.7.0-alpha3" :use-resources true]
-                 [neko/neko "3.1.0"]]
+                 [neko/neko "3.1.1"]]
   :profiles {:default [:dev]
 
              :dev
