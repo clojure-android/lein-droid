@@ -3,25 +3,16 @@
   (:require [clojure.data.zip.xml :refer :all]
             [clojure.xml :as xml]
             [clojure.java.io :as jio]
-            [clojure.zip :refer [append-child node up xml-zip]]
+            [clojure.zip :refer [up xml-zip]]
             [clostache.parser :as clostache]
             [leiningen.core.main :refer [info]]
             [leiningen.droid.utils :refer [dev-build?]]
-            [leiningen.release :refer [parse-semantic-version]])
-  (:import (java.io FileWriter)))
+            [leiningen.release :refer [parse-semantic-version]]))
 
 ;; ### Constants
 
 ;; Name of the category for the launcher activities.
 (def ^{:private true} launcher-category "android.intent.category.LAUNCHER")
-
-;; Name of the Internet permission.
-(def ^{:private true} internet-permission "android.permission.INTERNET")
-
-;; XML tag of the Internet permission.
-(def ^{:private true} internet-permission-tag
-  {:tag :uses-permission
-   :attrs {(keyword :android:name) internet-permission}})
 
 ;; Attribute name for target SDK version.
 (def ^:private target-sdk-attribute (keyword :android:targetSdkVersion))
@@ -46,18 +37,6 @@
   (xml-> manifest :application :activity :intent-filter :category
          (attr= :android:name launcher-category)))
 
-(defn- has-internet-permission?
-  "Checks if manifest contains Internet permission."
-  [manifest]
-  (first (xml-> manifest
-                :uses-permission (attr= :android:name internet-permission))))
-
-(defn- write-manifest
-  "Writes the manifest to the specified filename."
-  [manifest filename]
-  (binding [*out* (FileWriter. filename)]
-    (xml/emit (node manifest))))
-
 ;; ### Public functions
 
 (defn get-package-name
@@ -79,15 +58,6 @@
     (when activity-name
       (str (or rename-manifest-package pkg-name) "/"
            (str pkg-name activity-name)))))
-
-(defn write-manifest-with-internet-permission
-  "Updates the manifest on disk guaranteed to have the Internet permission."
-  [manifest-path]
-  (let [manifest (load-manifest manifest-path)]
-   (write-manifest (if (has-internet-permission? manifest)
-                     manifest
-                     (append-child manifest internet-permission-tag))
-                   manifest-path)))
 
 (defn get-target-sdk-version
   "Extracts the target SDK version from the provided manifest file. If
@@ -155,7 +125,7 @@
                                   :debug-build (dev-build? project)}
                                  manifest-options)]
     (when (.exists (jio/file manifest-template-path))
-      (clojure.java.io/make-parents manifest-path)
+      (jio/make-parents manifest-path)
       (->> full-manifest-map
            (clostache/render (slurp manifest-template-path))
            (spit manifest-path)))))
