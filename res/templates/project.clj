@@ -9,7 +9,7 @@
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
-  :plugins [[lein-droid "0.3.1"]]
+  :plugins [[lein-droid "0.3.2"]]
 
   :dependencies [[org.clojure-android/clojure "1.7.0-alpha3" :use-resources true]
                  [neko/neko "3.1.1"]]
