@@ -130,7 +130,8 @@
           `(binding [*compiler-options* ~opts]
              (doseq [namespace# '~nses]
                (println "Compiling" namespace#)
-               (clojure.core/compile namespace#)))
+               (clojure.core/compile namespace#))
+             (shutdown-agents))
           project (update-in project [:prep-tasks]
                              (partial remove #{"compile"}))]
       (.mkdirs (io/file (:compile-path project)))
