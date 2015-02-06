@@ -11,8 +11,7 @@
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
                        sdk-binary relativize-path get-sdk-support-jars
-                       get-resource-jars]]
-         [manifest :only [write-manifest-with-internet-permission]]])
+                       get-resource-jars]]])
   (:require [clojure.string]
             [clojure.set]
             [clojure.java.io :as io]
@@ -187,17 +186,13 @@ files or jar file, e.g. one produced by proguard."
   (ensure-paths sdk-path manifest-path res-path)
   (let [aapt-bin (sdk-binary project :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
-        dev-build (dev-build? project)
-        debug-mode (if dev-build ["--debug-mode"] [])
+        debug-mode (if (dev-build? project) ["--debug-mode"] [])
         manifest-file (io/file manifest-path)
         backup-file (io/file (str manifest-path ".backup"))
         ;; Only add `assets` directory if it is present.
         assets (mapcat #(when (.exists (io/file %)) ["-A" %])
                        (conj assets-paths assets-gen-path))
         external-resources (for [res external-res-paths] ["-S" res])]
-    (when dev-build
-      (io/copy manifest-file backup-file)
-      (write-manifest-with-internet-permission manifest-path))
     (sh aapt-bin "package" "--no-crunch" "-f" debug-mode "--auto-add-overlay"
         "-M" manifest-path
         "-S" out-res-path
@@ -208,10 +203,7 @@ files or jar file, e.g. one produced by proguard."
         "-F" out-res-pkg-path
         "--generate-dependencies"
         (if rename-manifest-package
-          ["--rename-manifest-package" rename-manifest-package] []))
-    (when dev-build
-      (io/copy backup-file manifest-file)
-      (io/delete-file backup-file))))
+          ["--rename-manifest-package" rename-manifest-package] []))))
 
 (defn create-apk
   "Creates a deployment-ready APK file.
@@ -223,8 +215,7 @@ files or jar file, e.g. one produced by proguard."
             java-only :java-only :as project}]
   (info "Creating APK...")
   (ensure-paths out-res-pkg-path out-dex-path)
-  (let [suffix (if (dev-build? project) "debug-unaligned" "unaligned")
-        unaligned-path (append-suffix out-apk-path suffix)
+  (let [unaligned-path (append-suffix out-apk-path "unaligned")
         resource-jars (concat (get-resource-jars project)
                               (map #(java.io.File. %) resource-jars-paths))]
     (sdk/create-apk project
@@ -236,25 +227,24 @@ files or jar file, e.g. one produced by proguard."
   Either a debug keystore key or a release key is used based on
   whether the build type is the debug one. Creates a debug keystore if
   it is missing."
-  [{{:keys [out-apk-path sigalg
+  [{{:keys [out-apk-path sigalg use-debug-keystore?
             keystore-path key-alias keypass storepass]} :android :as project}]
   (info "Signing APK with" keystore-path "...")
-  (let [dev-build (dev-build? project)
-        suffix (if dev-build "debug-unaligned" "unaligned")
-        unaligned-path (append-suffix out-apk-path suffix)
+  (let [debug (or (dev-build? project) use-debug-keystore?)
+        unaligned-path (append-suffix out-apk-path "unaligned")
         sigalg (or sigalg "SHA1withRSA")]
-    (when (and dev-build (not (.exists (io/file keystore-path))))
+    (when (and debug (not (.exists (io/file keystore-path))))
       ;; Create a debug keystore if there isn't one
       (create-debug-keystore keystore-path))
     (ensure-paths unaligned-path keystore-path)
-    (let [storepass     (or (when dev-build "android")
-                            storepass
-                            (System/getenv "STOREPASS")
-                            (read-password "Enter storepass: "))
-          keypass       (or (when dev-build "android")
-                            keypass
-                            (System/getenv "KEYPASS")
-                            (read-password "Enter keypass: "))]
+    (let [storepass (or (when debug "android")
+                        storepass
+                        (System/getenv "STOREPASS")
+                        (read-password "Enter storepass: "))
+          keypass   (or (when debug "android")
+                        keypass
+                        (System/getenv "KEYPASS")
+                        (read-password "Enter keypass: "))]
       (sh "jarsigner"
           "-sigalg" sigalg
           "-digestalg" "SHA1"
@@ -270,14 +260,10 @@ files or jar file, e.g. one produced by proguard."
   [{{:keys [sdk-path out-apk-path]} :android :as project}]
   (info "Aligning APK...")
   (let [zipalign-bin (sdk-binary project :zipalign)
-        unaligned-suffix (if (dev-build? project) "debug-unaligned" "unaligned")
-        unaligned-path (append-suffix out-apk-path unaligned-suffix)
-        aligned-path (if (dev-build? project)
-                       (append-suffix out-apk-path "debug")
-                       out-apk-path)]
+        unaligned-path (append-suffix out-apk-path "unaligned")]
     (ensure-paths unaligned-path)
-    (.delete (io/file aligned-path))
-    (sh zipalign-bin "4" unaligned-path aligned-path)))
+    (.delete (io/file out-apk-path))
+    (sh zipalign-bin "4" unaligned-path out-apk-path)))
 
 (defn apk
   "Metatask. Crunches and packages resources, creates, signs and aligns an APK."

@@ -4,9 +4,12 @@
   (:require [leiningen compile javac]
             [clojure.java.io :as io]
             [clojure.set :as sets]
-            [leiningen.core.eval :as eval])
+            [leiningen.core.eval :as eval]
+            [clojure.string :as st]
+            [clostache.parser :as clostache])
   (:use [leiningen.droid.utils :only [get-sdk-android-jar sdk-binary
-                                      ensure-paths sh dev-build?]]
+                                      ensure-paths sh dev-build?]]            
+        [leiningen.new.templates :only [slurp-resource sanitize]]
         [leiningen.droid.manifest :only [get-package-name generate-manifest]]
         [leiningen.core
          [main :only [debug info abort]]
@@ -27,6 +30,35 @@
           (into {} (map (fn [[k# v#]]
                           [k# (symbol (subs (str v#) 2))])
                         *data-readers*)))))
+
+(defn- java-type [x]
+  (condp = (type x)
+    Boolean "boolean"
+    String  "String"
+    Long    "long"
+    Double  "double"
+    (assert false ":build-config only supports boolean, String, long and double types")))
+
+(defn map-constants [constants]
+  (map (fn [[k v]]
+         {:key k
+          :value (pr-str v)
+          :type (java-type v)})
+       constants))
+
+(defn generate-build-constants
+  [{{:keys [manifest-path gen-path build-config]} :android :as project}]  
+  (let [res                (io/resource "templates/BuildConfig.java")
+        package-name       (get-package-name manifest-path)
+        package-path       (apply io/file gen-path (st/split package-name #"\."))
+        template-constants (map-constants build-config)]
+    (ensure-paths package-path)
+    (->> {:debug        (dev-build? project)
+          :package-name package-name
+          :constants    template-constants}
+         (clostache/render (slurp-resource res))
+         (spit (io/file package-path "BuildConfig.java"))))
+  project)
 
 (defn generate-resource-code
   "Generates the R.java file from the resources.
@@ -59,7 +91,7 @@
   "Generates R.java and builds a manifest with the appropriate version
   code and substitutions."
   [project]
-  (doto project generate-manifest generate-resource-code))
+  (doto project generate-manifest generate-resource-code generate-build-constants))
 
 ;; ### Compilation
 
@@ -71,7 +103,7 @@
 ;;
 (def ^:private always-compile-ns
   '#{clojure.core clojure.core.protocols clojure.string
-     clojure.java.io neko.init})
+     clojure.java.io})
 
 (defn namespaces-to-compile
   "Takes project and returns a set of namespaces that should be AOT-compiled."

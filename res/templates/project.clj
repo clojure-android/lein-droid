@@ -9,21 +9,21 @@
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
-  :plugins [[lein-droid "0.3.0-beta4"]]
+  :plugins [[lein-droid "0.3.2"]]
 
   :dependencies [[org.clojure-android/clojure "1.7.0-alpha3" :use-resources true]
-                 [neko/neko "3.1.0-preview2"]]
+                 [neko/neko "3.1.1"]]
   :profiles {:default [:dev]
 
              :dev
-             [;; :android-common :android-user
+             [:android-common :android-user
               {:dependencies [[org.clojure-android/tools.nrepl "0.2.6"]]
                :target-path "target/debug"
                :android {:aot :all-with-unused
                          :rename-manifest-package "{{package-sanitized}}.debug"
                          :manifest-options {:app-name "{{app-name}} - debug"}}}]
              :release
-             [;; :android-common
+             [:android-common
               {:target-path "target/release"
                :android
                { ;; Specify the path to your private keystore

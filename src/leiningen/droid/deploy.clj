@@ -4,7 +4,7 @@
   (:use [leiningen.core.main :only [debug info abort *debug*]]
         [leiningen.droid.manifest :only (get-launcher-activity
                                          get-package-name)]
-        [leiningen.droid.utils :only [sh ensure-paths dev-build? append-suffix
+        [leiningen.droid.utils :only [sh ensure-paths append-suffix
                                       prompt-user sdk-binary]]
         [leiningen.droid.compatibility :only (create-repl-port-file)]
         [reply.main :only (launch-nrepl)]))
@@ -69,15 +69,12 @@
    & device-args]
   (info "Installing APK...")
   (let [adb-bin (sdk-binary project :adb)
-        apk-path (if (dev-build? project)
-                   (append-suffix out-apk-path "debug")
-                   out-apk-path)
-        _ (ensure-paths apk-path)
+        _ (ensure-paths out-apk-path)
         device (get-device-args adb-bin device-args)
         output (java.io.StringWriter.)]
     ;; Rebind *out* to get the output `adb` produces.
     (binding [*out* output, *debug* true]
-      (sh adb-bin device "install" "-r" apk-path))
+      (sh adb-bin device "install" "-r" out-apk-path))
     (let [output (str output)
           response (some
                      adb-responses
@@ -90,7 +87,7 @@
           (if (.equalsIgnoreCase "y" resp)
             (do
               (sh adb-bin device "uninstall" (get-package-name manifest-path))
-              (sh adb-bin device "install" apk-path))
+              (sh adb-bin device "install" out-apk-path))
             (abort "Cannot proceed with installation.")))
 
         (do (info output)

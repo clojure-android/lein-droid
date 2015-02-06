@@ -21,8 +21,8 @@
    supports, consult [[https://github.com/clojure-android/lein-droid/wiki/project.clj-options][this page]].
 
    If you'd like to read the code, Marginalia docs are [[http://clojure-android.github.io/lein-droid/][here]].
-   
-   [[https://github.com/krisc][Kris Calabio]] put together [[https://github.com/krisc/events/blob/master/tutorial.md][an amazing tutorial]] 
+
+   [[https://github.com/krisc][Kris Calabio]] put together [[https://github.com/alexander-yakushev/events/blob/master/tutorial.md][an amazing tutorial]] 
    on how to write your first real Clojure/Android application.
 
 ** Contributors

@@ -1,6 +1,7 @@
 (ns {{package}}.main
-    (:use [neko.activity :only [defactivity set-content-view! *a]]
-          [neko.threading :only [on-ui]]))
+    (:require [neko.activity :refer [defactivity set-content-view!]]
+              [neko.debug :refer [*a]]
+              [neko.threading :refer [on-ui]]))
 
 (defactivity {{package}}.{{activity}}
   :key :main
