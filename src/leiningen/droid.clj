@@ -67,7 +67,7 @@
      (help #'droid))
   ([project & [cmd & args]]
      (init-hooks)
-     (some-> project
+     (some-> (proj)
              android-parameters
              (execute-subtask cmd args))))
 

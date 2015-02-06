@@ -7,7 +7,9 @@ import android.os.Bundle;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ImageView;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Button;
 import android.util.Log;
 
 import clojure.lang.Var;
@@ -27,21 +29,28 @@ public class SplashActivity extends Activity {
         if (firstLaunch) {
             firstLaunch = false;
             setupSplash();
-            loadClojure();
+            // loadClojure();
         } else {
             proceed();
         }
     }
 
     public void setupSplash() {
-        setContentView(R.layout.splashscreen);
+        Button b = new Button(this);
+        setContentView(b);
 
-        TextView appNameView = (TextView)findViewById(R.id.splash_app_name);
-        appNameView.setText(R.string.app_name);
+        b.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    loadClojure();
+                }
+            });
+        // TextView appNameView = (TextView)findViewById(R.id.splash_app_name);
+        // appNameView.setText(R.string.app_name);
 
-        Animation rotation = AnimationUtils.loadAnimation(this, R.anim.splash_rotation);
-        ImageView circleView = (ImageView)findViewById(R.id.splash_circles);
-        circleView.startAnimation(rotation);
+        // Animation rotation = AnimationUtils.loadAnimation(this, R.anim.splash_rotation);
+        // ImageView circleView = (ImageView)findViewById(R.id.splash_circles);
+        // circleView.startAnimation(rotation);
     }
 
     public void proceed() {
@@ -54,10 +63,10 @@ public class SplashActivity extends Activity {
                 @Override
                 public void run() {
                     Var LOAD = RT.var("clojure.core", "load");
-                    LOAD.invoke("/neko/init");
+                    LOAD.invoke("/clojure/core");
 
-                    Var INIT = RT.var("neko.init", "init");
-                    INIT.invoke(SplashActivity.this.getApplication());
+                    // Var INIT = RT.var("neko.init", "init");
+                    // INIT.invoke(SplashActivity.this.getApplication());
 
                     try {
                         Class.forName("test.leindroid.sample.MainActivity");

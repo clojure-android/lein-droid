@@ -4,21 +4,21 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
 
-  :global-vars {*warn-on-reflection* true}
+  :global-vars {clojure.core/*warn-on-reflection* true}
 
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  :plugins [[lein-droid "0.3.0"]]
+  ;; :plugins [[lein-droid "0.3.0"]]
 
   ;; Uncomment this line if your project doesn't use Clojure. Also
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
   :dependencies [[org.clojure-android/clojure "1.7.0-alpha3" :use-resources true]
-                 [neko/neko "3.1.0"]]
-  :profiles {:default [:dev]
+                 [neko/neko "3.1.2-SNAPSHOT"]]
+  :profiles {:default [:lean]
 
              :dev
              [:android-common :android-user
@@ -60,9 +60,16 @@
 
              :lean
              [:release
-              {:dependencies ^:replace [[org.bytopia/clojure "1.7.0-skummet-SNAPSHOT" :use-resources true]
-                                        [neko/neko "3.1.1-SNAPSHOT" :exclusions [[org.clojure-android/clojure]]]]
-               :android {:lean-compile true
+              {:dependencies ^:replace [[org.clojure-android/clojure "1.7.1-skummet-SNAPSHOT" :use-resources true]
+                                        ;; [neko/neko "3.1.1-SNAPSHOT" :exclusions [[org.clojure-android/clojure]]]
+                                        ]
+               :jvm-opts ["-Dclojure.compile.ignore-lean-classes=true"] 
+               :android {:build-type :debug
+                         :keystore-path "/home/unlogic/.android/debug.keystore"
+                         :key-alias "androiddebugkey"
+                         :keypass "android"
+                         :storepass "android"
+                         :lean-compile true
                          :skummet-skip-vars ["#'neko.init/init"
                                              "#'neko.context/context"
                                              "#'neko.resource/package-name"

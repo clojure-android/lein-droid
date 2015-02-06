@@ -15,6 +15,16 @@
 
 ;; ### Pre-compilation tasks
 
+(defn eval-in-project
+  ([project form init]
+   (eval/prep project)
+   (eval/eval-in project
+                 `(do ~@(map (fn [[k v]] `(set! ~k ~v)) (:global-vars project))
+                      ~init
+                      ~@(:injections project)
+                      ~form)))
+  ([project form] (eval-in-project project form nil)))
+
 (defn save-data-readers-to-resource
   "Save project's *data-readers* value to application's resources so
   it can be later retrieved in runtime. This is necessary to be able
@@ -130,19 +140,19 @@
                   (if (or dev-build start-nrepl-server) "enabled" "disabled")))
     (let [form
           (if lean-compile
-            `(let [lean-var?# (fn [var#]
-                                (not (#{~@skummet-skip-vars}
-                                      (str var#))))]
-               (push-thread-bindings {#'clojure.core/*loaded-libs*
-                                      (ref (sorted-set))})
+            `(clojure.core/let [lean-var?# (fn [var#]
+                                             (clojure.core/not (#{~@skummet-skip-vars}
+                                                                (clojure.core/str var#))))]
+               (clojure.core/push-thread-bindings {#'clojure.core/*loaded-libs*
+                                                   (clojure.core/ref (clojure.core/sorted-set))})
                (try
-                 (binding [~'*lean-var?* lean-var?#
-                           ~'*lean-compile* true
-                           *compiler-options* ~opts]
-                   (doseq [namespace# '~nses]
-                     (println "Compiling" namespace#)
+                 (clojure.core/binding [~'clojure.core/*lean-var?* lean-var?#
+                                        ~'clojure.core/*lean-compile* true
+                                        ~'clojure.core/*compiler-options* ~opts]
+                   (clojure.core/doseq [namespace# '~nses]
+                     (clojure.core/println "Compiling" namespace#)
                      (clojure.core/compile namespace#)))
-                 (finally (pop-thread-bindings))))
+                 (finally (clojure.core/pop-thread-bindings))))
             `(binding [*compiler-options* ~opts]
                (doseq [namespace# '~nses]
                  (println "Compiling" namespace#)
@@ -153,7 +163,7 @@
                                              (partial remove #{"compile"}))
                           lean-compile (update-in [:jvm-opts] conj lean-opt))]
       (.mkdirs (io/file (:compile-path project)))
-      (try (eval/eval-in-project project form)
+      (try (eval-in-project project form)
            (info "Compilation succeeded.")
            (catch Exception e
              (abort "Compilation failed."))))))
