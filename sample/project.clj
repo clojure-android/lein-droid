@@ -17,7 +17,7 @@
   ;; :java-only true
 
   :dependencies [[org.clojure-android/clojure "1.7.0-alpha5" :use-resources true]
-                 [neko/neko "3.2.0-preview2"]]
+                 [neko/neko "3.2.0-preview3"]]
 
   :profiles {:default [:dev]
 
