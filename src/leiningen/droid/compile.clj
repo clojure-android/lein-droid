@@ -15,13 +15,23 @@
 
 ;; ### Pre-compilation tasks
 
+(defn eval-in-project
+  ([project form init]
+   (eval/prep project)
+   (eval/eval-in project
+                 `(do ~@(map (fn [[k v]] `(set! ~k ~v)) (:global-vars project))
+                      ~init
+                      ~@(:injections project)
+                      ~form)))
+  ([project form] (eval-in-project project form nil)))
+
 (defn save-data-readers-to-resource
   "Save project's *data-readers* value to application's resources so
   it can be later retrieved in runtime. This is necessary to be able
   to use data readers when developing in REPL on the device."
   [{{:keys [assets-gen-path]} :android :as project}]
   (.mkdirs (io/file assets-gen-path))
-  (eval/eval-in-project
+  (eval-in-project
    project
    `(spit (io/file ~assets-gen-path "data_readers.clj")
           (into {} (map (fn [[k# v#]]
@@ -63,16 +73,6 @@
 
 ;; ### Compilation
 
-;; Stores a set of namespaces that should always be compiled
-;; regardless of the build type. Since these namespaces are used in
-;; `eval-in-project` call they naturally don't get AOT-compiled during
-;; automatic dependency resolution, so we have to make sure they are
-;; compiled anyway.
-;;
-(def ^:private always-compile-ns
-  '#{clojure.core clojure.core.protocols clojure.string
-     clojure.java.io})
-
 (defn namespaces-to-compile
   "Takes project and returns a set of namespaces that should be AOT-compiled."
   [{{:keys [aot aot-exclude-ns]} :android :as project}]
@@ -85,7 +85,6 @@
         ;; else
           (map symbol aot))
       set
-      (sets/union always-compile-ns)
       (sets/difference (set (map symbol aot-exclude-ns)))))
 
 (defn compile-clojure
@@ -130,41 +129,35 @@
                   (if (or dev-build start-nrepl-server) "enabled" "disabled")))
     (let [form
           (if lean-compile
-            `(let [lean-var?# (fn [var#]
-                                (not (#{~@skummet-skip-vars}
-                                      (str var#))))]
-               (push-thread-bindings {#'clojure.core/*loaded-libs*
-                                      (ref (sorted-set))})
-               (try
-                 (binding [~'*lean-var?* lean-var?#
-                           ~'*lean-compile* true
-                           *compiler-options* ~opts]
-                   (doseq [namespace# '~nses]
-                     (println "Compiling" namespace#)
-                     (clojure.core/compile namespace#)))
-                 (finally (pop-thread-bindings))))
+            `(let [lean-var?# (fn [var#] (not (#{~@skummet-skip-vars}
+                                              (str var#))))]
+               (binding [~'clojure.core/*lean-var?* lean-var?#
+                         ~'clojure.core/*lean-compile* true
+                         ~'clojure.core/*compiler-options* ~opts]
+                 (doseq [namespace# '~nses]
+                   (println "Compiling" namespace#)
+                   (clojure.core/compile namespace#))))
             `(binding [*compiler-options* ~opts]
                (doseq [namespace# '~nses]
                  (println "Compiling" namespace#)
-                 (clojure.core/compile namespace#))))
-          lean-opt "-Dclojure.compile.ignore-lean-classes=true"
-          project (cond-> project
-                          :always (update-in [:prep-tasks]
-                                             (partial remove #{"compile"}))
-                          lean-compile (update-in [:jvm-opts] conj lean-opt))]
+                 (clojure.core/compile namespace#))))]
       (.mkdirs (io/file (:compile-path project)))
-      (try (eval/eval-in-project project form)
+      (try (eval-in-project project form)
            (info "Compilation succeeded.")
            (catch Exception e
              (abort "Compilation failed."))))))
 
 (defn compile
   "Compiles both Java and Clojure source files."
-  [{{:keys [sdk-path gen-path]} :android, java-only :java-only :as project} & args]
+  [{{:keys [sdk-path gen-path lean-compile]} :android,
+    java-only :java-only :as project}]
   (ensure-paths sdk-path)
-  (let [project (update-in project [:java-source-paths] conj gen-path)]
-    ;; (when-not java-only
-    ;;   (save-data-readers-to-resource project))
-    (apply leiningen.javac/javac project args)
+  (let [project (cond-> project
+                        :always (update-in [:prep-tasks]
+                                           (partial remove #{"compile"}))
+                        :always (update-in [:java-source-paths] conj gen-path))]
+    (when-not java-only
+      (save-data-readers-to-resource project))
+    (leiningen.javac/javac project)
     (when-not java-only
       (compile-clojure project))))
