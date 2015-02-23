@@ -10,7 +10,6 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.util.Log;
 
-import clojure.lang.Symbol;
 import clojure.lang.Var;
 import clojure.lang.RT;
 
@@ -54,9 +53,8 @@ public class SplashActivity extends Activity {
         new Thread(new Runnable(){
                 @Override
                 public void run() {
-                    Symbol CLOJURE_MAIN = Symbol.intern("neko.init");
-                    Var REQUIRE = RT.var("clojure.core", "require");
-                    REQUIRE.invoke(CLOJURE_MAIN);
+                    Var LOAD = RT.var("clojure.core", "load");
+                    LOAD.invoke("/neko/init");
 
                     Var INIT = RT.var("neko.init", "init");
                     INIT.invoke(SplashActivity.this.getApplication());
