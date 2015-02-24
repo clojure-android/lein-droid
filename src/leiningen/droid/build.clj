@@ -227,10 +227,10 @@ files or jar file, e.g. one produced by proguard."
   Either a debug keystore key or a release key is used based on
   whether the build type is the debug one. Creates a debug keystore if
   it is missing."
-  [{{:keys [out-apk-path sigalg use-debug-keystore?
+  [{{:keys [out-apk-path sigalg use-debug-keystore
             keystore-path key-alias keypass storepass]} :android :as project}]
   (info "Signing APK with" keystore-path "...")
-  (let [debug (or (dev-build? project) use-debug-keystore?)
+  (let [debug (or (dev-build? project) use-debug-keystore)
         unaligned-path (append-suffix out-apk-path "unaligned")
         sigalg (or sigalg "SHA1withRSA")]
     (when (and debug (not (.exists (io/file keystore-path))))
