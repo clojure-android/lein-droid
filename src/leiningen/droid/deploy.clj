@@ -65,8 +65,8 @@
 ;; why this subtask is full of low-level stuff.
 (defn install
   "Installs the APK on the only (or specified) device or emulator."
-  [{{:keys [out-apk-path manifest-path]} :android :as project}
-   & device-args]
+  [{{:keys [out-apk-path manifest-path rename-manifest-package]}
+    :android :as project} & device-args]
   (info "Installing APK...")
   (let [adb-bin (sdk-binary project :adb)
         _ (ensure-paths out-apk-path)
@@ -83,10 +83,12 @@
         :success (debug output)
 
         :inconsistent-certificates
-        (let [resp (prompt-user uninstall-prompt)]
+        (let [resp (prompt-user uninstall-prompt)
+              package-name (or rename-manifest-package
+                               (get-package-name manifest-path))]
           (if (.equalsIgnoreCase "y" resp)
             (do
-              (sh adb-bin device "uninstall" (get-package-name manifest-path))
+              (sh adb-bin device "uninstall" package-name)
               (sh adb-bin device "install" out-apk-path))
             (abort "Cannot proceed with installation.")))
 
