@@ -63,7 +63,8 @@
              [:release
               {:dependencies ^:replace [[org.skummet/clojure-android "1.7.0-alpha5-r1" :use-resources true]
                                         [neko/neko "3.2.0-preview3"]]
-               :exclusions [[org.clojure/clojure]]
+               :exclusions [[org.clojure/clojure]
+                            [org.clojure-android/clojure]]
                :jvm-opts ["-Dclojure.compile.ignore-lean-classes=true"]
                :global-vars ^:replace {clojure.core/*warn-on-reflection* true}
                :android {:use-debug-keystore true
