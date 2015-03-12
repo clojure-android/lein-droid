@@ -41,28 +41,22 @@
   (ensure-paths sdk-path)
   (let [bt-root-dir (file sdk-path "build-tools")
         ;; build-tools directory contains a subdir which name we don't
-        ;; know that has all the tools. Let's grab the first directory
+        ;; know that has all the tools. Let's grab the last directory
         ;; inside build-tools/ and hope it is the one we need.
         bt-dir (or build-tools-version
                    (->> (.list bt-root-dir)
                         (filter #(.isDirectory (file bt-root-dir %)))
                         sort last)
                    (abort "Build tools not found."
-                          "Download them using the Android SDK Manager."))
-        bt-ver (Integer/parseInt (get (re-find #"(\d+)\..*" bt-dir) 1 "-1"))]
-    ;; if bt-ver is non-negative we have a definite numeric version number
-    ;; assume the latest build-tools dir is not empty
+                          "Download them using the Android SDK Manager."))]
     {:dx {:unix ["build-tools" bt-dir "dx"]
           :win ["build-tools" bt-dir "dx.bat"]}
      :adb {:unix ["platform-tools" "adb"]
            :win ["platform-tools" "adb.exe"]}
      :aapt {:unix ["build-tools" bt-dir "aapt"]
             :win ["build-tools" bt-dir "aapt.exe"]}
-     :zipalign (if (>= bt-ver 20)
-                 {:unix ["build-tools" bt-dir "zipalign"]
-                  :win ["build-tools" bt-dir "zipalign.exe"]}
-                 {:unix ["tools" "zipalign"]
-                  :win ["tools" "zipalign.exe"]})
+     :zipalign {:unix ["build-tools" bt-dir "zipalign"]
+                :win ["build-tools" bt-dir "zipalign.exe"]}
      :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
                 :win ["tools" "proguard" "lib" "proguard.jar"]}}))
 
