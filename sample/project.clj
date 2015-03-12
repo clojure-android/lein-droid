@@ -27,7 +27,7 @@
               ;; contain machine-specific options such as {:android {:sdk-path
               ;; "/path/to/sdk"}}. :android-user profile is for global
               ;; dev-related options like CIDER configuration.
-              {:dependencies [[org.clojure-android/tools.nrepl "0.2.6"]]
+              {:dependencies [[org.clojure-android/tools.nrepl "0.2.6-lollipop"]]
                :target-path "target/debug"
                :android {:aot :all-with-unused
                          ;; The namespace of the app package - having a
