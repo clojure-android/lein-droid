@@ -3,10 +3,10 @@
 (ns leiningen.droid.utils
   (:require [leiningen.core.project :as pr])
   (:use [clojure.java.io :only (file reader)]
-        [leiningen.core.main :only (info debug abort)]
+        [leiningen.core.main :only (info debug abort *debug*)]
         [leiningen.core.classpath :only [resolve-dependencies]]
         [clojure.string :only (join)])
-  (:import java.io.File))
+  (:import [java.io File StringWriter]))
 
 ;; #### Convenient functions to run SDK binaries
 
@@ -280,13 +280,18 @@
      (let [builder# (ProcessBuilder. ~command)
            _# (.redirectErrorStream builder# true)
            ~process-name (.start builder#)
-           output# (line-seq (reader (.getInputStream ~process-name)))]
+           output# (line-seq (reader (.getInputStream ~process-name)))
+           out-stream# (StringWriter.)]
        ~@body
-       (.waitFor ~process-name)
        (doseq [line# output#]
-         (if (= (.exitValue ~process-name) 0)
+         (if *debug*
            (debug line#)
-           (info line#)))
+           (binding [*out* out-stream#]
+             (println line#))))
+       (.waitFor ~process-name)
+       (when-not (and (= (.exitValue ~process-name) 0)
+                      (not *debug*))
+         (info (str out-stream#)))
        (when-not (= (.exitValue ~process-name) 0)
          (abort "Abort execution."))
        output#)))
