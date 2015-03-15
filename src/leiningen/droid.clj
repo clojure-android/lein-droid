@@ -12,7 +12,7 @@
         [leiningen.droid.compile :only [compile code-gen]]
         [leiningen.droid
          [classpath :only [init-hooks]]
-         [build :only [create-dex create-obfuscated-dex
+         [build :only [create-dex
                        crunch-resources package-resources create-apk
                        sign-apk zipalign-apk apk build jar]]
          [deploy :only [install run forward-port repl deploy]]
@@ -54,8 +54,7 @@
               "please use 'lein with-profile release droid doall'")))
 
 (defn ^{:no-project-needed true
-        :subtasks [#'new #'init #'code-gen #'compile
-                   #'create-dex #'create-obfuscated-dex
+        :subtasks [#'new #'init #'code-gen #'compile #'create-dex
                    #'crunch-resources #'package-resources
                    #'create-apk #'sign-apk #'zipalign-apk
                    #'install #'run #'forward-port #'repl
@@ -85,7 +84,6 @@
     "code-gen" (code-gen project)
     "compile" (compile project)
     "create-dex" (create-dex project)
-    "create-obfuscated-dex" (create-obfuscated-dex project)
     "crunch-resources" (crunch-resources project)
     "package-resources" (package-resources project)
     "create-apk" (create-apk project)

@@ -57,8 +57,8 @@
             :win ["build-tools" bt-dir "aapt.exe"]}
      :zipalign {:unix ["build-tools" bt-dir "zipalign"]
                 :win ["build-tools" bt-dir "zipalign.exe"]}
-     :proguard {:unix ["tools" "proguard" "lib" "proguard.jar"]
-                :win ["tools" "proguard" "lib" "proguard.jar"]}}))
+     :proguard {:unix ["tools" "proguard" "bin" "proguard.sh"]
+                :win ["tools" "proguard" "bin" "proguard.bat"]}}))
 
 (defn sdk-binary
   "Given the project map and the binary keyword, returns either a full
@@ -110,6 +110,8 @@
         gen-path (str (file target-path "gen"))
         has-template (.exists manifest-template-file)]
     {:out-dex-path target-path
+     :proguard-execute true
+     :proguard-output-jar-path (str (file target-path "mininified-classes.jar"))
      :manifest-path (if has-template
                       (str (file target-path "AndroidManifest.xml"))
                       "AndroidManifest.xml")
