@@ -10,7 +10,7 @@
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  :plugins [[lein-droid "0.3.5"]]
+  :plugins [[lein-droid "0.4.0-SNAPSHOT"]]
 
   ;; Uncomment this line if your project doesn't use Clojure. Also
   ;; don't forget to remove respective dependencies.
@@ -61,13 +61,15 @@
 
              :lean
              [:release
-              {:dependencies ^:replace [[org.skummet/clojure-android "1.7.0-alpha5-r1" :use-resources true]
+              {:dependencies ^:replace [[org.skummet/clojure-android "1.7.0-alpha5-r2" :use-resources true]
                                         [neko/neko "3.2.0-preview3"]]
                :exclusions [[org.clojure/clojure]
                             [org.clojure-android/clojure]]
                :jvm-opts ["-Dclojure.compile.ignore-lean-classes=true"]
                :global-vars ^:replace {clojure.core/*warn-on-reflection* true}
                :android {:use-debug-keystore true
+                         :proguard-execute true
+                         :proguard-conf-path "proguard.conf"
                          :lean-compile true
                          :skummet-skip-vars ["#'neko.init/init"
                                              "#'neko.context/context"
