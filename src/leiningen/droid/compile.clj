@@ -173,11 +173,13 @@
                          ~'clojure.core/*compiler-options* ~opts]
                  (doseq [namespace# '~nses]
                    (println "Compiling" namespace#)
-                   (clojure.core/compile namespace#))))
+                   (clojure.core/compile namespace#))
+                 (shutdown-agents)))
             `(binding [*compiler-options* ~opts]
                (doseq [namespace# '~nses]
                  (println "Compiling" namespace#)
-                 (clojure.core/compile namespace#))))]
+                 (clojure.core/compile namespace#))
+               (shutdown-agents)))]
       (.mkdirs (io/file (:compile-path project)))
       (try (eval-in-project project form)
            (info "Compilation succeeded.")
