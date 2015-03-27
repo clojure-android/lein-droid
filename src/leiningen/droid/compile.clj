@@ -51,9 +51,10 @@
 
 (defn map-constants [constants]
   (map (fn [[k v]]
-         {:key k
-          :value (pr-str v)
-          :type (java-type v)})
+         (binding [*print-dup* true]
+           {:key k
+            :value (pr-str v)
+            :type (java-type v)}))
        constants))
 
 (defn generate-build-constants
@@ -61,7 +62,10 @@
   (let [res                (io/resource "templates/BuildConfig.java")
         package-name       (get-package-name manifest-path)
         package-path       (apply io/file gen-path (st/split package-name #"\."))
-        template-constants (map-constants build-config)]
+        version-name       (-> project :version)
+        application-id     (or (-> project :android :rename-manifest-package) package-name)
+        template-constants (map-constants (merge build-config {"VERSION_NAME"   version-name
+                                                               "APPLICATION_ID" application-id}))]
     (ensure-paths package-path)
     (->> {:debug        (dev-build? project)
           :package-name package-name
