@@ -64,8 +64,9 @@
         package-path       (apply io/file gen-path (st/split package-name #"\."))
         version-name       (-> project :version)
         application-id     (or (-> project :android :rename-manifest-package) package-name)
-        template-constants (map-constants (merge build-config {"VERSION_NAME"   version-name
-                                                               "APPLICATION_ID" application-id}))]
+        template-constants (map-constants (merge {"VERSION_NAME"   version-name
+                                                  "APPLICATION_ID" application-id}
+                                                 build-config))]
     (ensure-paths package-path)
     (->> {:debug        (dev-build? project)
           :package-name package-name
