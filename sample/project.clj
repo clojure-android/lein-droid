@@ -16,8 +16,8 @@
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
-  :dependencies [[org.clojure-android/clojure "1.7.0-alpha5" :use-resources true]
-                 [neko/neko "3.2.0-preview3"]]
+  :dependencies [[org.clojure-android/clojure "1.7.0-alpha6" :use-resources true]
+                 [neko/neko "3.2.0"]]
 
   :profiles {:default [:dev]
 
@@ -27,7 +27,7 @@
               ;; contain machine-specific options such as {:android {:sdk-path
               ;; "/path/to/sdk"}}. :android-user profile is for global
               ;; dev-related options like CIDER configuration.
-              {:dependencies [[org.clojure-android/tools.nrepl "0.2.6-lollipop"]]
+              {:dependencies [[org.clojure/tools.nrepl "0.2.10"]]
                :target-path "target/debug"
                :android {:aot :all-with-unused
                          ;; The namespace of the app package - having a
@@ -61,8 +61,8 @@
 
              :lean
              [:release
-              {:dependencies ^:replace [[org.skummet/clojure-android "1.7.0-alpha5-r2" :use-resources true]
-                                        [neko/neko "3.2.0-preview3"]]
+              {:dependencies ^:replace [[org.skummet/clojure "1.7.0-alpha5-r4" :use-resources true]
+                                        [neko/neko "3.2.0"]]
                :exclusions [[org.clojure/clojure]
                             [org.clojure-android/clojure]]
                :jvm-opts ["-Dclojure.compile.ignore-lean-classes=true"]
