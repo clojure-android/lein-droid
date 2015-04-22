@@ -17,7 +17,7 @@
 
              :dev
              [:android-common :android-user
-              {:dependencies [[org.clojure-android/tools.nrepl "0.2.10"]]
+              {:dependencies [[org.clojure/tools.nrepl "0.2.10"]]
                :target-path "target/debug"
                :android {:aot :all-with-unused
                          :rename-manifest-package "{{package-sanitized}}.debug"
