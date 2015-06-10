@@ -209,8 +209,10 @@
 
 (defn get-sdk-android-jar
   "Returns a version-specific path to the `android.jar` SDK file."
-  [sdk-root version]
-  (str (file (get-sdk-platform-path sdk-root version) "android.jar")))
+  ([{{:keys [sdk-path target-version]} :android :as project}]
+   (get-sdk-android-jar sdk-path target-version))
+  ([sdk-root version]
+   (str (file (get-sdk-platform-path sdk-root version) "android.jar"))))
 
 (defn get-sdk-google-api-path
   "Returns a version-specific path to the Google SDK directory."
@@ -267,6 +269,10 @@
         mod-proj (assoc project :dependencies res-deps)]
     (resolve-dependencies :dependencies mod-proj)))
 
+(def ^:dynamic *sh-print-output*
+  "If true, print the output of the shell command regardless of *debug*."
+  false)
+
 (defmacro with-process
   "Executes the subprocess specified in the binding list and applies
   `body` do it while it is running. The binding list consists of a var
@@ -284,16 +290,17 @@
            _# (.redirectErrorStream builder# true)
            ~process-name (.start builder#)
            output# (line-seq (reader (.getInputStream ~process-name)))
-           out-stream# (StringWriter.)]
+           out-stream# (StringWriter.)
+           print-output?# (or *debug* *sh-print-output*)]
        ~@body
        (doseq [line# output#]
-         (if *debug*
-           (debug line#)
+         (if print-output?#
+           (info line#)
            (binding [*out* out-stream#]
              (println line#))))
        (.waitFor ~process-name)
        (when-not (and (= (.exitValue ~process-name) 0)
-                      (not *debug*))
+                      (not print-output?#))
          (info (str out-stream#)))
        (when-not (= (.exitValue ~process-name) 0)
          (abort "Abort execution."))
