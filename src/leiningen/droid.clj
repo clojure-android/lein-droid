@@ -46,19 +46,12 @@
     (doseq [task build-steps]
       (execute-subtask project task device-args))))
 
-(defn release
-  "DEPRECATED. Metatask. Builds, packs and deploys the release version of the
-  project."
-  [project & args]
-  (abort (str "\"release\" subtask is deprecated, "
-              "please use 'lein with-profile release droid doall'")))
-
 (defn ^{:no-project-needed true
         :subtasks [#'new #'init #'code-gen #'compile #'create-dex
                    #'crunch-resources #'package-resources
                    #'create-apk #'sign-apk #'zipalign-apk
                    #'install #'run #'forward-port #'repl
-                   #'build #'apk #'deploy #'doall #'release #'help
+                   #'build #'apk #'deploy #'doall #'help #'local-test
                    #'gather-dependencies #'jar #'pprint]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
@@ -101,7 +94,6 @@
     "apk" (apk project)
     "deploy" (apply deploy project args)
     "doall" (apply doall project args)
-    "release" (apply release project args)
     "jar" (jar project)
 
     ;; Help tasks
