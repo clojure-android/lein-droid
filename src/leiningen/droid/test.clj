@@ -14,7 +14,10 @@
   (when-not (-> project :android :library)
     (compile/code-gen project))
   (compile/compile project)
-  (let [test-nses (b/namespaces-on-classpath
+  (let [src-nses (b/namespaces-on-classpath
+                  :classpath (map io/file (distinct (:source-paths project)))
+                  :ignore-unreadable? false)
+        test-nses (b/namespaces-on-classpath
                    :classpath (map io/file (distinct (:test-paths project)))
                    :ignore-unreadable? false)
         cpath (cp/get-classpath project)
@@ -22,4 +25,5 @@
     (binding [utils/*sh-print-output* true]
       (utils/sh "java" "-cp" (str/join ":" cpath)
                 "coa.droid_test.internal.TestRunner" "-mode" mode
-                (map str test-nses)))))
+                ":src" (map str src-nses)
+                ":test" (map str test-nses)))))
