@@ -91,9 +91,7 @@
     "clean" (clean project)
 
     ;; Test tasks
-    "local-test" (do (code-gen project)
-                     (compile project)
-                     (apply local-test project args))
+    "local-test" (apply local-test project args)
 
     ;; Meta tasks
     "build" (build project)

@@ -158,10 +158,11 @@
     {:keys [nrepl-middleware]} :repl-options
     :as project}]
   (info "Compiling Clojure files...")
-  (ensure-paths manifest-path)
   (debug "Project classpath:" (get-classpath project))
   (let [nses (namespaces-to-compile project)
         dev-build (dev-build? project)
+        package-name (try (get-package-name manifest-path)
+                          (catch Exception ex nil))
         opts (cond-> {:neko.init/release-build (not dev-build)
                       :neko.init/start-nrepl-server start-nrepl-server
                       :neko.init/nrepl-port repl-device-port
@@ -169,10 +170,10 @@
                       enable-dynamic-compilation
                       :neko.init/ignore-log-priority ignore-log-priority
                       :neko.init/nrepl-middleware (list 'quote nrepl-middleware)
-                      :neko.init/package-name (get-package-name manifest-path)}
-                     (not dev-build) (assoc :elide-meta
-                                       [:doc :file :line :column :added :author
-                                        :static :arglists :forms]))]
+                      :neko.init/package-name package-name}
+               (not dev-build) (assoc :elide-meta
+                                      [:doc :file :line :column :added :author
+                                       :static :arglists :forms]))]
     (info (format "Build type: %s, dynamic compilation: %s, remote REPL: %s."
                   (if dev-build "debug" (if lean-compile "lean" "release"))
                   (if (or dev-build start-nrepl-server

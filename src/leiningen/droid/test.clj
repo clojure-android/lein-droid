@@ -4,12 +4,16 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [leiningen.core.classpath :as cp]
+            [leiningen.droid.compile :as compile]
             [leiningen.droid.utils :as utils]
             [leiningen.test :as ltest]))
 
 (defn local-test
   "Runs tests locally using Robolectric."
   [project & [mode]]
+  (when-not (-> project :android :library)
+    (compile/code-gen project))
+  (compile/compile project)
   (let [test-nses (b/namespaces-on-classpath
                    :classpath (map io/file (distinct (:test-paths project)))
                    :ignore-unreadable? false)
