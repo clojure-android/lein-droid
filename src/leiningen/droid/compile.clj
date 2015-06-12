@@ -1,20 +1,21 @@
 (ns leiningen.droid.compile
   "This part of the plugin is responsible for the project compilation."
   (:refer-clojure :exclude [compile])
-  (:require [leiningen compile javac]
+  (:require [bultitude.core :as bultitude]
             [clojure.java.io :as io]
-            [clojure.set :as sets]
+            [clojure.set :as set]
+            [clojure.string :as str]
+            [clostache.parser :as clostache]
+            [leiningen.compile :refer [stale-namespaces]]
+            [leiningen.core.classpath :refer [get-classpath]]
             [leiningen.core.eval :as eval]
-            [clojure.string :as st]
-            [clostache.parser :as clostache])
-  (:use [leiningen.droid.utils :only [get-sdk-android-jar sdk-binary
-                                      ensure-paths sh dev-build?]]            
-        [leiningen.new.templates :only [slurp-resource sanitize]]
-        [leiningen.droid.manifest :only [get-package-name generate-manifest]]
-        [leiningen.core
-         [main :only [debug info abort]]
-         [classpath :only [get-classpath]]]
-        [bultitude.core :only [namespaces-on-classpath]]))
+            [leiningen.core.main :refer [debug info abort]]
+            [leiningen.droid.manifest :refer [get-package-name generate-manifest]]
+            [leiningen.droid.utils :refer [get-sdk-android-jar sdk-binary
+                                           ensure-paths sh dev-build?]]
+            leiningen.javac
+            [leiningen.new.templates :refer [slurp-resource sanitize]])
+  (:import java.util.regex.Pattern))
 
 ;; ### Pre-compilation tasks
 
@@ -58,12 +59,13 @@
        constants))
 
 (defn generate-build-constants
-  [{{:keys [manifest-path gen-path build-config]} :android :as project}]  
+  [{{:keys [manifest-path gen-path build-config rename-manifest-package]}
+    :android :as project}]
   (let [res                (io/resource "templates/BuildConfig.java")
         package-name       (get-package-name manifest-path)
-        package-path       (apply io/file gen-path (st/split package-name #"\."))
+        package-path       (apply io/file gen-path (str/split package-name #"\."))
         version-name       (-> project :version)
-        application-id     (or (-> project :android :rename-manifest-package) package-name)
+        application-id     (or rename-manifest-package package-name)
         template-constants (map-constants (merge {"VERSION_NAME"   version-name
                                                   "APPLICATION_ID" application-id}
                                                  build-config))]
@@ -72,8 +74,7 @@
           :package-name package-name
           :constants    template-constants}
          (clostache/render (slurp-resource res))
-         (spit (io/file package-path "BuildConfig.java"))))
-  project)
+         (spit (io/file package-path "BuildConfig.java")))))
 
 (defn generate-resource-code
   "Generates the R.java file from the resources.
@@ -99,8 +100,7 @@
         external-resources
         "-I" android-jar
         "-J" gen-path
-        "--generate-dependencies"))
-  project)
+        "--generate-dependencies")))
 
 (defn code-gen
   "Generates R.java and builds a manifest with the appropriate version
@@ -113,16 +113,31 @@
 (defn namespaces-to-compile
   "Takes project and returns a set of namespaces that should be AOT-compiled."
   [{{:keys [aot aot-exclude-ns]} :android :as project}]
-  (-> (case aot
-        :all
-          (seq (leiningen.compile/stale-namespaces (assoc project :aot :all)))
-        :all-with-unused
-          (namespaces-on-classpath :classpath
-                                   (map io/file (get-classpath project)))
-        ;; else
-          (map symbol aot))
-      set
-      (sets/difference (set (map symbol aot-exclude-ns)))))
+  (let [all-nses (bultitude/namespaces-on-classpath
+                  :classpath (map io/file (get-classpath project)))
+        include (case aot
+                  :all (stale-namespaces (assoc project :aot :all))
+                  :all-with-unused all-nses
+                  aot)
+        exclude aot-exclude-ns
+
+        {include-nses false, include-regexps true}
+        (group-by #(instance? Pattern %) include)
+
+        {exclude-nses false, exclude-regexps true}
+        (group-by #(instance? Pattern %) exclude)]
+    (->> (set/difference (set (map str (if (seq include-regexps)
+                                         all-nses include-nses)))
+                         (set exclude-nses))
+         (filter (fn [ns] (if (seq include-regexps)
+                           (some #(re-matches % ns) include-regexps)
+                           true)))
+         (remove (fn [ns] (if (seq exclude-regexps)
+                           (some #(re-matches % ns) exclude-regexps)
+                           false)))
+         (concat (if (seq include-regexps)
+                   include-nses ()))
+         (map symbol))))
 
 (defn compile-clojure
   "Compiles Clojure files into .class files.
