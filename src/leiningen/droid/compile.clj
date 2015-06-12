@@ -176,9 +176,13 @@
                    (clojure.core/compile namespace#))
                  (shutdown-agents)))
             `(binding [*compiler-options* ~opts]
+               ;; If expectations is present, don't run it during compilation.
                (doseq [namespace# '~nses]
                  (println "Compiling" namespace#)
                  (clojure.core/compile namespace#))
+               (try (require 'expectations)
+                    ((resolve 'expectations/disable-run-on-shutdown))
+                    (catch Throwable _# nil))
                (shutdown-agents)))]
       (.mkdirs (io/file (:compile-path project)))
       (try (eval-in-project project form)

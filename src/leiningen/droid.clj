@@ -18,6 +18,7 @@
          [deploy :only [install run forward-port repl deploy]]
          [new :only [new init]]
          [compatibility :only [gather-dependencies]]
+         [test :only [local-test]]
          [utils :only [proj wrong-usage android-parameters ensure-paths
                        dev-build?]]]))
 
@@ -88,6 +89,11 @@
     "repl" (repl project)
     "gather-dependencies" (apply gather-dependencies project args)
     "clean" (clean project)
+
+    ;; Test tasks
+    "local-test" (do (code-gen project)
+                     (compile project)
+                     (apply local-test project args))
 
     ;; Meta tasks
     "build" (build project)
