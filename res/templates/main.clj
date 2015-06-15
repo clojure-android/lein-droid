@@ -5,8 +5,9 @@
 
 (defactivity {{package}}.{{activity}}
   :key :main
-  :on-create
-  (fn [this bundle]
+
+  (onCreate [this bundle]
+    (.superOnCreate this bundle)
     (on-ui
       (set-content-view! (*a)
         [:linear-layout {}

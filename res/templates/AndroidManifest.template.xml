@@ -9,6 +9,7 @@
   <uses-sdk android:minSdkVersion="15" />
 
   <application
+      android:name="neko.App"
       android:icon="@drawable/ic_launcher"
       android:label="{{app-name}}">
     <activity android:name=".SplashActivity"

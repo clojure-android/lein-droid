@@ -9,10 +9,10 @@
   :source-paths ["src/clojure" "src"]
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
-  :plugins [[lein-droid "0.4.0-alpha2"]]
+  :plugins [[lein-droid "0.4.0-alpha4"]]
 
-  :dependencies [[org.clojure-android/clojure "1.7.0-alpha6" :use-resources true]
-                 [neko/neko "3.2.0"]]
+  :dependencies [[org.clojure-android/clojure "1.7.0-RC1" :use-resources true]
+                 [neko/neko "4.0.0-alpha1"]]
   :profiles {:default [:dev]
 
              :dev
@@ -42,7 +42,7 @@
             ;; Try increasing this value if dexer fails with
             ;; OutOfMemoryException. Set the value according to your
             ;; available RAM.
-            :dex-opts ["-JXmx4096M"]
+            :dex-opts ["-JXmx4096M" "--incremental"]
 
             ;; If previous option didn't work, uncomment this as well.
             ;; :force-dex-optimize true
@@ -51,4 +51,5 @@
             :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers"
                              "cljs-tooling.complete" "cljs-tooling.info"
                              "cljs-tooling.util.analysis" "cljs-tooling.util.misc"
-                             "cider.nrepl" "cider-nrepl.plugin"]})
+                             "cider.nrepl" "cider-nrepl.plugin"
+                             "cider.nrepl.middleware.util.java.parser"]})
