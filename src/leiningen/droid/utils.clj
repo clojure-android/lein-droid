@@ -1,7 +1,8 @@
 ;; Provides utilities for the plugin.
 ;;
 (ns leiningen.droid.utils
-  (:require [leiningen.core.project :as pr])
+  (:require [leiningen.core.project :as pr]
+            [robert.hooke :refer [with-hooks-disabled]])
   (:use [clojure.java.io :only (file reader)]
         [leiningen.core.main :only (info debug abort *debug*)]
         [leiningen.core.classpath :only [resolve-dependencies]]
@@ -267,7 +268,8 @@
                                  (= lib 'org.clojure-android/clojure))]
                    dep)
         mod-proj (assoc project :dependencies res-deps)]
-    (resolve-dependencies :dependencies mod-proj)))
+    (with-hooks-disabled resolve-dependencies
+      (resolve-dependencies :dependencies mod-proj))))
 
 (def ^:dynamic *sh-print-output*
   "If true, print the output of the shell command regardless of *debug*."

@@ -1,6 +1,7 @@
 (ns leiningen.droid.classpath
   "Contains functions and hooks for Android-specific classpath
   manipulation."
+  (:require [leiningen.droid.aar :refer [get-aar-files]])
   (:use [robert.hooke :only [add-hook]]
         [leiningen.droid.utils :only [get-sdk-android-jar
                                       get-sdk-google-api-jars
@@ -53,6 +54,15 @@
               (repeat nil))
       all-deps)))
 
+(defn- resolve-dependencies-hook
+  "Takes the original `resolve-dependencies` function and arguments to it.
+  Appends jar files extracted from AAR dependencies."
+  [f dependency-key project & rest]
+  (let [deps (apply f dependency-key project rest)]
+    (if (= dependency-key :dependencies)
+      (concat deps (get-aar-files project "classes.jar"))
+      deps)))
+
 ;; We also have to manually attach Android SDK libraries to the
 ;; classpath. The reason for this is that Leiningen doesn't handle
 ;; external dependencies at the high level, and Android jars are not
@@ -79,4 +89,5 @@
 
 (defn init-hooks []
   (add-hook #'leiningen.core.classpath/get-dependencies #'dependencies-hook)
+  (add-hook #'leiningen.core.classpath/resolve-dependencies #'resolve-dependencies-hook)
   (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook))

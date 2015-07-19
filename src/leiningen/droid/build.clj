@@ -15,9 +15,9 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]
             [clojure.java.io :as io]
+            [leiningen.droid.aar :refer [extract-aar-dependencies]]
             [leiningen.droid.sdk :as sdk]
-            leiningen.jar leiningen.javac)
-  (:import java.io.File))
+            leiningen.jar leiningen.javac))
 
 ;; ### Build-related subtasks
 
@@ -130,6 +130,7 @@
   Same as `lein jar` but appends Android libraries to the classpath
   while compiling Java files."
   [project]
+  (extract-aar-dependencies project)
   (leiningen.javac/javac project)
   (leiningen.jar/jar project))
 
@@ -181,7 +182,7 @@
   (ensure-paths out-res-pkg-path out-dex-path)
   (let [unaligned-path (append-suffix out-apk-path "unaligned")
         resource-jars (concat (get-resource-jars project)
-                              (map #(java.io.File. %) resource-jars-paths))]
+                              (map io/file resource-jars-paths))]
     (sdk/create-apk project
                     :apk-name unaligned-path :resource-jars resource-jars)))
 

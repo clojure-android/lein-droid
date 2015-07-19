@@ -10,6 +10,7 @@
             [leiningen.core.classpath :refer [get-classpath]]
             [leiningen.core.eval :as eval]
             [leiningen.core.main :refer [debug info abort]]
+            [leiningen.droid.aar :refer [extract-aar-dependencies]]
             [leiningen.droid.manifest :refer [get-package-name generate-manifest]]
             [leiningen.droid.utils :refer [get-sdk-android-jar sdk-binary
                                            ensure-paths sh dev-build?]]
@@ -106,7 +107,9 @@
   "Generates R.java and builds a manifest with the appropriate version
   code and substitutions."
   [project]
-  (doto project generate-manifest generate-resource-code generate-build-constants))
+  (doto project
+    extract-aar-dependencies
+    generate-manifest generate-resource-code generate-build-constants))
 
 ;; ### Compilation
 
