@@ -35,42 +35,50 @@
   []
   (= java.io.File/separator "\\"))
 
+(defn get-sdk-build-tools-path
+  "Returns a path to the correct Android Build Tools directory."
+  ([{{:keys [sdk-path build-tools-version]} :android}]
+   (get-sdk-build-tools-path sdk-path build-tools-version))
+  ([sdk-path build-tools-version]
+   (let [bt-root-dir (file sdk-path "build-tools")
+         ;; build-tools directory contains a subdir which name we don't
+         ;; know that has all the tools. Let's grab the last directory
+         ;; inside build-tools/ and hope it is the one we need.
+         bt-dir (or build-tools-version
+                    (->> (.list bt-root-dir)
+                         (filter #(.isDirectory (file bt-root-dir %)))
+                         sort last)
+                    (abort "Build tools not found."
+                           "Download them using the Android SDK Manager."))]
+     (file bt-root-dir bt-dir))))
+
 (defn sdk-binary-paths
   "Returns a map of relative paths to different SDK binaries for both
   Unix and Windows platforms."
   [sdk-path build-tools-version]
   (ensure-paths sdk-path)
-  (let [bt-root-dir (file sdk-path "build-tools")
-        ;; build-tools directory contains a subdir which name we don't
-        ;; know that has all the tools. Let's grab the last directory
-        ;; inside build-tools/ and hope it is the one we need.
-        bt-dir (or build-tools-version
-                   (->> (.list bt-root-dir)
-                        (filter #(.isDirectory (file bt-root-dir %)))
-                        sort last)
-                   (abort "Build tools not found."
-                          "Download them using the Android SDK Manager."))]
-    {:dx {:unix ["build-tools" bt-dir "dx"]
-          :win ["build-tools" bt-dir "dx.bat"]}
-     :adb {:unix ["platform-tools" "adb"]
-           :win ["platform-tools" "adb.exe"]}
-     :aapt {:unix ["build-tools" bt-dir "aapt"]
-            :win ["build-tools" bt-dir "aapt.exe"]}
-     :zipalign {:unix ["build-tools" bt-dir "zipalign"]
-                :win ["build-tools" bt-dir "zipalign.exe"]}
-     :proguard {:unix ["tools" "proguard" "bin" "proguard.sh"]
-                :win ["tools" "proguard" "bin" "proguard.bat"]}}))
+  (let [build-tools (get-sdk-build-tools-path sdk-path build-tools-version)]
+    {:dx {:unix (file build-tools "dx")
+          :win (file build-tools "dx.bat")}
+     :adb {:unix (file sdk-path "platform-tools" "adb")
+           :win (file sdk-path "platform-tools" "adb.exe")}
+     :aapt {:unix (file build-tools "aapt")
+            :win (file build-tools "aapt.exe")}
+     :zipalign {:unix (file build-tools "zipalign")
+                :win (file build-tools "zipalign.exe")}
+     :proguard {:unix (file sdk-path "tools" "proguard" "bin" "proguard.sh")
+                :win (file sdk-path "tools" "proguard" "bin" "proguard.bat")}}))
 
 (defn sdk-binary
   "Given the project map and the binary keyword, returns either a full
   path to the binary as a string, or a vector with call to cmd.exe for
   batch-files."
   [{{:keys [sdk-path build-tools-version]} :android} binary-kw]
-  (let [binary (get-in (sdk-binary-paths sdk-path build-tools-version)
-                       [binary-kw (if (windows?) :win :unix)])
-        binary-str (str (apply file sdk-path binary))]
+  (let [binary-str (-> (sdk-binary-paths sdk-path build-tools-version)
+                       (get-in [binary-kw (if (windows?) :win :unix)])
+                       str)]
     (ensure-paths binary-str)
-    (if (.endsWith (last binary) ".bat")
+    (if (.endsWith binary-str ".bat")
       ["cmd.exe" "/C" binary-str]
       binary-str)))
 
