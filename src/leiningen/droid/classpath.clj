@@ -1,7 +1,7 @@
 (ns leiningen.droid.classpath
   "Contains functions and hooks for Android-specific classpath
   manipulation."
-  (:require [leiningen.droid.aar :refer [get-aar-files]])
+  (:require [leiningen.droid.aar :refer [get-aar-classes]])
   (:use [robert.hooke :only [add-hook]]
         [leiningen.droid.utils :only [get-sdk-android-jar
                                       get-sdk-google-api-jars
@@ -60,7 +60,7 @@
   [f dependency-key project & rest]
   (let [deps (apply f dependency-key project rest)]
     (if (= dependency-key :dependencies)
-      (concat deps (get-aar-files project "classes.jar"))
+      (concat deps (get-aar-classes project))
       deps)))
 
 ;; We also have to manually attach Android SDK libraries to the

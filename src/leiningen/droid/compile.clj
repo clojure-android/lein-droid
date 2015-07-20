@@ -214,12 +214,13 @@
   [{{:keys [sdk-path gen-path lean-compile]} :android,
     java-only :java-only :as project}]
   (ensure-paths sdk-path)
-  (let [project (cond-> project
-                        :always (update-in [:prep-tasks]
-                                           (partial remove #{"compile"}))
-                        :always (update-in [:java-source-paths] conj gen-path))]
+  (let [project (-> project
+                    (update-in [:prep-tasks] (partial remove #{"compile"}))
+                    (update-in [:java-source-paths] conj gen-path))]
+    ;; Need to silence merge-profiles here to run javac successfully.
+    (with-redefs [leiningen.core.project/merge-profiles
+                  (fn [prof & _] (assoc prof :eval-in :subprocess))]
+      (leiningen.javac/javac project))
     (when-not java-only
-      (save-data-readers-to-resource project))
-    (leiningen.javac/javac project)
-    (when-not java-only
+      (save-data-readers-to-resource project)
       (compile-clojure project))))

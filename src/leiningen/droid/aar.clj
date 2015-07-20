@@ -3,7 +3,8 @@
   (:require [clojure.java.io :as io]
             [leiningen.core.classpath :as cp]
             [leiningen.core.main :refer [debug]])
-  (:import net.lingala.zip4j.core.ZipFile))
+  (:import java.io.File
+           net.lingala.zip4j.core.ZipFile))
 
 (defn- get-aar-dependencies
   "Returns a list of artifact dependencies that have `aar` extension."
@@ -41,3 +42,17 @@
   (let [aar-extracted-dir (io/file target-path "aar-extracted")]
     (for [dep (get-aar-dependencies project)]
       (apply io/file aar-extracted-dir (str-dependency dep) subpath))))
+
+(defn get-aar-classes
+  "Returns the list of all jars extracted from all AAR dependencies."
+  [project]
+  (let [classes-jars (get-aar-files project "classes.jar")
+        libs-dirs (get-aar-files project "libs")]
+    (concat classes-jars
+            (mapcat #(.listFiles ^File %) libs-dirs))))
+
+(defn get-aar-native-paths
+  "Returns the list of existing paths to native libraries extracted from AAR
+  dependencies."
+  [project]
+  (filter #(.exists ^File %) (get-aar-files project "jni")))

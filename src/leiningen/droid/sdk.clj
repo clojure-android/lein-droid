@@ -2,6 +2,7 @@
   "Functions to interact with Android SDK tools."
   (:use [leiningen.core.main :only [debug]])
   (:require [cemerick.pomegranate :as pomegranate]
+            [leiningen.droid.aar :refer [get-aar-native-paths]]
             [clojure.java.io :as io])
   (:import java.io.File java.io.PrintStream))
 
@@ -24,12 +25,13 @@
 (defn create-apk
   "Delegates APK creation to ApkBuilder class in sdklib.jar."
   [{{:keys [sdk-path out-res-pkg-path out-dex-path native-libraries-paths]}
-    :android} & {:keys [apk-name resource-jars]}]
+    :android :as project} & {:keys [apk-name resource-jars]}]
   ;; Dynamically load sdklib.jar
   (pomegranate/add-classpath (io/file sdk-path "tools" "lib" "sdklib.jar"))
   (let [apkbuilder (make-apk-builder apk-name out-res-pkg-path out-dex-path)
         all-native-libraries (concat native-libraries-paths
-                                     (get-unpacked-natives-paths))
+                                     (get-unpacked-natives-paths)
+                                     (get-aar-native-paths project))
         dexes (filter #(re-matches #".*dex" (.getName %))
                       (.listFiles (io/file out-dex-path)))]
     (when (seq resource-jars)
