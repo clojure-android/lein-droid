@@ -101,10 +101,12 @@
             ;; Specify this if your project is a library.
             ;; :library true
 
-            :dex-opts ["-JXmx4096M"]
+            :dex-opts ["-JXmx4096M" "--incremental"]
 
-            ;; Uncomment this if dexer fails with OutOfMemoryException.
-            ;; :force-dex-optimize true
+            ;; If you hit the 65k method limit while dexing, uncomment the
+            ;; following lines. Also remove the --incremental option above.
+            ;; :multi-dex true
+            ;; :multi-dex-proguard-conf-path "build/proguard-multi-dex.cfg"
 
             ;; Uncomment this line to be able to use Google API.
             ;; :use-google-api true

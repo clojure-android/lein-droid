@@ -122,6 +122,8 @@
      :proguard-execute false
      :proguard-conf-path "proguard.conf"
      :proguard-output-jar-path (str (file target-path "mininified-classes.jar"))
+     :multi-dex-root-classes-path (file target-path "root-classes.jar")
+     :multi-dex-main-dex-list-path (file target-path "main-dex-list.txt")
      :manifest-path (if has-template
                       (str (file target-path "AndroidManifest.xml"))
                       "AndroidManifest.xml")

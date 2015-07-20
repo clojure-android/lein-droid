@@ -11,7 +11,7 @@
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
                        sdk-binary relativize-path get-sdk-support-jars
-                       get-resource-jars]]])
+                       get-resource-jars get-sdk-build-tools-path]]])
   (:require [clojure.string :as str]
             [clojure.set :as set]
             [clojure.java.io :as io]
@@ -21,40 +21,14 @@
 
 ;; ### Build-related subtasks
 
-;; Since the execution of `dx` takes a pretty lot of time we need to
-;; ensure that its subprocess will be killed if user cancels the build
-;; (sends SIGINT to leiningen). That is why we add a hook to the
-;; runtime that will be triggered when Leiningen is closed.
-;;
-(defn- run-dx
-  "Run dex on the given target paths, each should be either a directory with
-  .class files or a jar file."
-  [{{:keys [sdk-path out-dex-path force-dex-optimize dex-opts]} :android,
-    :as project}
-   target-paths]
-  (info "Creating DEX....")
-  (let [dx-bin (sdk-binary project :dx)
-        options (or dex-opts [])
-        no-optimize (if (and (not force-dex-optimize) (dev-build? project))
-                      "--no-optimize" [])
-        annotations (io/file sdk-path "tools" "support" "annotations.jar")]
-    (with-process [proc (->> [dx-bin options "--dex" no-optimize
-                              "--output" out-dex-path
-                              target-paths annotations]
-                             flatten
-                             (map str))]
-      (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
-
-(defn- run-proguard
+(defn- run-proguard-minifying
   "Run proguard on the compiled classes and dependencies, create an JAR with
   minimized and shaken classes."
   [{{:keys [sdk-path external-classes-paths target-version support-libraries
             proguard-conf-path proguard-opts proguard-output-jar-path]} :android
-            compile-path :compile-path
-            :as project}]
+            compile-path :compile-path :as project}]
   (info "Running Proguard...")
   (ensure-paths compile-path proguard-conf-path)
-
   (let [proguard-bin (sdk-binary project :proguard)
         android-jar (get-sdk-android-jar sdk-path target-version)
         proguard-opts (or proguard-opts [])
@@ -62,8 +36,7 @@
         annotations (io/file sdk-path "tools" "support" "annotations.jar")
         deps (resolve-dependencies :dependencies project)
         support-jars (get-sdk-support-jars sdk-path support-libraries true)
-        external-paths (or external-classes-paths [])
-        compile-path-dir (io/file compile-path)]
+        external-paths (or external-classes-paths [])]
     (sh proguard-bin (str "@" proguard-conf-path)
         "-injars" (->> (concat [compile-path] deps external-paths support-jars)
                        (map str)
@@ -74,6 +47,68 @@
         "-outjars" proguard-output-jar-path
         proguard-opts)))
 
+(defn- run-proguard-multidexing
+  "Run proguard on the compiled classes and dependencies to determine which
+  classes have to be kept in primary dex."
+  [{{:keys [multi-dex-proguard-conf-path multi-dex-root-classes-path]} :android
+    :as project} target-paths]
+  (let [proguard-bin (sdk-binary project :proguard)
+        android-jar (io/file (get-sdk-build-tools-path project)
+                             "lib" "shrinkedAndroid.jar")]
+    (sh proguard-bin (str "@" multi-dex-proguard-conf-path)
+        "-injars" (str/join ":" target-paths)
+        "-libraryjars" (str android-jar)
+        "-outjars" multi-dex-root-classes-path)))
+
+(defn- generate-main-dex-list
+  "Creates a text file with the list of classes that should be included into
+  primary dex."
+  [{{:keys [multi-dex-root-classes-path multi-dex-main-dex-list-path]} :android
+    :as project}
+   target-paths]
+  (run-proguard-multidexing project target-paths)
+  (let [dx-jar (io/file (get-sdk-build-tools-path project) "lib" "dx.jar")
+        builder (ProcessBuilder.
+                 ["java" "-cp" (str dx-jar) "com.android.multidex.MainDexListBuilder"
+                  multi-dex-root-classes-path (str/join ":" target-paths)])
+        process-name (.start builder)
+        output (line-seq (io/reader (.getInputStream process-name)))
+        writer (io/writer (io/file multi-dex-main-dex-list-path))]
+    (binding [*out* writer]
+      (doseq [line output]
+        (println line)))
+    (.waitFor process-name)))
+
+;; Since the execution of `dx` takes a pretty lot of time we need to
+;; ensure that its subprocess will be killed if user cancels the build
+;; (sends SIGINT to leiningen). That is why we add a hook to the
+;; runtime that will be triggered when Leiningen is closed.
+;;
+(defn- run-dx
+  "Run dex on the given target paths, each should be either a directory with
+  .class files or a jar file."
+  [{{:keys [sdk-path out-dex-path force-dex-optimize dex-opts multi-dex
+            multi-dex-root-classes-path multi-dex-main-dex-list-path]} :android :as project}
+   target-paths]
+  (if multi-dex
+    (do (info "Creating multi DEX....")
+        (generate-main-dex-list project target-paths))
+    (info "Creating DEX...."))
+  (let [dx-bin (sdk-binary project :dx)
+        options (or dex-opts [])
+        no-optimize (if (and (not force-dex-optimize) (dev-build? project))
+                      "--no-optimize" [])
+        annotations (io/file sdk-path "tools" "support" "annotations.jar")
+        multi-dex (if multi-dex
+                    ["--multi-dex" "--main-dex-list" multi-dex-main-dex-list-path]
+                    [])]
+    (with-process [proc (->> [dx-bin options "--dex" no-optimize multi-dex
+                              "--output" out-dex-path
+                              target-paths annotations]
+                             flatten
+                             (map str))]
+      (.addShutdownHook (Runtime/getRuntime) (Thread. #(.destroy proc))))))
+
 (defn create-dex
   "Creates a DEX file from the compiled .class files."
   [{{:keys [sdk-path external-classes-paths support-libraries
@@ -81,7 +116,7 @@
             compile-path :compile-path :as project}]
   (if proguard-execute
     (do
-      (run-proguard project)
+      (run-proguard-minifying project)
       (run-dx project proguard-output-jar-path))
     (let [deps (resolve-dependencies :dependencies project)
           support-jars (get-sdk-support-jars sdk-path support-libraries true)
