@@ -114,34 +114,29 @@
   "Returns a map of the default android-specific parameters."
   [{root :root, name :name, target-path :target-path
     java-paths :java-source-paths}]
-  (let [manifest-template "AndroidManifest.template.xml"
-        manifest-template-file (file (absolutize root manifest-template))
-        gen-path (str (file target-path "gen"))
-        has-template (.exists manifest-template-file)]
-    {:out-dex-path target-path
-     :proguard-execute false
-     :proguard-conf-path "proguard.conf"
-     :proguard-output-jar-path (str (file target-path "mininified-classes.jar"))
-     :multi-dex-root-classes-path (file target-path "root-classes.jar")
-     :multi-dex-main-dex-list-path (file target-path "main-dex-list.txt")
-     :manifest-path (if has-template
-                      (str (file target-path "AndroidManifest.xml"))
-                      "AndroidManifest.xml")
-     :manifest-template-path manifest-template
-     :manifest-options {:app-name "@string/app_name"}
-     :res-path "res"
-     :gen-path gen-path
-     :out-res-path (str (file target-path "res"))
-     :assets-paths ["assets"]
-     :assets-gen-path (str (file target-path "assets-gen"))
-     :out-res-pkg-path (str (file target-path (str name ".ap_")))
-     :out-apk-path (str (file target-path (str name ".apk")))
-     :keystore-path (str (file (System/getProperty "user.home")
-                               ".android" "debug.keystore"))
-     :key-alias "androiddebugkey"
-     :repl-device-port 9999
-     :repl-local-port 9999
-     :target-version 10}))
+  {:out-dex-path target-path
+   :proguard-execute false
+   :proguard-conf-path "proguard.conf"
+   :proguard-output-jar-path (file target-path "mininified-classes.jar")
+   :multi-dex-root-classes-path (file target-path "root-classes.jar")
+   :multi-dex-main-dex-list-path (file target-path "main-dex-list.txt")
+   :manifest-path (file target-path "AndroidManifest.xml")
+   :manifest-main-app-path (file target-path "AndroidManifest.app.xml")
+   :manifest-template-path "AndroidManifest.template.xml"
+   :manifest-options {:app-name "@string/app_name"}
+   :res-path "res"
+   :gen-path (file target-path "gen")
+   :out-res-path (file target-path "res")
+   :assets-paths ["assets"]
+   :assets-gen-path (file target-path "assets-gen")
+   :out-res-pkg-path (file target-path (str name ".ap_"))
+   :out-apk-path (file target-path (str name ".apk"))
+   :keystore-path (file (System/getProperty "user.home")
+                        ".android" "debug.keystore")
+   :key-alias "androiddebugkey"
+   :repl-device-port 9999
+   :repl-local-port 9999
+   :target-version 15})
 
 (declare android-parameters)
 

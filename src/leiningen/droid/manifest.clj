@@ -5,9 +5,13 @@
             [clojure.java.io :as jio]
             [clojure.zip :refer [up xml-zip]]
             [clostache.parser :as clostache]
-            [leiningen.core.main :refer [info]]
+            [leiningen.core.main :refer [info debug]]
+            [leiningen.droid.aar :refer [get-aar-files]]
             [leiningen.droid.utils :refer [dev-build?]]
-            [leiningen.release :refer [parse-semantic-version]]))
+            [leiningen.release :refer [parse-semantic-version]])
+  (:import com.android.manifmerger.ManifestMerger
+           com.android.manifmerger.MergerLog
+           [com.android.utils StdLogger StdLogger$Level]))
 
 ;; ### Constants
 
@@ -111,11 +115,21 @@
        (map * version-coefficients)
        (reduce +)))
 
+(defn merge-manifests
+  "Merges the main application manifest file with manifests from AAR files."
+  [{{:keys [manifest-path manifest-main-app-path]} :android :as project}]
+  (let [merger (ManifestMerger. (MergerLog/wrapSdkLog
+                                 (StdLogger. StdLogger$Level/VERBOSE)) nil)
+        lib-manifests (get-aar-files project "AndroidManifest.xml")]
+    (debug "Merging secondary manifests:" lib-manifests)
+    (.process merger (jio/file manifest-path) (jio/file manifest-main-app-path)
+              (into-array lib-manifests) nil nil)))
+
 (defn generate-manifest
   "If a :manifest-template-path is specified, perform template substitution with
   the values in :android :manifest, including the version-name and version-code
   which are automatically generated, placing the output in :manifest-path."
-  [{{:keys [manifest-path manifest-template-path manifest-options
+  [{{:keys [manifest-path manifest-template-path manifest-options manifest-main-app-path
             target-path]} :android, version :version :as project}]
   (info "Generating manifest...")
   (let [full-manifest-map (merge {:version-name version
@@ -124,8 +138,8 @@
                                                     version-code)
                                   :debug-build (dev-build? project)}
                                  manifest-options)]
-    (when (.exists (jio/file manifest-template-path))
-      (jio/make-parents manifest-path)
-      (->> full-manifest-map
-           (clostache/render (slurp manifest-template-path))
-           (spit manifest-path)))))
+    (jio/make-parents manifest-path)
+    (->> full-manifest-map
+         (clostache/render (slurp manifest-template-path))
+         (spit manifest-main-app-path))
+    (merge-manifests project)))
