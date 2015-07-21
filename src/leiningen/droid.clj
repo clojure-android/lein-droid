@@ -4,12 +4,13 @@
 ;;
 (ns leiningen.droid
   (:refer-clojure :exclude [compile doall repl])
-  (:require clojure.pprint)
+  (:require clojure.pprint
+            [leiningen.droid.code-gen :refer [code-gen]])
   (:use [leiningen.core.project :only [set-profiles]]
         [leiningen.core.main :only [abort]]
         [leiningen.help :only (subtask-help-for)]
         [leiningen.clean :only [clean]]
-        [leiningen.droid.compile :only [compile code-gen]]
+        [leiningen.droid.compile :only [compile]]
         [leiningen.droid
          [classpath :only [init-hooks]]
          [build :only [create-dex

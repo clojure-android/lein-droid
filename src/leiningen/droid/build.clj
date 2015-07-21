@@ -6,7 +6,7 @@
          [classpath :only [resolve-dependencies]]
          [main :only [debug info abort *debug*]]]
         [leiningen.droid
-         [compile :only [code-gen compile]]
+         [compile :only [compile]]
          [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
@@ -15,8 +15,10 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]
             [clojure.java.io :as io]
-            [leiningen.droid.aar :refer [extract-aar-dependencies]]
-            [leiningen.droid.sdk :as sdk]
+            [leiningen.droid
+             [code-gen :refer [code-gen]]
+             [aar :refer [get-aar-files extract-aar-dependencies]]
+             [sdk :as sdk]]
             leiningen.jar leiningen.javac))
 
 ;; ### Build-related subtasks
@@ -172,13 +174,7 @@
 ;; ### APK-related subtasks
 
 (defn package-resources
-  "Packages application resources.
-
-  If this task is run with :dev profile, then it ensures that
-  AndroidManifest.xml has Internet permission for running the REPL
-  server. This is achieved by backing up the original manifest file
-  and creating a new one with Internet permission appended to it.
-  After the packaging the original manifest file is restored."
+  "Packages application resources."
   [{{:keys [sdk-path target-version manifest-path assets-paths res-path
             out-res-path external-res-paths out-res-pkg-path
             rename-manifest-package assets-gen-path]} :android :as project}]
@@ -190,13 +186,16 @@
         manifest-file (io/file manifest-path)
         backup-file (io/file (str manifest-path ".backup"))
         ;; Only add `assets` directory if it is present.
-        assets (mapcat #(when (.exists (io/file %)) ["-A" %])
-                       (conj assets-paths assets-gen-path))
+        assets (mapcat #(when (.exists (io/file %)) ["-A" (str %)])
+                       (concat assets-paths [assets-gen-path]
+                               (get-aar-files project "assets")))
+        aar-resources (for [res (get-aar-files project "res")] ["-S" (str res)])
         external-resources (for [res external-res-paths] ["-S" res])]
     (sh aapt-bin "package" "--no-crunch" "-f" debug-mode "--auto-add-overlay"
         "-M" manifest-path
         "-S" out-res-path
         "-S" res-path
+        aar-resources
         external-resources
         assets
         "-I" android-jar

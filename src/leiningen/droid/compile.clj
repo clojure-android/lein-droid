@@ -4,18 +4,13 @@
   (:require [bultitude.core :as bultitude]
             [clojure.java.io :as io]
             [clojure.set :as set]
-            [clojure.string :as str]
-            [clostache.parser :as clostache]
             [leiningen.compile :refer [stale-namespaces]]
             [leiningen.core.classpath :refer [get-classpath]]
             [leiningen.core.eval :as eval]
             [leiningen.core.main :refer [debug info abort]]
-            [leiningen.droid.aar :refer [extract-aar-dependencies]]
-            [leiningen.droid.manifest :refer [get-package-name generate-manifest]]
-            [leiningen.droid.utils :refer [get-sdk-android-jar sdk-binary
-                                           ensure-paths sh dev-build?]]
-            leiningen.javac
-            [leiningen.new.templates :refer [slurp-resource sanitize]])
+            [leiningen.droid.manifest :refer [get-package-name]]
+            [leiningen.droid.utils :refer [ensure-paths dev-build?]]
+            leiningen.javac)
   (:import java.util.regex.Pattern))
 
 ;; ### Pre-compilation tasks
@@ -42,74 +37,6 @@
           (into {} (map (fn [[k# v#]]
                           [k# (symbol (subs (str v#) 2))])
                         *data-readers*)))))
-
-(defn- java-type [x]
-  (condp = (type x)
-    Boolean "boolean"
-    String  "String"
-    Long    "long"
-    Double  "double"
-    (assert false ":build-config only supports boolean, String, long and double types")))
-
-(defn map-constants [constants]
-  (map (fn [[k v]]
-         (binding [*print-dup* true]
-           {:key k
-            :value (pr-str v)
-            :type (java-type v)}))
-       constants))
-
-(defn generate-build-constants
-  [{{:keys [manifest-path gen-path build-config rename-manifest-package]}
-    :android :as project}]
-  (let [res                (io/resource "templates/BuildConfig.java")
-        package-name       (get-package-name manifest-path)
-        package-path       (apply io/file gen-path (str/split package-name #"\."))
-        version-name       (-> project :version)
-        application-id     (or rename-manifest-package package-name)
-        template-constants (map-constants (merge {"VERSION_NAME"   version-name
-                                                  "APPLICATION_ID" application-id}
-                                                 build-config))]
-    (ensure-paths package-path)
-    (->> {:debug        (dev-build? project)
-          :package-name package-name
-          :constants    template-constants}
-         (clostache/render (slurp-resource res))
-         (spit (io/file package-path "BuildConfig.java")))))
-
-(defn generate-resource-code
-  "Generates the R.java file from the resources.
-
-  This task is necessary if you define the UI in XML and also to gain
-  access to your strings and images by their ID."
-  [{{:keys [sdk-path target-version manifest-path res-path gen-path
-            out-res-path external-res-paths library]} :android
-    java-only :java-only :as project}]
-  (info "Generating R.java...")
-  (let [aapt-bin (sdk-binary project :aapt)
-        android-jar (get-sdk-android-jar sdk-path target-version)
-        manifest-file (io/file manifest-path)
-        library-specific (if library "--non-constant-id" "--auto-add-overlay")
-        external-resources (for [res external-res-paths] ["-S" res])]
-    (ensure-paths manifest-path res-path android-jar)
-    (.mkdirs (io/file gen-path))
-    (.mkdirs (io/file out-res-path))
-    (sh aapt-bin "package" library-specific "-f" "-m"
-        "-M" manifest-path
-        "-S" out-res-path
-        "-S" res-path
-        external-resources
-        "-I" android-jar
-        "-J" gen-path
-        "--generate-dependencies")))
-
-(defn code-gen
-  "Generates R.java and builds a manifest with the appropriate version
-  code and substitutions."
-  [project]
-  (doto project
-    extract-aar-dependencies
-    generate-manifest generate-resource-code generate-build-constants))
 
 ;; ### Compilation
 

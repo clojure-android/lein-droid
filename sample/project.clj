@@ -10,14 +10,17 @@
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  :plugins [[lein-droid "0.4.0-alpha3"]]
+  :plugins [[lein-droid "0.4.0-SNAPSHOT"]]
 
   ;; Uncomment this line if your project doesn't use Clojure. Also
   ;; don't forget to remove respective dependencies.
   ;; :java-only true
 
   :dependencies [[org.clojure-android/clojure "1.7.0-RC1" :use-resources true]
-                 [neko/neko "4.0.0-alpha1"]]
+                 [neko/neko "4.0.0-SNAPSHOT"]
+                 ;; [com.android.support/appcompat-v7 "18.0.0" :extension "aar"]
+                 ;; [com.google.android.gms/play-services-ads "7.5.0" :extension "aar"]
+                 ]
 
   :profiles {:default [:dev]
 
@@ -69,12 +72,9 @@
                :global-vars ^:replace {clojure.core/*warn-on-reflection* true}
                :android {:use-debug-keystore true
                          :proguard-execute true
-                         :proguard-conf-path "proguard.conf"
+                         :proguard-conf-path "build/proguard-minify.cfg"
                          :lean-compile true
-                         :skummet-skip-vars ["#'neko.init/init"
-                                             "#'neko.context/context"
-                                             "#'neko.resource/package-name"
-                                             "#'neko.-utils/keyword->static-field"
+                         :skummet-skip-vars ["#'neko.-utils/keyword->static-field"
                                              "#'neko.-utils/keyword->setter"
                                              "#'neko.ui.traits/get-display-metrics"
                                              "#'test.leindroid.sample.main/MainActivity-onCreate"

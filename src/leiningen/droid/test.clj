@@ -4,6 +4,7 @@
             [clojure.java.io :as io]
             [clojure.string :as str]
             [leiningen.core.classpath :as cp]
+            [leiningen.droid.code-gen :as code-gen]
             [leiningen.droid.compile :as compile]
             [leiningen.droid.utils :as utils]
             [leiningen.test :as ltest]))
@@ -12,7 +13,7 @@
   "Runs tests locally using Robolectric."
   [project & [mode]]
   (when-not (-> project :android :library)
-    (compile/code-gen project))
+    (code-gen/code-gen project))
   (compile/compile project)
   (let [src-nses (b/namespaces-on-classpath
                   :classpath (map io/file (distinct (:source-paths project)))
