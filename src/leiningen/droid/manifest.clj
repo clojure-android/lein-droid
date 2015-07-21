@@ -61,7 +61,9 @@
         pkg-name (first (xml-> manifest (attr :package)))]
     (when activity-name
       (str (or rename-manifest-package pkg-name) "/"
-           (str pkg-name activity-name)))))
+           (if (.startsWith activity-name ".")
+             (str pkg-name activity-name)
+             activity-name)))))
 
 (defn get-target-sdk-version
   "Extracts the target SDK version from the provided manifest file. If
