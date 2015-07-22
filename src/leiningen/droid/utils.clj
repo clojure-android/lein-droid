@@ -177,27 +177,22 @@
                                  conj res-path out-res-path))))))
           project project-dependencies))
 
-(defn add-local-android-repositories
-  "Populates project's :repositories list with flat filesystem Maven
-  repositories that reside in Android SDK. This allows to use certain
-  dependencies without explicitly specifying path to them."
-  [{{:keys [sdk-path]} :android :as project}]
-  (let [p (fn [& path] {:url (str "file://" (apply file sdk-path path))})]
-    (update-in project [:repositories] conj
-               ["android-support" (p "extras" "android" "m2repository")]
-               ["android-play-services" (p "extras" "google" "m2repository")])))
-
 ;; This is the middleware function to be plugged into project.clj.
 (defn android-parameters
-  "Merges project's `:android` map with the default parameters map,
-  processes project dependencies and absolutizes paths in the
+  "Merges project's `:android` map with the default parameters map, adds local
+  SDK repositories, processes project dependencies and absolutizes paths in the
   `:android` map."
   [{:keys [android] :as project}]
   (let [android-params (merge (get-default-android-params project)
-                              android)]
+                              android)
+        p (fn [& path] {:url (str "file://" (apply file (:sdk-path android) path))})
+        repos {:repositories
+               [["android-support" (p "extras" "android" "m2repository")]
+                ["android-play-services" (p "extras" "google" "m2repository")]]}]
     (-> project
+        (vary-meta assoc-in [:profiles :sdk-repos] repos)
+        (pr/merge-profiles [:sdk-repos])
         (assoc :android android-params)
-        add-local-android-repositories
         process-project-dependencies
         absolutize-android-paths)))
 
