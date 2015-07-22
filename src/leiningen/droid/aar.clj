@@ -48,7 +48,7 @@
   [project]
   (let [classes-jars (get-aar-files project "classes.jar")
         libs-dirs (get-aar-files project "libs")]
-    (concat classes-jars
+    (concat (filter #(.exists ^File %) classes-jars)
             (mapcat #(.listFiles ^File %) libs-dirs))))
 
 (defn get-aar-native-paths
