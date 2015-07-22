@@ -61,6 +61,8 @@
      (help #'droid))
   ([project & [cmd & args]]
      (init-hooks)
+     (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
+       (abort "Subtask" cmd "should be run from the project folder."))
      (some-> project
              android-parameters
              (execute-subtask cmd args))))
@@ -68,8 +70,6 @@
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."
   [project name args]
-  (when (and (nil? project) (not (#{"new" "help" "init"} name)))
-    (abort "Subtask" name "should be run from the project folder."))
   (case name
     ;; Standalone tasks
     "new" (if (< (count args) 2)
