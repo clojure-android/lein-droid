@@ -15,11 +15,15 @@
   (:require [clojure.string :as str]
             [clojure.set :as set]
             [clojure.java.io :as io]
+            leiningen.core.project
             [leiningen.droid
              [code-gen :refer [code-gen]]
              [aar :refer [get-aar-files extract-aar-dependencies]]
              [sdk :as sdk]]
-            leiningen.jar leiningen.javac))
+            leiningen.jar leiningen.javac leiningen.pom)
+  (:import net.lingala.zip4j.core.ZipFile
+           net.lingala.zip4j.model.ZipParameters
+           net.lingala.zip4j.util.Zip4jConstants))
 
 ;; ### Build-related subtasks
 
@@ -170,6 +174,35 @@
   (extract-aar-dependencies project)
   (leiningen.javac/javac project)
   (leiningen.jar/jar project))
+
+(defn aar
+  "Metatask. Packages library into AAR archive."
+  [{{:keys [manifest-path res-path gen-path assets-paths]} :android
+    target-path :target-path, name :name, version :version :as project}]
+  (extract-aar-dependencies project)
+  (code-gen project)
+  (.renameTo (io/file gen-path "R.txt") (io/file target-path "R.txt"))
+  (with-redefs [leiningen.jar/get-jar-filename*
+                (fn [& _] (str (io/file target-path "classes.jar")))
+                ;; What the hell is that???
+                leiningen.core.project/non-leaky-profiles
+                (fn [& _] [])]
+    (leiningen.javac/javac project)
+    (leiningen.jar/jar (assoc project :auto-clean false)))
+  ;; Finally create AAR file
+  (let [zip (ZipFile. (io/file target-path (format "%s-%s.aar" name version)))
+        params (doto (ZipParameters.)
+                 (.setCompressionMethod Zip4jConstants/COMP_STORE)
+                 ;; (.setDefaultFolderPath "target")
+                 (.setEncryptFiles false))]
+    (.addFile zip (io/file manifest-path) params)
+    (.addFile zip (io/file target-path "classes.jar") params)
+    (.addFile zip (io/file target-path "R.txt") params)
+    (.addFolder zip (io/file res-path) params)
+    (doseq [path assets-paths
+            :when (.exists (io/file path))]
+      (.addFolder zip (io/file path) params)))
+  (leiningen.pom/pom (assoc project :packaging "aar")))
 
 ;; ### APK-related subtasks
 

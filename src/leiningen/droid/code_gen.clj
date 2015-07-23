@@ -97,24 +97,12 @@
   (let [aapt-bin (sdk-binary project :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         manifest-file (io/file manifest-path)
-        library-specific (if library "--non-constant-id" "--auto-add-overlay")
+        library-specific (if library ["--non-constant-id"] [])
         aar-resources (for [res (get-aar-files project "res")] ["-S" (str res)])
         external-resources (for [res external-res-paths] ["-S" res])]
     (ensure-paths manifest-path res-path android-jar)
     (.mkdirs (io/file gen-path))
     (.mkdirs (io/file out-res-path))
-    ;; First call without library resources to get a project-only R.txt
-    ;; (sh aapt-bin "package" library-specific "-f" "-m"
-    ;;     ;; "-M" manifest-path
-    ;;     "-S" out-res-path
-    ;;     "-S" res-path
-    ;;     external-resources
-    ;;     "-I" android-jar
-    ;;     "-J" gen-path
-    ;;     "--output-text-symbols" gen-path
-    ;;     "--generate-dependencies")
-    ;; (.renameTo (io/file gen-path "R.txt") (io/file gen-path "R.app.txt"))
-    ;; Then call with everything to get a full R.txt
     (sh aapt-bin "package" library-specific "-f" "-m"
         "-M" manifest-path
         "-S" out-res-path
@@ -124,6 +112,7 @@
         "-I" android-jar
         "-J" gen-path
         "--output-text-symbols" gen-path
+        "--auto-add-overlay"
         "--generate-dependencies")
     ;; Finally generate R.java files having R.txt keys
     (when-not library
@@ -132,7 +121,9 @@
 (defn code-gen
   "Generates R.java and builds a manifest with the appropriate version
   code and substitutions."
-  [project]
+  [{{:keys [library]} :android :as project}]
   (doto project
     extract-aar-dependencies
-    generate-manifest generate-resource-code generate-build-constants))
+    generate-manifest generate-resource-code)
+  (when-not library
+    (generate-build-constants project)))

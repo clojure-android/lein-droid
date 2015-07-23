@@ -15,7 +15,7 @@
          [classpath :only [init-hooks]]
          [build :only [create-dex
                        crunch-resources package-resources create-apk
-                       sign-apk zipalign-apk apk build jar]]
+                       sign-apk zipalign-apk apk build jar aar]]
          [deploy :only [install run forward-port repl deploy]]
          [new :only [new init]]
          [compatibility :only [gather-dependencies]]
@@ -100,6 +100,7 @@
     "deploy" (apply deploy project args)
     "doall" (apply doall project args)
     "jar" (jar project)
+    "aar" (aar project)
 
     ;; Help tasks
     "pprint" (apply pprint project args)
