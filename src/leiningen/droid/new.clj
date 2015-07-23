@@ -93,7 +93,6 @@
      ["res/drawable-hdpi/splash_hands.png" (render "splash_hands.png")]
      ["res/drawable-hdpi/ic_launcher.png" (render "ic_launcher_hdpi.png")]
      ["res/drawable-mdpi/ic_launcher.png" (render "ic_launcher_mdpi.png")]
-     ["res/drawable-ldpi/ic_launcher.png" (render "ic_launcher_ldpi.png")]
      ["res/drawable/splash_background.xml" (render "splash_background.xml")]
      ["res/anim/splash_rotation.xml" (render "splash_rotation.xml")]
      ["res/layout/splashscreen.xml" (render "splashscreen.xml")]
