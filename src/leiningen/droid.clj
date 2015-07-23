@@ -16,7 +16,7 @@
          [build :only [create-dex
                        crunch-resources package-resources create-apk
                        sign-apk zipalign-apk apk build jar aar]]
-         [deploy :only [install run forward-port repl deploy]]
+         [deploy :only [install run forward-port repl deploy local-repo]]
          [new :only [new init]]
          [compatibility :only [gather-dependencies]]
          [test :only [local-test]]
@@ -90,6 +90,7 @@
     "repl" (repl project)
     "gather-dependencies" (apply gather-dependencies project args)
     "clean" (clean project)
+    "local-repo" (local-repo project)
 
     ;; Test tasks
     "local-test" (apply local-test project args)

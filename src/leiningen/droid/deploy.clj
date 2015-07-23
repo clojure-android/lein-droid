@@ -7,7 +7,9 @@
         [leiningen.droid.utils :only [sh ensure-paths append-suffix
                                       prompt-user sdk-binary]]
         [leiningen.droid.compatibility :only (create-repl-port-file)]
-        [reply.main :only (launch-nrepl)]))
+        [reply.main :only (launch-nrepl)])
+  (:require [clojure.java.io :as io]
+            [cemerick.pomegranate.aether :as aether]))
 
 (defn- device-list
   "Returns the list of currently attached devices."
@@ -134,3 +136,14 @@
     (apply install project device)
     (apply run project device)
     (apply forward-port project device)))
+
+(defn local-repo
+  "Install the generated AAR package to the local Maven repository."
+  [{:keys [target-path name group version root] :as project}]
+  (leiningen.pom/pom (assoc project :packaging "aar"))
+  (let [aar-file (io/file target-path (format "%s-%s.aar" name version))]
+    (ensure-paths aar-file)
+    (->> {[:extension "pom"] (io/file root "pom.xml")
+          [:extension "aar"] aar-file}
+         (#'aether/artifacts-for [(symbol group name) version])
+         (aether/install-artifacts :files))))
