@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">Android Clojure!</string>
+  <string name="app_name">Android-Clojure</string>
+  <string name="input_is_empty">Your input is empty</string>
+  <string name="your_input_fmt">Your input: %1$s</string>
+  <string name="touch_me">Touch me</string>
 
 </resources>

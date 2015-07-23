@@ -78,6 +78,7 @@
               :path (package-to-path (sanitize package-name))
               :activity (get options ":activity" "MainActivity")
               :target-sdk (get options ":target-sdk" "15")
+              :min-sdk (get options ":min-sdk" "15")
               :app-name (get options ":app-name" project-name)}
         render (renderer "templates")]
     (info "Creating project" project-name "...")
@@ -86,6 +87,7 @@
      "assets"
      [".gitignore" (render "gitignore")]
      ["LICENSE" (render "LICENSE" data)]
+     ["README.md" (render "README.md" data)]
      ["AndroidManifest.template.xml" (render "AndroidManifest.template.xml" data)]
      ["project.clj" (render "project.clj" data)]
      ["res/drawable-hdpi/splash_circle.png" (render "splash_circle.png")]

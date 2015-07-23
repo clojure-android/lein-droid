@@ -11,7 +11,7 @@
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
   :plugins [[lein-droid "0.4.0-alpha4"]]
 
-  :dependencies [[org.clojure-android/clojure "1.7.0-RC1" :use-resources true]
+  :dependencies [[org.clojure-android/clojure "1.7.0" :use-resources true]
                  [neko/neko "4.0.0-alpha1"]]
   :profiles {:default [:dev]
 
@@ -21,16 +21,14 @@
                :target-path "target/debug"
                :android {:aot :all-with-unused
                          :rename-manifest-package "{{package-sanitized}}.debug"
-                         :manifest-options {:app-name "{{app-name}} - debug"}}}]
+                         :manifest-options {:app-name "{{app-name}} (debug)"}}}]
              :release
              [:android-common
               {:target-path "target/release"
                :android
-               { ;; Specify the path to your private keystore
-                ;; and the the alias of the key you want to
-                ;; sign APKs with.
-                ;; :keystore-path "/home/user/.android/private.keystore"
+               {;; :keystore-path "/home/user/.android/private.keystore"
                 ;; :key-alias "mykeyalias"
+                ;; :sigalg "MD5withRSA"
 
                 :ignore-log-priority [:debug :verbose]
                 :aot :all
@@ -44,12 +42,8 @@
             ;; available RAM.
             :dex-opts ["-JXmx4096M" "--incremental"]
 
-            ;; If previous option didn't work, uncomment this as well.
-            ;; :force-dex-optimize true
-
             :target-version "{{target-sdk}}"
             :aot-exclude-ns ["clojure.parallel" "clojure.core.reducers"
-                             "cljs-tooling.complete" "cljs-tooling.info"
-                             "cljs-tooling.util.analysis" "cljs-tooling.util.misc"
                              "cider.nrepl" "cider-nrepl.plugin"
-                             "cider.nrepl.middleware.util.java.parser"]})
+                             "cider.nrepl.middleware.util.java.parser"
+                             #"cljs-tooling\..+"]})

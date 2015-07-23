@@ -6,7 +6,10 @@
           android:versionName="{{version-name}}" >
           {[={{ }}=]}
 
-  <uses-sdk android:minSdkVersion="15" />
+  {{={[ ]}=}}
+  <uses-sdk android:minSdkVersion="{[min-sdk]}"
+            android:targetSdkVersion="{{target-version}}" />
+  {[={{ }}=]}
 
   <application
       android:name="neko.App"

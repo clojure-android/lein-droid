@@ -4,11 +4,12 @@
           android:versionCode="{{version-code}}"
           android:versionName="{{version-name}}" >
 
-  <uses-sdk android:minSdkVersion="15" />
+  <uses-sdk android:minSdkVersion="15"
+            android:targetSdkVersion="{{target-version}}" />
 
   <application android:name="neko.App"
       android:icon="@drawable/ic_launcher"
-      android:label="{{app-name}}">
+      android:label="Android-Clojure">
     <activity android:name=".SplashActivity"
               android:theme="@android:style/Theme.Translucent.NoTitleBar">
       <intent-filter>

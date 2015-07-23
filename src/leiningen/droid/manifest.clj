@@ -132,12 +132,13 @@
   the values in :android :manifest, including the version-name and version-code
   which are automatically generated, placing the output in :manifest-path."
   [{{:keys [manifest-path manifest-template-path manifest-options manifest-main-app-path
-            target-path]} :android, version :version :as project}]
+            target-version]} :android, version :version :as project}]
   (info "Generating manifest...")
   (let [full-manifest-map (merge {:version-name version
                                   :version-code (-> version
                                                     parse-semantic-version
                                                     version-code)
+                                  :target-version target-version
                                   :debug-build (dev-build? project)}
                                  manifest-options)]
     (jio/make-parents manifest-path)

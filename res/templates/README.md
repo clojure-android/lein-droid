@@ -1,4 +1,4 @@
-# sample
+# {{app-name}}
 
 This is a Clojure/Android application.
 
@@ -8,6 +8,6 @@ FIXME
 
 ## License
 
-Copyright © 2012 FIXME
+Copyright © 2015 FIXME
 
 Distributed under the Eclipse Public License, the same as Clojure.
