@@ -4,7 +4,7 @@
             [clojure.string :as str]
             [clostache.parser :as clostache]
             [leiningen.core.main :refer [debug info abort]]
-            [leiningen.droid.aar :refer [extract-aar-dependencies get-aar-files]]
+            [leiningen.droid.aar :refer [get-aar-files]]
             [leiningen.droid.manifest :refer [get-package-name generate-manifest]]
             [leiningen.droid.sideload :as sideload]
             [leiningen.droid.utils :refer [get-sdk-android-jar sdk-binary
@@ -81,12 +81,7 @@
                     lib-gen-path gen-path]
                 (create-r-file full-symbols r-txt package-name lib-gen-path))))
           (get-aar-files project "AndroidManifest.xml")
-          (get-aar-files project "R.txt")
-          ;; (cons (io/file manifest-path)
-          ;;       (get-aar-files project "AndroidManifest.xml"))
-          ;; (cons (io/file gen-path "R.app.txt")
-          ;;       (get-aar-files project "R.txt"))
-          ))))
+          (get-aar-files project "R.txt")))))
 
 (defn generate-resource-code
   "Generates R.java files for both the project and the libraries."
@@ -123,7 +118,6 @@
   code and substitutions."
   [{{:keys [library]} :android :as project}]
   (doto project
-    extract-aar-dependencies
     generate-manifest generate-resource-code)
   (when-not library
     (generate-build-constants project)))

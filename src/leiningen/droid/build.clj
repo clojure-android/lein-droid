@@ -18,7 +18,7 @@
             leiningen.core.project
             [leiningen.droid
              [code-gen :refer [code-gen]]
-             [aar :refer [get-aar-files extract-aar-dependencies]]
+             [aar :refer [get-aar-files]]
              [sdk :as sdk]]
             leiningen.jar leiningen.javac leiningen.pom)
   (:import net.lingala.zip4j.core.ZipFile
@@ -171,7 +171,6 @@
   Same as `lein jar` but appends Android libraries to the classpath
   while compiling Java files."
   [project]
-  (extract-aar-dependencies project)
   (leiningen.javac/javac project)
   (leiningen.jar/jar project))
 
@@ -179,7 +178,6 @@
   "Metatask. Packages library into AAR archive."
   [{{:keys [manifest-path res-path gen-path assets-paths]} :android
     target-path :target-path, name :name, version :version :as project}]
-  (extract-aar-dependencies project)
   (code-gen project)
   (.renameTo (io/file gen-path "R.txt") (io/file target-path "R.txt"))
   (with-redefs [leiningen.jar/get-jar-filename*

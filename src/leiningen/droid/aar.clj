@@ -1,6 +1,7 @@
 (ns leiningen.droid.aar
   "Utilities for manipulating Android package format (AAR)."
   (:require [clojure.java.io :as io]
+            [clojure.edn :as edn]
             [leiningen.core.classpath :as cp]
             [leiningen.core.main :refer [debug]])
   (:import java.io.File
@@ -28,12 +29,18 @@
 (defn extract-aar-dependencies
   "Unpacks all AAR dependencies of the project into the target directory."
   [{:keys [target-path] :as project}]
-  (let [deps (get-aar-dependencies project)
-        aar-extracted-dir (io/file target-path "aar-extracted")]
-    (debug "Extracting AAR dependencies: " deps)
-    (doseq [dep deps]
-      (.extractAll (ZipFile. (:file (meta dep)))
-                   (str (io/file aar-extracted-dir (str-dependency dep)))))))
+  (let [deps (set (get-aar-dependencies project))
+        aar-extracted-dir (io/file target-path "aar-extracted")
+        ;; Read which AARs we already extracted to avoid doing it again.
+        extracted-file (io/file aar-extracted-dir "extracted.edn")
+        already-extracted (when (.exists ^File extracted-file)
+                            (edn/read-string (slurp extracted-file)))]
+    (when-not (or (empty? deps) (= deps already-extracted))
+      (debug "Extracting AAR dependencies: " deps)
+      (doseq [dep deps]
+        (.extractAll (ZipFile. (:file (meta dep)))
+                     (str (io/file aar-extracted-dir (str-dependency dep)))))
+      (spit extracted-file deps))))
 
 (defn get-aar-files
   "Returns the list of files or directories specified by `subpath` extracted
