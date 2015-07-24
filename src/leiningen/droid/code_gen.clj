@@ -118,6 +118,5 @@
   code and substitutions."
   [{{:keys [library]} :android :as project}]
   (doto project
-    generate-manifest generate-resource-code)
-  (when-not library
-    (generate-build-constants project)))
+    generate-manifest generate-resource-code
+    generate-build-constants))

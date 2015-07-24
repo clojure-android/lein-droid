@@ -19,9 +19,12 @@
             [leiningen.droid
              [code-gen :refer [code-gen]]
              [aar :refer [get-aar-files]]
+             [manifest :refer [get-package-name]]
              [sdk :as sdk]]
-            leiningen.jar leiningen.javac leiningen.pom)
-  (:import net.lingala.zip4j.core.ZipFile
+            [leiningen.jar :as jar]
+            leiningen.javac leiningen.pom)
+  (:import java.io.File
+           net.lingala.zip4j.core.ZipFile
            net.lingala.zip4j.model.ZipParameters
            net.lingala.zip4j.util.Zip4jConstants))
 
@@ -172,21 +175,28 @@
   while compiling Java files."
   [project]
   (leiningen.javac/javac project)
-  (leiningen.jar/jar project))
+  (jar/write-jar project (jar/get-jar-filename project)
+                 (#'jar/filespecs (dissoc project :java-source-paths))))
 
 (defn aar
   "Metatask. Packages library into AAR archive."
   [{{:keys [manifest-path res-path gen-path assets-paths]} :android
-    target-path :target-path, name :name, version :version :as project}]
+    :keys [name version target-path compile-path] :as project}]
   (code-gen project)
   (.renameTo (io/file gen-path "R.txt") (io/file target-path "R.txt"))
-  (with-redefs [leiningen.jar/get-jar-filename*
-                (fn [& _] (str (io/file target-path "classes.jar")))
-                ;; What the hell is that???
-                leiningen.core.project/non-leaky-profiles
-                (fn [& _] [])]
-    (leiningen.javac/javac project)
-    (leiningen.jar/jar (assoc project :auto-clean false)))
+  (leiningen.javac/javac project)
+  ;; Remove unnecessary files
+  (.delete ^File (io/file gen-path "R.java.d"))
+  (let [package-name (get-package-name manifest-path)
+        classes-path (apply io/file compile-path (str/split package-name #"\."))]
+    (doseq [^File file (.listFiles ^File classes-path)
+            :let [filename (.getName file)]
+            :when (or (= filename "R.class")
+                      (re-matches #"R\$\w+\.class" filename))]
+      (.delete file)))
+  ;; Make a JAR
+  (jar/write-jar project (io/file target-path "classes.jar")
+                 (#'jar/filespecs (dissoc project :java-source-paths)))
   ;; Finally create AAR file
   (let [zip (ZipFile. (io/file target-path (format "%s-%s.aar" name version)))
         params (doto (ZipParameters.)
