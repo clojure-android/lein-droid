@@ -11,7 +11,8 @@
             [leiningen.release :refer [parse-semantic-version]])
   (:import com.android.manifmerger.ManifestMerger
            com.android.manifmerger.MergerLog
-           [com.android.utils StdLogger StdLogger$Level]))
+           [com.android.utils StdLogger StdLogger$Level]
+           java.io.File))
 
 ;; ### Constants
 
@@ -125,7 +126,7 @@
         lib-manifests (get-aar-files project "AndroidManifest.xml")]
     (debug "Merging secondary manifests:" lib-manifests)
     (.process merger (jio/file manifest-path) (jio/file manifest-main-app-path)
-              (into-array lib-manifests) nil nil)))
+              (into-array File lib-manifests) nil nil)))
 
 (defn generate-manifest
   "If a :manifest-template-path is specified, perform template substitution with
