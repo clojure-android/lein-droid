@@ -6,7 +6,7 @@
 ** Usage
 
    First make sure you have [[http://developer.android.com/sdk/index.html][Android SDK]] installed, with the latest
-   Android SDK Build-tools (>=19.0.0).
+   Android SDK Build-tools (>=20.0.0).
 
    Follow the [[https://github.com/clojure-android/lein-droid/wiki/Tutorial][Tutorial]] to start using lein-droid.
 
@@ -23,6 +23,12 @@
 
    [[https://github.com/krisc][Kris Calabio]] wrote a [[https://github.com/alexander-yakushev/events/blob/master/tutorial.md][tutorial]] on how to write your first real Clojure/Android
    application.
+
+** How to modify lein-droid
+
+   Being a plugin for Leiningen, the workflow for modifying, debugging and
+   testing it is slightly more complicated than with a regular Clojure project.
+   See [[https://github.com/clojure-android/lein-droid/wiki/Hacking-the-plugin][Hacking the plugin]] page for details.
 
 ** Contributors
 
