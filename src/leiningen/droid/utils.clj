@@ -186,7 +186,8 @@
   (let [android-params (merge (get-default-android-params project)
                               android)
         p (fn [& path] {:url (str "file://" (apply file (:sdk-path android) path))})
-        repos {:repositories
+        repos {:java-source-paths [(:gen-path android-params)]
+               :repositories
                [["android-support" (p "extras" "android" "m2repository")]
                 ["android-play-services" (p "extras" "google" "m2repository")]]}]
     (-> project

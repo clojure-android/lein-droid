@@ -142,9 +142,7 @@
     java-only :java-only :as project}]
   (ensure-paths sdk-path)
   (let [project (-> project
-                    (update-in [:prep-tasks] (partial remove #{"compile"}))
-                    (update-in [:java-source-paths] conj gen-path))]
-    ;; Need to silence merge-profiles here to run javac successfully.
+                    (update-in [:prep-tasks] (partial remove #{"compile"})))]
     (leiningen.javac/javac project)
     (when-not java-only
       (save-data-readers-to-resource project)
