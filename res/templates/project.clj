@@ -1,4 +1,4 @@
-(defproject {{name}}/{{name}} "0.0.1-SNAPSHOT"
+(defproject {{name}}/{{name}} "0.1.0-SNAPSHOT"
   :description "FIXME: Android project description"
   :url "http://example.com/FIXME"
   :license {:name "Eclipse Public License"

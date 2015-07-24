@@ -1,11 +1,14 @@
-(defproject {{name}}/{{name}} "{{version}}"
+(defproject {{name}}/{{name}} "0.1.0-SNAPSHOT"
   :description "FIXME: Android library description"
+  :packaging "aar"
 
-  :source-paths ["src/clojure" "src"]
-  :java-source-paths ["src/java" "gen"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
+  :source-paths ["src/clojure"]
+  :java-source-paths ["src/java"]
 
+  :plugins [[lein-droid "0.4.0-alpha4"]]
   :profiles {:default [:android-common]}
 
   :android {:target-version "{{target-sdk}}"
-            {{library?}}})
+            :library true
+            {{manifest-template-path}}})

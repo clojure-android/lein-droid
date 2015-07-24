@@ -6,8 +6,7 @@
   (:use [leiningen.core.main :only [info abort]]
         [leiningen.new.templates :only [render-text slurp-resource
                                         sanitize ->files]]
-        [leiningen.droid.manifest :only [get-target-sdk-version
-                                         get-project-version]]))
+        [leiningen.droid.manifest :only [get-target-sdk-version]]))
 
 (defn renderer
   "Taken from lein-newnew.
@@ -25,22 +24,13 @@
 (defn package-to-path [package-name]
   (string/replace package-name #"\." "/"))
 
-(defn- load-properties
-  "Loads a properties file. Returns nil if the file doesn't exist."
-  [file]
-  (when (.exists file)
-    (with-open [rdr (io/reader file)]
-      (let [properties (java.util.Properties.)]
-        (.load properties rdr)
-        properties))))
-
 (defn package-name-valid? [package-name]
   (and (not (.startsWith package-name "."))
        (> (.indexOf package-name ".") -1)
        (= (.indexOf package-name "-") -1)))
 
 (defn init
-  "Creates project.clj file in an existing Android project folder.
+  "Creates project.clj file within an existing Android library folder.
 
   Presumes default directory names (like src, res and gen) and
   AndroidManifest.xml file to be already present in the project."
@@ -51,36 +41,36 @@
              "Android project. Use `lein droid new` to create a new project."))
     (let [manifest-path (.getAbsolutePath manifest)
           [_ name] (re-find #".*/(.+)/\." current-dir)
-          props (load-properties (io/file current-dir "project.properties"))
           data {:name name
-                :version (or (get-project-version manifest-path)
-                             "0.0.1-SNAPSHOT")
-                :target-sdk (or (get-target-sdk-version manifest-path) "10")
-                :library? (if (and props
-                                   (= (.getProperty props "android.library")
-                                      "true"))
-                            ":library true" "")}
+                :target-sdk (or (get-target-sdk-version manifest-path) "15")
+                :manifest-template-path
+                ":manifest-template-path \"AndroidManifest.xml\" "}
           render (renderer "templates")]
       (info "Creating project.clj...")
       (io/copy (render "library.project.clj" data)
                (io/file current-dir "project.clj")))))
 
-(defn new
-  "Creates new Android project given the project's name and package name."
-  [project-name package-name & options]
-  (when-not (package-name-valid? package-name)
-    (abort "ERROR: Package name should have at least two levels and"
-           "not contain hyphens (you can replace them with underscores)."))
-  (let [options (apply hash-map options)
-        data {:name project-name
-              :package package-name
-              :package-sanitized (sanitize package-name)
-              :path (package-to-path (sanitize package-name))
-              :activity (get options ":activity" "MainActivity")
-              :target-sdk (get options ":target-sdk" "15")
-              :min-sdk (get options ":min-sdk" "15")
-              :app-name (get options ":app-name" project-name)}
-        render (renderer "templates")]
+(defn new-library
+  "Creates new Android library."
+  [library-name package-name data]
+  (let [render (renderer "templates")]
+    (info "Creating library" library-name "...")
+    (->files
+     data
+     "assets"
+     [".gitignore" (render "gitignore")]
+     ["LICENSE" (render "LICENSE")]
+     ["README.md" (render "README.library.md" data)]
+     ["AndroidManifest.template.xml" (render "AndroidManifest.library.xml" data)]
+     ["project.clj" (render "library.project.clj" data)]
+     ["res/values/strings.xml" (render "strings.library.xml" data)]
+     ["src/java/{{path}}/Util.java" (render "Util.java" data)]
+     ["src/clojure/{{path}}/main.clj" (render "core.clj" data)])))
+
+(defn new-application
+  "Creates new Android application."
+  [project-name package-name data]
+  (let [render (renderer "templates")]
     (info "Creating project" project-name "...")
     (->files
      data
@@ -101,3 +91,23 @@
      ["res/values/strings.xml" (render "strings.xml" data)]
      ["src/java/{{path}}/SplashActivity.java" (render "SplashActivity.java" data)]
      ["src/clojure/{{path}}/main.clj" (render "main.clj" data)])))
+
+(defn new
+  "Creates new Android project given the project's name and package name."
+  [project-name package-name & options]
+  (when-not (package-name-valid? package-name)
+    (abort "ERROR: Package name should have at least two levels and"
+           "not contain hyphens (you can replace them with underscores)."))
+  (let [options (apply hash-map options)
+        data {:name project-name
+              :package package-name
+              :package-sanitized (sanitize package-name)
+              :path (package-to-path (sanitize package-name))
+              :activity (get options ":activity" "MainActivity")
+              :target-sdk (get options ":target-sdk" "15")
+              :min-sdk (get options ":min-sdk" "15")
+              :app-name (get options ":app-name" project-name)
+              :library (get options ":library" false)}]
+    (if (= (:library data) "true")
+      (new-library project-name package-name data)
+      (new-application project-name package-name data))))
