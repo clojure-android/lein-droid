@@ -9,6 +9,9 @@
   {{/new-project}}
   {{^new-project}}
   :java-source-paths ["src"]
+
+  ;; Uncomment this line if your project doesn't use Clojure.
+  ;; :java-only true
   {{/new-project}}
 
   :plugins [[lein-droid "0.4.0-alpha4"]]

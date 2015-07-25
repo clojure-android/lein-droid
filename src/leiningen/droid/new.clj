@@ -77,6 +77,8 @@
      ["README.md" (render "README.md" data)]
      ["AndroidManifest.template.xml" (render "AndroidManifest.template.xml" data)]
      ["project.clj" (render "project.clj" data)]
+     ["build/proguard-minify.cfg" (render "proguard_minify.cfg" data)]
+     ["build/proguard-multi-dex.cfg" (render "proguard_multi_dex.cfg" data)]
      ["res/drawable-hdpi/splash_circle.png" (render "splash_circle.png")]
      ["res/drawable-hdpi/splash_droid.png" (render "splash_droid.png")]
      ["res/drawable-hdpi/splash_hands.png" (render "splash_hands.png")]

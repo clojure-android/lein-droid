@@ -12,24 +12,20 @@
 
   :plugins [[lein-droid "0.4.0-SNAPSHOT"]]
 
-  ;; Uncomment this line if your project doesn't use Clojure. Also
-  ;; don't forget to remove respective dependencies.
-  ;; :java-only true
-
   :dependencies [[org.clojure-android/clojure "1.7.0-RC1" :use-resources true]
-                 [neko/neko "4.0.0-SNAPSHOT"]
-                 ;; [com.android.support/appcompat-v7 "18.0.0" :extension "aar"]
-                 ;; [com.google.android.gms/play-services-ads "7.5.0" :extension "aar"]
-                 ]
+                 [com.google.android.gms/play-services "7.0.0" :extension "aar"]
+                 [com.android.support/appcompat-v7 "18.0.0" :extension "aar"]
+                 [neko/neko "4.0.0-alpha2"]]
 
   :profiles {:default [:dev]
 
              :dev
              [:android-common :android-user
-              ;; These profiles can be specified in your profiles.clj and
+              ;; The above profiles can be specified in your profiles.clj and
               ;; contain machine-specific options such as {:android {:sdk-path
               ;; "/path/to/sdk"}}. :android-user profile is for global
               ;; dev-related options like CIDER configuration.
+
               {:dependencies [[org.clojure/tools.nrepl "0.2.10"]]
                :target-path "target/debug"
                :android {:aot :all-with-unused
@@ -37,7 +33,7 @@
                          ;; different one for dev and release allows you to
                          ;; install both at the same time.
                          :rename-manifest-package "test.leindroid.sample.debug"
-                         :manifest-options {:app-name "Android sample debug"}
+                         :manifest-options {:app-name "Android-Clojure (debug)"}
                          }}]
 
              :release
