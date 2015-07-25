@@ -40,11 +40,8 @@
       (abort "ERROR: AndroidManifest.xml not found - have to be in an existing"
              "Android project. Use `lein droid new` to create a new project."))
     (let [manifest-path (.getAbsolutePath manifest)
-          [_ name] (re-find #".*/(.+)/\." current-dir)
-          data {:name name
-                :target-sdk (or (get-target-sdk-version manifest-path) "15")
-                :manifest-template-path
-                ":manifest-template-path \"AndroidManifest.xml\" "}
+          data {:name (.getName (io/file current-dir))
+                :target-sdk (or (get-target-sdk-version manifest-path) "15")}
           render (renderer "templates")]
       (info "Creating project.clj...")
       (io/copy (render "library.project.clj" data)
@@ -107,7 +104,8 @@
               :target-sdk (get options ":target-sdk" "15")
               :min-sdk (get options ":min-sdk" "15")
               :app-name (get options ":app-name" project-name)
-              :library (get options ":library" false)}]
+              :library (get options ":library" false)
+              :new-project true}]
     (if (= (:library data) "true")
       (new-library project-name package-name data)
       (new-application project-name package-name data))))

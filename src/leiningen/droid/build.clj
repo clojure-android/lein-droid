@@ -181,7 +181,7 @@
 (defn aar
   "Metatask. Packages library into AAR archive."
   [{{:keys [manifest-path res-path gen-path assets-paths]} :android
-    :keys [name version target-path compile-path] :as project}]
+    :keys [name version target-path compile-path root] :as project}]
   (code-gen project)
   (.renameTo (io/file gen-path "R.txt") (io/file target-path "R.txt"))
   (leiningen.javac/javac project)
@@ -207,6 +207,8 @@
     (.addFile zip (io/file target-path "classes.jar") params)
     (.addFile zip (io/file target-path "R.txt") params)
     (.addFolder zip (io/file res-path) params)
+    (when (.exists (io/file root "libs"))
+      (.addFolder zip (io/file root "libs") params))
     (doseq [path assets-paths
             :when (.exists (io/file path))]
       (.addFolder zip (io/file path) params)))
