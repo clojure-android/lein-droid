@@ -252,11 +252,10 @@
 
   It is done by executing methods from ApkBuilder SDK class on the
   generated DEX-file and the resource package."
-  [{{:keys [out-apk-path out-res-pkg-path
-            out-dex-path resource-jars-paths]} :android,
-            java-only :java-only :as project}]
+  [{{:keys [out-apk-path out-res-pkg-path resource-jars-paths]} :android
+    :as project}]
   (info "Creating APK...")
-  (ensure-paths out-res-pkg-path out-dex-path)
+  (ensure-paths out-res-pkg-path)
   (let [unaligned-path (append-suffix out-apk-path "unaligned")
         resource-jars (concat (get-resource-jars project)
                               (map io/file resource-jars-paths))]

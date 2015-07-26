@@ -1,6 +1,6 @@
 (ns leiningen.droid.sdk
   "Functions to interact with Android SDK tools."
-  (:use [leiningen.core.main :only [debug]])
+  (:use [leiningen.core.main :only [debug abort]])
   (:require [leiningen.droid.aar :refer [get-aar-native-paths]]
             [leiningen.droid.sideload :as sideload]
             [clojure.java.io :as io])
@@ -32,8 +32,10 @@
       (debug "Adding native libraries: " all-native-libraries)
       (doseq [lib all-native-libraries]
         (.addNativeLibraries apkbuilder ^File (io/file lib))))
-    (when (seq dexes)
-      (debug "Adding DEX files: " dexes)
-      (doseq [dex dexes]
-        (.addFile apkbuilder dex (.getName dex))))
+    (if (seq dexes)
+      (do
+        (debug "Adding DEX files: " dexes)
+        (doseq [dex dexes]
+          (.addFile apkbuilder dex (.getName dex))))
+      (abort "No *.dex files found in " out-dex-path))
     (.sealApk apkbuilder)))
