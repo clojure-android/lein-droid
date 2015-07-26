@@ -226,9 +226,7 @@
   (let [aapt-bin (sdk-binary project :aapt)
         android-jar (get-sdk-android-jar sdk-path target-version)
         debug-mode (if (dev-build? project) ["--debug-mode"] [])
-        manifest-file (io/file manifest-path)
-        backup-file (io/file (str manifest-path ".backup"))
-        ;; Only add `assets` directory if it is present.
+        ;; Only add `assets` directories when they are present.
         assets (mapcat #(when (.exists (io/file %)) ["-A" (str %)])
                        (concat assets-paths [assets-gen-path]
                                (get-aar-files project "assets")))
