@@ -61,6 +61,7 @@
   classes have to be kept in primary dex."
   [{{:keys [multi-dex-proguard-conf-path multi-dex-root-classes-path]} :android
     :as project} target-paths]
+  (ensure-paths multi-dex-proguard-conf-path)
   (let [proguard-bin (sdk-binary project :proguard)
         android-jar (io/file (get-sdk-build-tools-path project)
                              "lib" "shrinkedAndroid.jar")]
