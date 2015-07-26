@@ -9,7 +9,8 @@
         [leiningen.droid.compatibility :only (create-repl-port-file)]
         [reply.main :only (launch-nrepl)])
   (:require [clojure.java.io :as io]
-            [cemerick.pomegranate.aether :as aether]))
+            [cemerick.pomegranate.aether :as aether]
+            [reply.initialization :as reply-init]))
 
 (defn- device-list
   "Returns the list of currently attached devices."
@@ -123,10 +124,33 @@
         (str "tcp:" repl-local-port)
         (str "tcp:" repl-device-port))))
 
+(defn default-init
+  "Substitution for REPLy's own `default-init-function`."
+  [{:keys [custom-help] :as options}]
+  `(do
+     ~@reply-init/prelude
+
+     (use '[clojure.repl :only ~'[source apropos dir doc pst find-doc]])
+     (use '[clojure.pprint :only ~'[pp pprint]])
+
+     (defn ~'help
+       "Prints a list of helpful commands."
+       []
+       (println "        Exit: Control+D or (exit) or (quit)")
+       (println "    Commands: (user/help)")
+       (println "        Docs: (doc function-name-here)")
+       (println "              (find-doc \"part-of-name-here\")")
+       (println "      Source: (source function-name-here)"))
+
+     (user/help)
+
+     nil))
+
 (defn repl
   "Connects to a remote nREPL server on the device using REPLy."
   [{{:keys [repl-local-port]} :android}]
-  (launch-nrepl {:attach (str "localhost:" repl-local-port)}))
+  (with-redefs [reply-init/default-init-code default-init]
+    (launch-nrepl {:attach (str "localhost:" repl-local-port)})))
 
 (defn deploy
   "Metatask. Runs `install, `run`, `forward-port`."
