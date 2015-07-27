@@ -6,7 +6,7 @@
 ** Usage
 
    First make sure you have [[http://developer.android.com/sdk/index.html][Android SDK]] installed, with the latest
-   Android SDK Build-tools (>=20.0.0).
+   Android SDK Build-tools and Android Support Repository.
 
    Follow the [[https://github.com/clojure-android/lein-droid/wiki/Tutorial][Tutorial]] to start using lein-droid.
 
