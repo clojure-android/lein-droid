@@ -6,8 +6,7 @@
             [leiningen.core.classpath :as cp]
             [leiningen.droid.code-gen :as code-gen]
             [leiningen.droid.compile :as compile]
-            [leiningen.droid.utils :as utils]
-            [leiningen.test :as ltest]))
+            [leiningen.droid.utils :as utils]))
 
 (defn local-test
   "Runs tests locally using Robolectric."
