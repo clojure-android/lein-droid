@@ -93,7 +93,6 @@
 
     ;; Test tasks
     "local-test" (apply local-test project args)
-    "local-repl" (local-test project "repl")
 
     ;; Meta tasks
     "build" (build project)

@@ -3,6 +3,7 @@
   (:require [bultitude.core :as b]
             [clojure.java.io :as io]
             [clojure.string :as str]
+            [clojure.set :as set]
             [leiningen.core.classpath :as cp]
             [leiningen.droid.code-gen :as code-gen]
             [leiningen.droid.compile :as compile]
@@ -10,13 +11,15 @@
 
 (defn local-test
   "Runs tests locally using Robolectric."
-  [project & [mode]]
+  [{{:keys [cloverage-exclude-ns]} :android :as project} & [mode]]
   (when-not (-> project :android :library)
     (code-gen/code-gen project))
   (compile/compile project)
   (let [src-nses (b/namespaces-on-classpath
                   :classpath (map io/file (distinct (:source-paths project)))
                   :ignore-unreadable? false)
+        src-nses (set/difference (set src-nses)
+                                 (set (map symbol cloverage-exclude-ns)))
         test-nses (b/namespaces-on-classpath
                    :classpath (map io/file (distinct (:test-paths project)))
                    :ignore-unreadable? false)
