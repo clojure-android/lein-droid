@@ -113,9 +113,6 @@
             ;; "v7-gridlayout", "v7-mediarouter", "v13".
             ;; :support-libraries ["v7-appcompat" "v13"]
 
-            ;; Use this property to add project dependencies.
-            ;; :project-dependencies [ "/path/to/library/project" ]
-
             ;; Sequence of external jars or class folders to include
             ;; into project.
             ;; :external-classes-paths ["path/to/external/jar/file"

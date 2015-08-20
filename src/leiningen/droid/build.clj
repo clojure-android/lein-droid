@@ -134,48 +134,11 @@
       (run-dx project (concat [compile-path] deps support-jars
                               external-classes-paths)))))
 
-;; Because of the AAPT bug we must turn paths to files here so that proper
-;; canonical names are calculated.
-;;
-(defn crunch-resources
-  "Updates the pre-processed PNG cache.
-
-  Calls `aapt` binary with the _crunch_ task."
-  [{{:keys [res-path out-res-path]} :android :as project}]
-  (info "Crunching resources...")
-  (ensure-paths res-path)
-  (let [aapt-bin (sdk-binary project :aapt)
-        crunch (fn [src-dir target-dir]
-                 (sh aapt-bin "crunch -v" "-S" src-dir "-C" target-dir))]
-    (doseq [aar (get-aar-files project)
-            :when (.exists ^File (io/file aar "R.txt"))
-            :let [out (io/file aar "out-res")]]
-      (.mkdirs ^File out)
-      (crunch (io/file aar "res") out))
-    (crunch (io/file res-path) (io/file out-res-path))))
-
-;; We have to declare a future reference here because `build` and
-;; `build-project-dependencies` are mutually-recursive.
-;;
-(declare build)
-
-(defn build-project-dependencies
-  "Builds all project dependencies for the current project."
-  [{{:keys [project-dependencies]} :android, root :root}]
-  (doseq [dep-path project-dependencies
-          :let [dep-project (read-project (get-project-file root dep-path))]]
-    (info "Building project dependency" dep-path "...")
-    (build dep-project)
-    (info "Building dependency complete.")))
-
 (defn build
-  "Metatask. Builds dependencies, compiles and creates DEX (if not a library)."
+  "Metatask. Compiles the project and creates DEX."
   [{{:keys [library]} :android :as project}]
-  (if library
-    (doto project
-      build-project-dependencies code-gen compile crunch-resources)
-    (doto project
-      build-project-dependencies code-gen compile create-dex)))
+  (doto project
+    code-gen compile create-dex))
 
 (defn jar
   "Metatask. Packages compiled Java files and Clojure sources into JAR.
@@ -224,6 +187,26 @@
   (leiningen.pom/pom (assoc project :packaging "aar")))
 
 ;; ### APK-related subtasks
+
+;; Because of the AAPT bug we must turn paths to files here so that proper
+;; canonical names are calculated.
+;;
+(defn crunch-resources
+  "Updates the pre-processed PNG cache.
+
+  Calls `aapt` binary with the _crunch_ task."
+  [{{:keys [res-path out-res-path]} :android :as project}]
+  (info "Crunching resources...")
+  (ensure-paths res-path)
+  (let [aapt-bin (sdk-binary project :aapt)
+        crunch (fn [src-dir target-dir]
+                 (sh aapt-bin "crunch -v" "-S" src-dir "-C" target-dir))]
+    (doseq [aar (get-aar-files project)
+            :when (.exists ^File (io/file aar "R.txt"))
+            :let [out (io/file aar "out-res")]]
+      (.mkdirs ^File out)
+      (crunch (io/file aar "res") out))
+    (crunch (io/file res-path) (io/file out-res-path))))
 
 (defn package-resources
   "Packages application resources."

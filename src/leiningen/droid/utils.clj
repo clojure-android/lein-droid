@@ -155,33 +155,9 @@
       (file project-directory-path "project.clj")
       (file root project-directory-path "project.clj"))))
 
-(defn process-project-dependencies
-  "Parses `project.clj` files from the project dependencies to extract
-  the paths to external resources and class files."
-  [{{:keys [project-dependencies]} :android, root :root :as project}]
-  (reduce (fn [project dependency-path]
-            (let [project-file (get-project-file root dependency-path)]
-              (if-not (.exists ^File project-file)
-                (do
-                  (info "WARNING:" (str project-file) "doesn't exist.")
-                  project)
-                (let [dep (read-project project-file)
-                      {:keys [compile-path dependencies]} dep
-                      {:keys [res-path out-res-path]} (:android dep)]
-                  (-> project
-                      (update-in [:dependencies]
-                                 concat dependencies)
-                      (update-in [:android :external-classes-paths]
-                                 conj compile-path)
-                      (update-in [:android :external-res-paths]
-                                 conj res-path out-res-path))))))
-          project project-dependencies))
-
-;; This is the middleware function to be plugged into project.clj.
 (defn android-parameters
-  "Merges project's `:android` map with the default parameters map, adds local
-  SDK repositories, processes project dependencies and absolutizes paths in the
-  `:android` map."
+  "Merges project's `:android` map with default Android parameters and
+  absolutizes paths in the `:android` map."
   [{:keys [android] :as project}]
   (let [android-params (merge (get-default-android-params project) android)]
     (-> project
@@ -189,7 +165,6 @@
                    {:java-source-paths [(:gen-path android-params)]})
         (pr/merge-profiles [::extras])
         (assoc :android android-params)
-        process-project-dependencies
         absolutize-android-paths)))
 
 ;; ### General utilities
