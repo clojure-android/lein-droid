@@ -3,9 +3,10 @@
   (:require [clojure.data.zip.xml :refer :all]
             [clojure.xml :as xml]
             [clojure.java.io :as jio]
+            [clojure.string :as str]
             [clojure.zip :refer [up xml-zip]]
             [clostache.parser :as clostache]
-            [leiningen.core.main :refer [info debug]]
+            [leiningen.core.main :refer [info debug abort]]
             [leiningen.droid.aar :refer [get-aar-files]]
             [leiningen.droid.utils :refer [dev-build?]]
             [leiningen.release :refer [parse-semantic-version]])
@@ -25,9 +26,6 @@
 ;; Attribute name for minimal SDK version.
 (def ^:private min-sdk-attribute (keyword :android:minSdkVersion))
 
-;; Attribute name for project version name.
-(def ^:private version-name-attribute (keyword :android:versionName))
-
 ;; ### Local functions
 
 (defn- load-manifest
@@ -42,7 +40,7 @@
   (xml-> manifest :application :activity :intent-filter :category
          (attr= :android:name launcher-category)))
 
-;; ### Public functions
+;; ### Manifest parsing and data extraction
 
 (defn get-package-name
   "Returns the name of the application's package."
@@ -70,31 +68,30 @@
   "Extracts the target SDK version from the provided manifest file. If
   target SDK is not specified returns minimal SDK."
   [manifest-path]
-  (let [[uses-sdk] (xml-> (load-manifest manifest-path) :uses-sdk)
-        [target-sdk] (xml-> uses-sdk (attr target-sdk-attribute))]
-    (or target-sdk
+  (let [[uses-sdk] (xml-> (load-manifest manifest-path) :uses-sdk)]
+    (or (first (xml-> uses-sdk (attr target-sdk-attribute)))
         (first (xml-> uses-sdk (attr min-sdk-attribute))))))
 
-(defn get-project-version
-  "Extracts the project version name from the provided manifest file."
-  [manifest-path]
-  (first (xml-> (load-manifest manifest-path) (attr version-name-attribute))))
-
-(def ^:private version-bit-sizes [9 9 9 5])
+;; ### Manifest templating
 
 (def ^:private version-maximums
-  (mapv (partial bit-shift-left 1) version-bit-sizes))
+  "Maximum values per each version bucket."
+  (mapv (partial bit-shift-left 1) [9 9 9 5]))
 
 (def ^:private version-coefficients
-  (mapv (fn [offset] (bit-shift-left 1 (- 32 offset)))
-        (reductions + version-bit-sizes)))
+  "Each part of the version number will be multiplied by the respective
+  coefficient, all of which are calculated here."
+  (->> version-maximums
+       (reductions +)
+       (mapv (fn [offset] (bit-shift-left 1 (- 32 offset))))))
 
 (defn- assert>
   "Asserts that a>b in version segments"
   [a b]
-  (assert (> a b) (str "Version number segment too large to fit in the
-  version-code scheme " b ">" a ", maximum version in each segment
-  is " (clojure.string/join "." version-maximums)))
+  (when-not (> a b)
+    (abort (format "Version number segment too large to fit in the
+ version-code scheme: %s > %s, maximum version in each segment is %s"
+                   b a (str/join "." version-maximums))))
   b)
 
 (defn version-code
