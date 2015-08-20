@@ -183,16 +183,11 @@
   SDK repositories, processes project dependencies and absolutizes paths in the
   `:android` map."
   [{:keys [android] :as project}]
-  (let [android-params (merge (get-default-android-params project)
-                              android)
-        p (fn [& path] {:url (str "file://" (apply file (:sdk-path android) path))})
-        repos {:java-source-paths [(:gen-path android-params)]
-               :repositories
-               [["android-support" (p "extras" "android" "m2repository")]
-                ["android-play-services" (p "extras" "google" "m2repository")]]}]
+  (let [android-params (merge (get-default-android-params project) android)]
     (-> project
-        (vary-meta assoc-in [:profiles :sdk-repos] repos)
-        (pr/merge-profiles [:sdk-repos])
+        (vary-meta assoc-in [:profiles ::extras]
+                   {:java-source-paths [(:gen-path android-params)]})
+        (pr/merge-profiles [::extras])
         (assoc :android android-params)
         process-project-dependencies
         absolutize-android-paths)))
