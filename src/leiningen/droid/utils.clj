@@ -320,9 +320,13 @@
 
 (defn sh
   "Executes the command given by `args` in a subprocess. Flattens the
-  given list."
+  given list. Turns files into canonical paths."
   [& args]
-  (with-process [process (flatten args)]))
+  (let [str-args (for [arg (flatten args)]
+                   (if (instance? File arg)
+                     (.getCanonicalPath ^File arg)
+                     (str arg)))]
+    (with-process [process str-args])))
 
 (defn dev-build?
   "Checks the build type of the current project, assuming dev build if
