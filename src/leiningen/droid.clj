@@ -19,7 +19,6 @@
                        sign-apk zipalign-apk apk build jar aar]]
          [deploy :only [install run forward-port repl deploy local-repo]]
          [new :only [new init]]
-         [compatibility :only [gather-dependencies]]
          [test :only [local-test]]
          [utils :only [proj wrong-usage android-parameters ensure-paths
                        dev-build?]]]))
@@ -53,7 +52,7 @@
                    #'create-apk #'sign-apk #'zipalign-apk
                    #'install #'run #'forward-port #'repl
                    #'build #'apk #'deploy #'doall #'help #'local-test
-                   #'gather-dependencies #'jar #'pprint]}
+                   #'jar #'pprint]}
   droid
   "Supertask for Android-related tasks (see `lein droid` for list)."
   ([project]
@@ -87,7 +86,6 @@
     "run" (apply run project args)
     "forward-port" (apply forward-port project args)
     "repl" (repl project)
-    "gather-dependencies" (apply gather-dependencies project args)
     "clean" (clean project)
     "local-repo" (local-repo project)
 
