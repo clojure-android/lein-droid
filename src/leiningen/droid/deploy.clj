@@ -6,7 +6,6 @@
                                          get-package-name)]
         [leiningen.droid.utils :only [sh ensure-paths append-suffix
                                       prompt-user sdk-binary]]
-        [leiningen.droid.compatibility :only (create-repl-port-file)]
         [reply.main :only (launch-nrepl)])
   (:require [clojure.java.io :as io]
             [cemerick.pomegranate.aether :as aether]
@@ -113,11 +112,11 @@
   "Binds a port on the local machine to the port on the device.
 
   This allows to connect to the remote REPL from the current machine."
-  [{{:keys [repl-device-port repl-local-port]} :android :as project}
+  [{{:keys [repl-device-port repl-local-port]} :android, root :root :as project}
    & device-args]
   (info "Binding device port" repl-device-port
         "to local port" repl-local-port "...")
-  (create-repl-port-file project)
+  (spit (io/file root ".nrepl-port") repl-local-port)
   (let [adb-bin (sdk-binary project :adb)
         device (get-device-args adb-bin device-args)]
     (sh adb-bin device "forward"
