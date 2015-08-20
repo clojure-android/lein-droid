@@ -134,6 +134,9 @@
       (run-dx project (concat [compile-path] deps support-jars
                               external-classes-paths)))))
 
+;; Because of the AAPT bug we must turn paths to files here so that proper
+;; canonical names are calculated.
+;;
 (defn crunch-resources
   "Updates the pre-processed PNG cache.
 
@@ -141,10 +144,15 @@
   [{{:keys [res-path out-res-path]} :android :as project}]
   (info "Crunching resources...")
   (ensure-paths res-path)
-  (let [aapt-bin (sdk-binary project :aapt)]
-    (sh aapt-bin "crunch -v"
-        "-S" res-path
-        "-C" out-res-path)))
+  (let [aapt-bin (sdk-binary project :aapt)
+        crunch (fn [src-dir target-dir]
+                 (sh aapt-bin "crunch -v" "-S" src-dir "-C" target-dir))]
+    (doseq [aar (get-aar-files project)
+            :when (.exists ^File (io/file aar "R.txt"))
+            :let [out (io/file aar "out-res")]]
+      (.mkdirs ^File out)
+      (crunch (io/file aar "res") out))
+    (crunch (io/file res-path) (io/file out-res-path))))
 
 ;; We have to declare a future reference here because `build` and
 ;; `build-project-dependencies` are mutually-recursive.
@@ -231,12 +239,16 @@
         assets (mapcat #(when (.exists (io/file %)) ["-A" (str %)])
                        (concat assets-paths [assets-gen-path]
                                (get-aar-files project "assets")))
-        aar-resources (for [res (get-aar-files project "res")] ["-S" (str res)])
+        aar-resources (for [res (get-aar-files project "res")] ["-S" res])
+        aar-crunched-resources (for [res (get-aar-files project "out-res")
+                                     :when (.exists ^File res)]
+                                 ["-S" res])
         external-resources (for [res external-res-paths] ["-S" res])]
     (sh aapt-bin "package" "--no-crunch" "-f" debug-mode "--auto-add-overlay"
         "-M" manifest-path
         "-S" out-res-path
         "-S" res-path
+        aar-crunched-resources
         aar-resources
         external-resources
         assets
