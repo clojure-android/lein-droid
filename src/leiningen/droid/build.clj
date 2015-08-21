@@ -125,7 +125,7 @@
   (if proguard-execute
     (do
       (run-proguard-minifying project)
-      (run-dx project proguard-output-jar-path))
+      (run-dx project [proguard-output-jar-path]))
     (let [deps (resolve-dependencies :dependencies project)
           external-classes-paths (or external-classes-paths [])]
       (run-dx project (concat [compile-path] deps external-classes-paths)))))
