@@ -104,9 +104,6 @@
             ;; :multi-dex true
             ;; :multi-dex-proguard-conf-path "build/proguard-multi-dex.cfg"
 
-            ;; Uncomment this line to be able to use Google API.
-            ;; :use-google-api true
-
             ;; Sequence of external jars or class folders to include
             ;; into project.
             ;; :external-classes-paths ["path/to/external/jar/file"
