@@ -5,7 +5,7 @@
   (:use [robert.hooke :only [add-hook]]
         [leiningen.droid.utils :only [get-sdk-android-jar
                                       get-sdk-google-api-jars
-                                      get-sdk-support-jars]])
+                                      ]])
   (:import org.sonatype.aether.util.version.GenericVersionScheme))
 
 ;; Since `dx` and `ApkBuilder` utilities fail when they are feeded
@@ -75,14 +75,14 @@
   Then the path to the actual `android.jar` file is constructed and
   appended to the rest of the classpath list."
   [f {{:keys [sdk-path target-version external-classes-paths
-              use-google-api support-libraries]}
+              use-google-api]}
       :android :as project}]
   (let [classpath (f project)
         result (conj (concat classpath external-classes-paths
                              (when use-google-api
                                (get-sdk-google-api-jars sdk-path
                                                         target-version))
-                             (get-sdk-support-jars sdk-path support-libraries))
+                             )
                      (get-sdk-android-jar sdk-path target-version)
                      (str sdk-path "/tools/support/annotations.jar"))]
     result))

@@ -107,12 +107,6 @@
             ;; Uncomment this line to be able to use Google API.
             ;; :use-google-api true
 
-            ;; This option allows you to specify Android support
-            ;; libraries you want to use in your application.
-            ;; Available versions: "v4", "v7-appcompat",
-            ;; "v7-gridlayout", "v7-mediarouter", "v13".
-            ;; :support-libraries ["v7-appcompat" "v13"]
-
             ;; Sequence of external jars or class folders to include
             ;; into project.
             ;; :external-classes-paths ["path/to/external/jar/file"

@@ -10,7 +10,7 @@
          [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
-                       sdk-binary relativize-path get-sdk-support-jars
+                       sdk-binary relativize-path
                        get-resource-jars get-sdk-build-tools-path]]])
   (:require [clojure.string :as str]
             [clojure.set :as set]
@@ -33,7 +33,7 @@
 (defn- run-proguard-minifying
   "Run proguard on the compiled classes and dependencies, create an JAR with
   minimized and shaken classes."
-  [{{:keys [sdk-path external-classes-paths target-version support-libraries
+  [{{:keys [sdk-path external-classes-paths target-version
             proguard-conf-path proguard-opts proguard-output-jar-path]} :android
             compile-path :compile-path :as project}]
   (info "Running Proguard...")
@@ -44,10 +44,9 @@
 
         annotations (io/file sdk-path "tools" "support" "annotations.jar")
         deps (resolve-dependencies :dependencies project)
-        support-jars (get-sdk-support-jars sdk-path support-libraries true)
         external-paths (or external-classes-paths [])]
     (sh proguard-bin (str "@" proguard-conf-path)
-        "-injars" (->> (concat [compile-path] deps external-paths support-jars)
+        "-injars" (->> (concat [compile-path] deps external-paths)
                        (map str)
                        (str/join ":"))
         "-libraryjars" (->> [annotations android-jar]
@@ -121,7 +120,7 @@
 
 (defn create-dex
   "Creates a DEX file from the compiled .class files."
-  [{{:keys [sdk-path external-classes-paths support-libraries
+  [{{:keys [sdk-path external-classes-paths
             proguard-execute proguard-output-jar-path]} :android,
             compile-path :compile-path :as project}]
   (if proguard-execute
@@ -129,10 +128,8 @@
       (run-proguard-minifying project)
       (run-dx project proguard-output-jar-path))
     (let [deps (resolve-dependencies :dependencies project)
-          support-jars (get-sdk-support-jars sdk-path support-libraries true)
           external-classes-paths (or external-classes-paths [])]
-      (run-dx project (concat [compile-path] deps support-jars
-                              external-classes-paths)))))
+      (run-dx project (concat [compile-path] deps external-classes-paths)))))
 
 (defn build
   "Metatask. Compiles the project and creates DEX."
