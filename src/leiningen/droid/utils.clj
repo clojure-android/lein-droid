@@ -197,6 +197,14 @@
   ([sdk-root version]
    (str (file (get-sdk-platform-path sdk-root version) "android.jar"))))
 
+(defn get-sdk-annotations-jar
+  "Returns a path to annotations.jar file."
+  [sdk-root-or-project]
+  (let [sdk-root (if (map? sdk-root-or-project)
+                   (get-in sdk-root-or-project [:android :sdk-path])
+                   sdk-root-or-project)]
+    (str (file sdk-root "tools" "support" "annotations.jar"))))
+
 (defn get-resource-jars
   "Get the list of dependency libraries that has `:use-resources true`
   in their definition."

@@ -2,7 +2,8 @@
   "Contains functions and hooks for Android-specific classpath
   manipulation."
   (:require [leiningen.droid.aar :refer [get-aar-classes]]
-            [leiningen.droid.utils :refer [get-sdk-android-jar]]
+            [leiningen.droid.utils :refer [get-sdk-android-jar
+                                           get-sdk-annotations-jar]]
             [robert.hooke :refer [add-hook]])
   (:import org.sonatype.aether.util.version.GenericVersionScheme))
 
@@ -72,12 +73,11 @@
   extracting the path to the Android SDK and the target version from it.
   Then the path to the actual `android.jar` file is constructed and
   appended to the rest of the classpath list."
-  [f {{:keys [sdk-path target-version external-classes-paths]}
-      :android :as project}]
+  [f {{:keys [external-classes-paths]} :android :as project}]
   (let [classpath (f project)
         result (conj (concat classpath external-classes-paths)
-                     (get-sdk-android-jar sdk-path target-version)
-                     (str sdk-path "/tools/support/annotations.jar"))]
+                     (get-sdk-android-jar project)
+                     (get-sdk-annotations-jar project))]
     result))
 
 (defn init-hooks []

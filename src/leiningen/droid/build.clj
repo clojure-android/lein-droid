@@ -10,7 +10,7 @@
          [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
                        create-debug-keystore get-project-file read-project
-                       sdk-binary relativize-path
+                       sdk-binary relativize-path get-sdk-annotations-jar
                        get-resource-jars get-sdk-build-tools-path]]])
   (:require [clojure.string :as str]
             [clojure.set :as set]
@@ -33,18 +33,17 @@
 (defn- run-proguard-minifying
   "Run proguard on the compiled classes and dependencies, create an JAR with
   minimized and shaken classes."
-  [{{:keys [sdk-path external-classes-paths target-version
+  [{{:keys [external-classes-paths
             proguard-conf-path proguard-opts proguard-output-jar-path]} :android
             compile-path :compile-path :as project}]
   (info "Running Proguard...")
   (ensure-paths compile-path proguard-conf-path)
   (let [proguard-bin (sdk-binary project :proguard)
-        android-jar (get-sdk-android-jar sdk-path target-version)
-        proguard-opts (or proguard-opts [])
-
-        annotations (io/file sdk-path "tools" "support" "annotations.jar")
+        android-jar (get-sdk-android-jar project)
+        annotations (get-sdk-annotations-jar project)
         deps (resolve-dependencies :dependencies project)
-        external-paths (or external-classes-paths [])]
+        external-paths (or external-classes-paths [])
+        proguard-opts (or proguard-opts [])]
     (sh proguard-bin (str "@" proguard-conf-path)
         "-injars" (->> (concat [compile-path] deps external-paths)
                        (map str)
@@ -96,7 +95,7 @@
 (defn- run-dx
   "Run dex on the given target paths, each should be either a directory with
   .class files or a jar file."
-  [{{:keys [sdk-path out-dex-path force-dex-optimize dex-opts multi-dex
+  [{{:keys [out-dex-path force-dex-optimize dex-opts multi-dex
             multi-dex-root-classes-path multi-dex-main-dex-list-path]} :android :as project}
    target-paths]
   (if multi-dex
@@ -107,7 +106,7 @@
         options (or dex-opts [])
         no-optimize (if (and (not force-dex-optimize) (dev-build? project))
                       "--no-optimize" [])
-        annotations (io/file sdk-path "tools" "support" "annotations.jar")
+        annotations (get-sdk-annotations-jar project)
         multi-dex (if multi-dex
                     ["--multi-dex" "--main-dex-list" multi-dex-main-dex-list-path]
                     [])]
