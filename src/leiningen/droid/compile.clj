@@ -33,10 +33,11 @@
   (.mkdirs (io/file assets-gen-path))
   (eval-in-project
    project
-   `(spit (io/file ~assets-gen-path "data_readers.clj")
-          (into {} (map (fn [[k# v#]]
-                          [k# (symbol (subs (str v#) 2))])
-                        *data-readers*)))))
+   `(do (require 'clojure.java.io)
+        (spit (clojure.java.io/file ~assets-gen-path "data_readers.clj")
+              (into {} (map (fn [[k# v#]]
+                              [k# (symbol (subs (str v#) 2))])
+                            clojure.core/*data-readers*))))))
 
 ;; ### Compilation
 
