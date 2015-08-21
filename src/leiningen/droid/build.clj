@@ -144,7 +144,8 @@
   [project]
   (leiningen.javac/javac project)
   (jar/write-jar project (jar/get-jar-filename project)
-                 (#'jar/filespecs (dissoc project :java-source-paths))))
+                 (#'jar/filespecs (dissoc project :java-source-paths)))
+  (leiningen.pom/pom project))
 
 (defn aar
   "Metatask. Packages library into AAR archive."
