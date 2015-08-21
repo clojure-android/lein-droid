@@ -10,12 +10,12 @@
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  :plugins [[lein-droid "0.4.0-alpha6"]]
+  :plugins [[lein-droid "0.4.1"]]
 
   :dependencies [[org.clojure-android/clojure "1.7.0-RC1" :use-resources true]
-                 [com.google.android.gms/play-services "7.0.0" :extension "aar"]
-                 [com.android.support/appcompat-v7 "18.0.0" :extension "aar"]
-                 [neko/neko "4.0.0-alpha2"]]
+                 ;; [com.google.android.gms/play-services "7.0.0" :extension "aar"]
+                 ;; [com.android.support/appcompat-v7 "18.0.0" :extension "aar"]
+                 [neko/neko "4.0.0-alpha4"]]
 
   :profiles {:default [:dev]
 
@@ -60,7 +60,7 @@
 
              :lean
              [:release
-              {:dependencies ^:replace [[org.skummet/clojure "1.7.0-RC1-r2" :use-resources true]
+              {:dependencies ^:replace [[org.skummet/clojure "1.7.0-RC3-r2"]
                                         [neko/neko "4.0.0-alpha2"]]
                :exclusions [[org.clojure/clojure]
                             [org.clojure-android/clojure]]
