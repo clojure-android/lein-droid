@@ -74,14 +74,18 @@
 
 ;; ### Manifest templating
 
+(def ^:private version-bit-sizes
+  "Amount of bits allocated for each version bucket."
+  [9 9 9 5])
+
 (def ^:private version-maximums
   "Maximum values per each version bucket."
-  (mapv (partial bit-shift-left 1) [9 9 9 5]))
+  (mapv (partial bit-shift-left 1) version-bit-sizes))
 
 (def ^:private version-coefficients
   "Each part of the version number will be multiplied by the respective
   coefficient, all of which are calculated here."
-  (->> version-maximums
+  (->> version-bit-sizes
        (reductions +)
        (mapv (fn [offset] (bit-shift-left 1 (- 32 offset))))))
 
