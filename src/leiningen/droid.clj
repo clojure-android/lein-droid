@@ -6,6 +6,7 @@
   (:refer-clojure :exclude [compile doall repl])
   (:require clojure.pprint
             [leiningen.droid.aar :refer [extract-aar-dependencies]]
+            [leiningen.core.main :refer [debug info abort]]
             [leiningen.droid.code-gen :refer [code-gen]])
   (:use [leiningen.core.project :only [set-profiles]]
         [leiningen.core.main :only [abort]]
@@ -61,8 +62,8 @@
      (init-hooks)
      (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
        (abort "Subtask" cmd "should be run from the project folder."))
-     (ensure-paths (-> project :android :sdk-path))
-     (doto (android-parameters project)
+     (ensure-paths (-> (proj) :android :sdk-path))
+     (doto (android-parameters (proj))
        extract-aar-dependencies
        (execute-subtask cmd args))))
 
