@@ -14,7 +14,7 @@
   ;; :java-only true
   {{/new-project}}
 
-  :plugins [[lein-droid "0.4.1"]]
+  :plugins [[lein-droid "0.4.2"]]
   :profiles {:default [:android-common]}
 
   :android {:target-version "{{target-sdk}}"
