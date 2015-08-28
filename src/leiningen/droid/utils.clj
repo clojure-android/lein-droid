@@ -92,7 +92,7 @@
   [root path]
   (str (if (.isAbsolute (file path))
          path
-         (file root path))))
+         (.getCanonicalPath (file root path)))))
 
 (defn absolutize-android-paths
   "Taken from Leiningen source code.
@@ -138,36 +138,28 @@
    :repl-local-port 9999
    :target-version 15})
 
-(declare android-parameters)
+(defn android-parameters
+  "Merges project's `:android` map with default Android parameters and
+  absolutizes paths in the `:android` map."
+  [{:keys [android root] :as project}]
+  (let [android-params (merge (get-default-android-params project) android)
+        sdk-path (absolutize root (:sdk-path android-params))
+        p (fn [& path] {:url (str "file://" (apply file sdk-path path))})]
+    (-> project
+        (update-in [:java-source-paths] conj (:gen-path android-params))
+        (update-in [:repositories] concat
+                   [["android-support" (p "extras" "android" "m2repository")]
+                    ["android-play-services" (p "extras" "google" "m2repository")]])
+        (assoc :android android-params)
+        absolutize-android-paths)))
+
+;; ### General utilities
 
 (defn read-project
   "Reads and initializes a Leiningen project and applies Android
   middleware to it."
   [project-file]
   (android-parameters (pr/init-project (pr/read (str project-file)))))
-
-(defn get-project-file
-  "Returns the path to project.clj file in the specified project
-  directory (either absolute or relative)."
-  [root project-directory-path]
-  (let [project-directory (file project-directory-path)]
-    (if (.isAbsolute project-directory)
-      (file project-directory-path "project.clj")
-      (file root project-directory-path "project.clj"))))
-
-(defn android-parameters
-  "Merges project's `:android` map with default Android parameters and
-  absolutizes paths in the `:android` map."
-  [{:keys [android] :as project}]
-  (let [android-params (merge (get-default-android-params project) android)]
-    (-> project
-        (vary-meta assoc-in [:profiles ::extras]
-                   {:java-source-paths [(:gen-path android-params)]})
-        (pr/merge-profiles [::extras])
-        (assoc :android android-params)
-        absolutize-android-paths)))
-
-;; ### General utilities
 
 (defn proj [] (read-project "sample/project.clj"))
 

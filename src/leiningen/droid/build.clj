@@ -9,7 +9,7 @@
          [compile :only [compile]]
          [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
-                       create-debug-keystore get-project-file read-project
+                       create-debug-keystore read-project
                        sdk-binary relativize-path get-sdk-annotations-jar
                        get-resource-jars get-sdk-build-tools-path]]])
   (:require [clojure.string :as str]

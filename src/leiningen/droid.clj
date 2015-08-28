@@ -62,7 +62,7 @@
      (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
        (abort "Subtask" cmd "should be run from the project folder."))
      (ensure-paths (-> project :android :sdk-path))
-     (doto (android-parameters project)
+     (doto project
        extract-aar-dependencies
        (execute-subtask cmd args))))
 
