@@ -142,16 +142,22 @@
   "Merges project's `:android` map with default Android parameters and
   absolutizes paths in the `:android` map."
   [{:keys [android root] :as project}]
-  (let [android-params (merge (get-default-android-params project) android)
-        sdk-path (absolutize root (:sdk-path android-params))
-        p (fn [& path] {:url (str "file://" (apply file sdk-path path))})]
-    (-> project
-        (update-in [:java-source-paths] conj (:gen-path android-params))
-        (update-in [:repositories] concat
-                   [["android-support" (p "extras" "android" "m2repository")]
-                    ["android-play-services" (p "extras" "google" "m2repository")]])
-        (assoc :android android-params)
-        absolutize-android-paths)))
+  (if-not (:sdk-path android)
+    ;; :sdk-path might be nil when this function is called from middleware
+    ;; before the :sdk-path is merged from some external profile. In this case
+    ;; just do nothing to project map.
+    project
+    (let [android-params (merge (get-default-android-params project) android)
+          sdk-path (absolutize root (:sdk-path android))
+          support-repo (file sdk-path "extras" "android" "m2repository")
+          ps-repo (file sdk-path "extras" "google" "m2repository")]
+      (-> project
+          (update-in [:java-source-paths] conj (:gen-path android-params))
+          (update-in [:repositories] concat
+                     [["android-support" {:url (str "file://" support-repo)}]
+                      ["android-play-services" {:url (str "file://" ps-repo)}]])
+          (assoc :android android-params)
+          absolutize-android-paths))))
 
 ;; ### General utilities
 
@@ -207,6 +213,21 @@
         mod-proj (assoc project :dependencies res-deps)]
     (with-hooks-disabled resolve-dependencies
       (resolve-dependencies :dependencies mod-proj))))
+
+(defn sdk-sanity-check
+  "Ensures that :sdk-path is present in the project, and necessary modules are
+  installed."
+  [{{:keys [sdk-path target-version]} :android :as project}]
+  (ensure-paths sdk-path)
+  (let [check (fn [name file] (when-not (.exists file)
+                               (abort name "is not installed.
+Please install it from your Android SDK manager.")))]
+    (when-not target-version
+      (abort ":target-version is not specified. Abort execution."))
+    (check (str "SDK platform " target-version)
+           (file (get-sdk-platform-path sdk-path target-version)))
+    (check "Android Support Repository"
+           (file sdk-path "extras" "android" "m2repository"))))
 
 (def ^:dynamic *sh-print-output*
   "If true, print the output of the shell command regardless of *debug*."

@@ -20,7 +20,7 @@
          [deploy :only [install run forward-port repl deploy local-repo]]
          [new :only [new init]]
          [test :only [local-test]]
-         [utils :only [proj wrong-usage android-parameters ensure-paths
+         [utils :only [proj wrong-usage android-parameters sdk-sanity-check
                        dev-build?]]]))
 
 (defn help
@@ -61,8 +61,8 @@
      (init-hooks)
      (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
        (abort "Subtask" cmd "should be run from the project folder."))
-     (ensure-paths (-> project :android :sdk-path))
      (doto project
+       sdk-sanity-check
        extract-aar-dependencies
        (execute-subtask cmd args))))
 
