@@ -152,7 +152,7 @@
           support-repo (file sdk-path "extras" "android" "m2repository")
           ps-repo (file sdk-path "extras" "google" "m2repository")]
       (-> project
-          (update-in [:java-source-paths] conj (:gen-path android-params))
+          (update-in [:java-source-paths] conj (str (:gen-path android-params)))
           (update-in [:repositories] concat
                      [["android-support" {:url (str "file://" support-repo)}]
                       ["android-play-services" {:url (str "file://" ps-repo)}]])
