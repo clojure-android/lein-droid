@@ -1,0 +1,25 @@
+language: android
+sudo: false
+
+cache:
+  directories:
+    - $HOME/.m2
+
+before_install:
+  - mkdir ~/bin
+  - wget https://raw.github.com/technomancy/leiningen/stable/bin/lein -P ~/bin/
+  - chmod a+x ~/bin/lein
+  - mkdir ~/.lein
+
+android:
+  components:
+    - build-tools-21.1.1
+    - android-18
+    - extra-android-m2repository
+
+lein: ~/bin/lein
+
+script:
+    - cd sample
+    - DEBUG=1 lein with-profile travis droid build
+    - DEBUG=1 lein with-profile travis droid apk

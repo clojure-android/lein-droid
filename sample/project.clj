@@ -19,6 +19,16 @@
 
   :profiles {:default [:dev]
 
+             ;; This is a profile for Travis CI build
+             :travis
+             [:android-common :android-user
+              {:dependencies [[org.clojure/tools.nrepl "0.2.10"]]
+               :target-path "target/debug"
+               :android {:aot :all-with-unused
+                         :rename-manifest-package "test.leindroid.sample.debug"
+                         :manifest-options {:app-name "Android-Clojure (debug)"}
+                         :sdk-path "/usr/local/android-sdk/"}}]
+
              :dev
              [:android-common :android-user
               ;; The above profiles can be specified in your profiles.clj and
