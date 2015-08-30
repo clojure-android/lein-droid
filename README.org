@@ -1,5 +1,7 @@
 * lein-droid
 
+  [[https://travis-ci.org/clojure-android/lein-droid/][https://travis-ci.org/clojure-android/lein-droid.svg?branch=master]]
+
   A Leiningen plugin to simplify Clojure development for Android
   platform. It acts as a build-tool for Clojure/Android projects.
 
