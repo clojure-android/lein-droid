@@ -2,11 +2,13 @@
   "Provides tasks for creating a new project or initialiaing plugin
   support in an existing one."
   (:require [clojure.string :as string]
-            [clojure.java.io :as io])
-  (:use [leiningen.core.main :only [info abort]]
-        [leiningen.new.templates :only [render-text slurp-resource
-                                        sanitize ->files]]
-        [leiningen.droid.manifest :only [get-target-sdk-version]]))
+            [clojure.java.io :as io]
+            [leiningen.core.classpath :as cp]
+            [leiningen.core.main :refer [info abort]]
+            [leiningen.core.project :as project]
+            [leiningen.droid.manifest :refer [get-target-sdk-version]]
+            [leiningen.new.templates :refer [render-text slurp-resource
+                                             sanitize ->files]]))
 
 (defn renderer
   "Taken from lein-newnew.
@@ -29,6 +31,32 @@
        (> (.indexOf package-name ".") -1)
        (= (.indexOf package-name "-") -1)))
 
+(defn- latest-version
+  "Downloads the latest version of the given artifact symbol, and returns the
+  version string."
+  [artifact default]
+  (let [version (try (->> {:dependencies [[artifact "RELEASE"]]
+                           :repositories project/default-repositories}
+                          (cp/get-dependencies :dependencies)
+                          keys
+                          (some #(when (= (first %) artifact) %))
+                          second)
+                     (catch Exception ex nil))]
+    (if version
+      (do (info "Found" artifact version)
+          version)
+      (do (info "Couldn't resolve the latest" artifact
+                "version, using default" default)
+          default))))
+
+(defn- current-plugin-version
+  "Returns the version of this very lein-droid plugin currently being run."
+  []
+  (->> (io/resource "META-INF/maven/lein-droid/lein-droid/pom.properties")
+       io/reader line-seq
+       (keep #(second (re-matches #"^version=(.+)" %)))
+       (some identity)))
+
 (defn init
   "Creates project.clj file within an existing Android library folder.
 
@@ -41,7 +69,8 @@
              "Android project. Use `lein droid new` to create a new project."))
     (let [manifest-path (.getAbsolutePath manifest)
           data {:name (.getName (io/file current-dir))
-                :target-sdk (or (get-target-sdk-version manifest-path) "15")}
+                :target-sdk (or (get-target-sdk-version manifest-path) "15")
+                :lein-droid-version (current-plugin-version)}
           render (renderer "templates")]
       (info "Creating project.clj...")
       (io/copy (render "library.project.clj" data)
@@ -97,17 +126,21 @@
   (when-not (package-name-valid? package-name)
     (abort "ERROR: Package name should have at least two levels and"
            "not contain hyphens (you can replace them with underscores)."))
+  (info "Resolving latest artifact versions...")
   (let [options (apply hash-map options)
         data {:name project-name
               :package package-name
               :package-sanitized (sanitize package-name)
               :path (package-to-path (sanitize package-name))
               :activity (get options ":activity" "MainActivity")
-              :target-sdk (get options ":target-sdk" "15")
+              :target-sdk (get options ":target-sdk" "21")
               :min-sdk (get options ":min-sdk" "15")
               :app-name (get options ":app-name" project-name)
               :library (get options ":library" false)
-              :new-project true}]
+              :new-project true
+              :lein-droid-version (current-plugin-version)
+              :clojure-version (latest-version 'org.clojure-android/clojure "1.7.0-r3")
+              :neko-version (latest-version 'neko "0.4.0-alpha5")}]
     (if (= (:library data) "true")
       (new-library project-name package-name data)
       (new-application project-name package-name data))))
