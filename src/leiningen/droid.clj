@@ -59,12 +59,14 @@
      (help #'droid))
   ([project & [cmd & args]]
      (init-hooks)
-     (when (and (nil? project) (not (#{"new" "help" "init"} cmd)))
-       (abort "Subtask" cmd "should be run from the project folder."))
-     (doto project
-       sdk-sanity-check
-       extract-aar-dependencies
-       (execute-subtask cmd args))))
+     (if project
+       (doto project
+         sdk-sanity-check
+         extract-aar-dependencies
+         (execute-subtask cmd args))
+       (if (#{"new" "help" "init"} cmd)
+         (execute-subtask cmd args)
+         (abort "Subtask" cmd "should be run from the project folder.")))))
 
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."
