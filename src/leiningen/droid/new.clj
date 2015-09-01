@@ -133,7 +133,7 @@
               :package-sanitized (sanitize package-name)
               :path (package-to-path (sanitize package-name))
               :activity (get options ":activity" "MainActivity")
-              :target-sdk (get options ":target-sdk" "21")
+              :target-sdk (get options ":target-sdk" "18")
               :min-sdk (get options ":min-sdk" "15")
               :app-name (get options ":app-name" project-name)
               :library (get options ":library" false)
