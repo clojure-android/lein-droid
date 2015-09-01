@@ -70,8 +70,8 @@
 
              :lean
              [:release
-              {:dependencies ^:replace [[org.skummet/clojure "1.7.0-RC3-r2"]
-                                        [neko/neko "4.0.0-alpha2"]]
+              {:dependencies ^:replace [[org.skummet/clojure "1.7.0-r1"]
+                                        [neko/neko "4.0.0-alpha5"]]
                :exclusions [[org.clojure/clojure]
                             [org.clojure-android/clojure]]
                :jvm-opts ["-Dclojure.compile.ignore-lean-classes=true"]
@@ -80,11 +80,10 @@
                          :proguard-execute true
                          :proguard-conf-path "build/proguard-minify.cfg"
                          :lean-compile true
-                         :skummet-skip-vars ["#'neko.-utils/keyword->static-field"
-                                             "#'neko.-utils/keyword->setter"
-                                             "#'neko.ui.traits/get-display-metrics"
-                                             "#'test.leindroid.sample.main/MainActivity-onCreate"
-                                             "#'test.leindroid.sample.main/MainActivity-init"]}}]
+                         :skummet-skip-vars [;; You can list here var names that
+                                             ;; you want to keep non-lean. E.g.:
+                                             ;; "#'foo.bar/my-function"
+                                             ]}}]
 
              ;; Here's an example of using different profiles
              :trial-version-dev
