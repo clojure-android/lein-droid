@@ -167,7 +167,17 @@
   [project-file]
   (android-parameters (pr/init-project (pr/read (str project-file)))))
 
-(defn proj [] (read-project "sample/project.clj"))
+(defn proj
+  ([] (proj "sample/project.clj"))
+  ([project-clj]
+   (let [profiles (.split (or (System/getenv "LEIN_DROID_PROFILES") "") ",")
+         project (read-project project-clj)]
+     (if (seq profiles)
+       (pr/set-profiles project
+                        (distinct
+                         (mapcat #(pr/expand-profile project (keyword %))
+                                 profiles)))
+       project))))
 
 (defn sdk-version-number
   "If version keyword is passed (for example, `:ics` or `:jelly-bean`), resolves

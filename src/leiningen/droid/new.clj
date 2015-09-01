@@ -52,10 +52,11 @@
 (defn- current-plugin-version
   "Returns the version of this very lein-droid plugin currently being run."
   []
-  (->> (io/resource "META-INF/maven/lein-droid/lein-droid/pom.properties")
-       io/reader line-seq
-       (keep #(second (re-matches #"^version=(.+)" %)))
-       (some identity)))
+  (try (->> (io/resource "META-INF/maven/lein-droid/lein-droid/pom.properties")
+            io/reader line-seq
+            (keep #(second (re-matches #"^version=(.+)" %)))
+            (some identity))
+       (catch Exception ex nil)))
 
 (defn init
   "Creates project.clj file within an existing Android library folder.
@@ -70,7 +71,7 @@
     (let [manifest-path (.getAbsolutePath manifest)
           data {:name (.getName (io/file current-dir))
                 :target-sdk (or (get-target-sdk-version manifest-path) "15")
-                :lein-droid-version (current-plugin-version)}
+                :lein-droid-version (or (current-plugin-version) "0.4.3")}
           render (renderer "templates")]
       (info "Creating project.clj...")
       (io/copy (render "library.project.clj" data)
@@ -138,7 +139,7 @@
               :app-name (get options ":app-name" project-name)
               :library (get options ":library" false)
               :new-project true
-              :lein-droid-version (current-plugin-version)
+              :lein-droid-version (or (current-plugin-version) "0.4.3")
               :clojure-version (latest-version 'org.clojure-android/clojure "1.7.0-r3")
               :neko-version (latest-version 'neko "0.4.0-alpha5")
               :skummet-version (latest-version 'org.skummet/clojure "1.7.0-r1")}]

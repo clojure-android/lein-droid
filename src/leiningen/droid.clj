@@ -59,14 +59,16 @@
      (help #'droid))
   ([project & [cmd & args]]
      (init-hooks)
-     (if project
-       (doto project
-         sdk-sanity-check
-         extract-aar-dependencies
-         (execute-subtask cmd args))
-       (if (#{"new" "help" "init"} cmd)
-         (execute-subtask cmd args)
-         (abort "Subtask" cmd "should be run from the project folder.")))))
+     (if (#{"new" "help" "init"} cmd)
+       (execute-subtask nil cmd args)
+       (let [env-project (System/getenv "LEIN_DROID_PROJECT")
+             project (if-not (empty? env-project) (proj env-project) project)]
+         (cond (= cmd "pprint") (execute-subtask project cmd args)
+               project (doto project
+                         sdk-sanity-check
+                         extract-aar-dependencies
+                         (execute-subtask cmd args))
+               :else (abort "Subtask" cmd "should be run from the project folder."))))))
 
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."
