@@ -10,7 +10,7 @@ before_install:
   - wget https://raw.github.com/technomancy/leiningen/stable/bin/lein -P ~/bin/
   - chmod a+x ~/bin/lein
   - mkdir ~/.lein
-  - cp .profiles.clj ~/.lein/profiles.clj
+  - cp travis/profiles.clj ~/.lein/
 
 android:
   components:
@@ -21,11 +21,15 @@ android:
 lein: ~/bin/lein
 
 env:
-  - PROJECT="sample" PREP="cd sample" LEIN_DROID_PROJECT=""
-  - PROJECT="newtest" PREP="lein droid new newtest org.clojure_android.newtest" LEIN_DROID_PROJECT="newtest/project.clj"
+  - PROJECT="sample" PREP="cd sample" LEIN_DROID_PROJECT="" DEPLOY="bash travis/deploy.sh"
+  - PROJECT="newtest" PREP="lein droid new newtest org.clojure_android.newtest" LEIN_DROID_PROJECT="newtest/project.clj" DEPLOY=""
 
 script:
   - $PREP
   - DEBUG=1 LEIN_DROID_PROFILES=travis,dev lein with-profile travis,dev do droid build, droid apk
   - DEBUG=1 LEIN_DROID_PROFILES=travis,release lein with-profile travis,release do droid build, droid apk
   - DEBUG=1 LEIN_DROID_PROFILES=travis,lean lein with-profile travis,lean do clean, droid build, droid apk
+
+after_success:
+  - cd ..
+  - $DEPLOY
