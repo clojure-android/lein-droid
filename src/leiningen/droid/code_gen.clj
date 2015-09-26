@@ -136,7 +136,7 @@
       (generate-r-files project))))
 
 (defn code-gen
-  "Generates R.java and builds a manifest with the appropriate version
+  "Metatask. Generates R.java and builds a manifest with the appropriate version
   code and substitutions."
   [{{:keys [library]} :android :as project}]
   (doto project

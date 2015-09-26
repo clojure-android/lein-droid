@@ -42,7 +42,7 @@
 (defn doall
   "Metatask. Performs all Android tasks from compilation to deployment."
   [{{:keys [library]} :android :as project} & device-args]
-  (let [build-steps (if library ["build"] ["build" "apk" "deploy"])]
+  (let [build-steps (if library ["build"] ["code-gen" "build" "apk" "deploy"])]
     (doseq [task build-steps]
       (execute-subtask project task device-args))))
 
@@ -75,7 +75,6 @@
             (abort (wrong-usage "lein droid new" #'new))
             (apply new args))
     "init" (init (.getAbsolutePath (clojure.java.io/file ".")))
-    "code-gen" (code-gen project)
     "compile" (compile project)
     "create-dex" (create-dex project)
     "crunch-resources" (crunch-resources project)
@@ -94,6 +93,7 @@
     "local-test" (apply local-test project args)
 
     ;; Meta tasks
+    "code-gen" (code-gen project)
     "build" (build project)
     "apk" (apk project)
     "deploy" (apply deploy project args)

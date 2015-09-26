@@ -134,7 +134,7 @@
   "Metatask. Compiles the project and creates DEX."
   [{{:keys [library]} :android :as project}]
   (doto project
-    code-gen compile create-dex))
+    compile create-dex))
 
 (defn jar
   "Metatask. Packages compiled Java files and Clojure sources into JAR.
