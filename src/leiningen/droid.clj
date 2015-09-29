@@ -75,12 +75,14 @@
    which subtasks in code-gen are required to be run."
   [{{:keys [library gen-path]} :android :as project, root :root}]
   (info "Running conditional code generation")
-  (doto project
-    generate-manifest generate-resource-code)
   (let [project-file (get-project-file root (str))
         timestamp-file-name (str gen-path "/timestamps.txt")]
     (when
       (ib/file-modified? project-file (io/file timestamp-file-name))
+      (info "Dependency(project.clj) is modified since last recorded time, regenerating manifests.")
+      (generate-manifest project)
+      (info "Dependency(project.clj) is modified since last recorded time, regenerating R.java code.")
+      (generate-resource-code project)
       (info "Dependency(project.clj) is modified since last recorded time, regenerating BuildConfig.java")
       (generate-build-constants project)
       (spit timestamp-file-name (prn-str {(str project-file) (.lastModified project-file)})))))
