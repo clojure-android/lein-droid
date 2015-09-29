@@ -36,23 +36,9 @@
             :type (java-type v)}))
        constants))
 
-(defn project-modified?
-  "Check if the project.clj was modified since the last time recorded. Return false
-  iff recorded timestamp is same as the one that's read recently."
-  [project-file timestamp-file]
-  (if (not (.exists timestamp-file))
-    true
-    (let [project-file-time (.lastModified project-file)
-          project-file-name (str project-file)
-          timestamps (edn/read-string (slurp timestamp-file))]
-      (if (and (contains? timestamps project-file-name) 
-        (== (timestamps project-file-name) project-file-time))
-        false
-        true))))
-
 (defn generate-build-constants
   [{{:keys [manifest-path gen-path build-config rename-manifest-package]}
-    :android, version :version :as project, root :root}]
+    :android, version :version :as project}]
   (ensure-paths manifest-path)
   (let [res (io/resource "templates/BuildConfig.java")
         package-name (get-package-name manifest-path)
@@ -61,19 +47,13 @@
         template-constants (-> (merge {"VERSION_NAME"   version
                                        "APPLICATION_ID" application-id}
                                       build-config)
-                               map-constants)
-        project-file (get-project-file root (str))
-        timestamp-file-name (str gen-path "/timestamps.txt")
-        project-file-time (.lastModified project-file)]
-    (when (project-modified? project-file (io/file timestamp-file-name))
-      (info "project.clj is modified since last recorded time, regenerating BuildConfig.java")
-      (ensure-paths gen-package-path)
-      (->> {:debug        (dev-build? project)
-            :package-name package-name
-            :constants    template-constants}
-           (clostache/render (slurp-resource res))
-           (spit (io/file gen-package-path "BuildConfig.java")))
-      (spit timestamp-file-name (prn-str {(str project-file) (.lastModified project-file)})))))
+                               map-constants)]
+    (ensure-paths gen-package-path)
+    (->> {:debug        (dev-build? project)
+          :package-name package-name
+          :constants    template-constants}
+         (clostache/render (slurp-resource res))
+         (spit (io/file gen-package-path "BuildConfig.java")))))
 
 ;; ### R.java generation
 

@@ -5,15 +5,19 @@
 (ns leiningen.droid
   (:refer-clojure :exclude [compile doall repl])
   (:require clojure.pprint
+            [clojure.java.io :as io]
             [leiningen.droid.aar :refer [extract-aar-dependencies]]
-            [leiningen.droid.code-gen :refer [code-gen]])
+            [leiningen.droid.code-gen :refer [code-gen generate-resource-code
+                                              generate-build-constants]]
+            [leiningen.droid.inc-build :as ib])
   (:use [leiningen.core.project :only [set-profiles]]
-        [leiningen.core.main :only [abort]]
+        [leiningen.core.main :only [info abort]]
         [leiningen.help :only (subtask-help-for)]
         [leiningen.clean :only [clean]]
         [leiningen.droid.compile :only [compile]]
         [leiningen.droid
          [classpath :only [init-hooks]]
+         [manifest :only [generate-manifest]]
          [build :only [create-dex
                        crunch-resources package-resources create-apk
                        sign-apk zipalign-apk apk build jar aar]]
@@ -21,7 +25,7 @@
          [new :only [new init]]
          [test :only [local-test]]
          [utils :only [proj wrong-usage android-parameters ensure-paths
-                       dev-build?]]]))
+                       dev-build? get-project-file]]]))
 
 (defn help
   "Shows the list of possible `lein droid` subtasks."
@@ -66,6 +70,21 @@
        extract-aar-dependencies
        (execute-subtask cmd args))))
 
+(defn conditional-code-gen
+  "Initiate the conditional execution of metatask code-gen. We identify
+   which subtasks in code-gen are required to be run."
+  [{{:keys [library gen-path]} :android :as project, root :root}]
+  (info "Running conditional code generation")
+  (doto project
+    generate-manifest generate-resource-code)
+  (let [project-file (get-project-file root (str))
+        timestamp-file-name (str gen-path "/timestamps.txt")]
+    (when
+      (ib/file-modified? project-file (io/file timestamp-file-name))
+      (info "Dependency(project.clj) is modified since last recorded time, regenerating BuildConfig.java")
+      (generate-build-constants project)
+      (spit timestamp-file-name (prn-str {(str project-file) (.lastModified project-file)})))))
+
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."
   [project name args]
@@ -93,7 +112,7 @@
     "local-test" (apply local-test project args)
 
     ;; Meta tasks
-    "code-gen" (code-gen project)
+    "code-gen" (conditional-code-gen project)
     "build" (build project)
     "apk" (apk project)
     "deploy" (apply deploy project args)
