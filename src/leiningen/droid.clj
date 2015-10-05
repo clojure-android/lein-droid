@@ -70,22 +70,43 @@
        extract-aar-dependencies
        (execute-subtask cmd args))))
 
+(defn conditional-execute-subtask
+  "Conditionally execute the specified subtask."
+  [{{:keys [gen-path]} :android :as project, root :root} subtask]
+  (ensure-paths root)
+  (let [dependencies (map #(str root java.io.File/separator %)
+                          ((ib/get-subtask-dependencies) subtask))
+        timestamp-file-name (str gen-path "/timestamps.txt")]
+      (case subtask
+        "generate-manifest"
+        (do
+          (when (ib/input-modified? timestamp-file-name subtask dependencies)
+            (info "Dependecies are modified since last recorded time. Re-doing" subtask)
+            (generate-manifest project)
+            (ib/record-timestamps timestamp-file-name subtask dependencies)))
+        "generate-resource-code"
+        (do
+          (when (ib/input-modified? timestamp-file-name subtask dependencies)
+            (info "Dependecies are modified since last recorded time. Re-doing" subtask)
+            (generate-resource-code project)
+            (ib/record-timestamps timestamp-file-name subtask dependencies)))
+        "generate-build-constants"
+        (do
+          (when (ib/input-modified? timestamp-file-name subtask dependencies)
+            (info "Dependecies are modified since last recorded time. Re-doing" subtask)
+            (generate-build-constants project)
+            (ib/record-timestamps timestamp-file-name subtask dependencies)))
+        (println "Unregonized subtask: " subtask))))
+
 (defn conditional-code-gen
   "Initiate the conditional execution of metatask code-gen. We identify
    which subtasks in code-gen are required to be run."
-  [{{:keys [library gen-path]} :android :as project, root :root}]
+  [project]
   (info "Running conditional code generation")
-  (let [project-file (get-project-file root (str))
-        timestamp-file-name (str gen-path "/timestamps.txt")]
-    (when
-      (ib/file-modified? project-file (io/file timestamp-file-name))
-      (info "Dependency(project.clj) is modified since last recorded time, regenerating manifests.")
-      (generate-manifest project)
-      (info "Dependency(project.clj) is modified since last recorded time, regenerating R.java code.")
-      (generate-resource-code project)
-      (info "Dependency(project.clj) is modified since last recorded time, regenerating BuildConfig.java")
-      (generate-build-constants project)
-      (spit timestamp-file-name (prn-str {(str project-file) (.lastModified project-file)})))))
+    (doto project
+      (conditional-execute-subtask "generate-manifest")
+      (conditional-execute-subtask "generate-resource-code")
+      (conditional-execute-subtask "generate-build-constants")))
 
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."
