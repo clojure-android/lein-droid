@@ -77,26 +77,14 @@
   (let [dependencies (map #(str root java.io.File/separator %)
                           ((ib/get-subtask-dependencies) subtask))
         timestamp-file-name (str gen-path "/timestamps.txt")]
+    (when (ib/input-modified? timestamp-file-name subtask dependencies)
+      (info "Dependecies are modified since last recorded time. Re-doing" subtask)
       (case subtask
-        "generate-manifest"
-        (do
-          (when (ib/input-modified? timestamp-file-name subtask dependencies)
-            (info "Dependecies are modified since last recorded time. Re-doing" subtask)
-            (generate-manifest project)
-            (ib/record-timestamps timestamp-file-name subtask dependencies)))
-        "generate-resource-code"
-        (do
-          (when (ib/input-modified? timestamp-file-name subtask dependencies)
-            (info "Dependecies are modified since last recorded time. Re-doing" subtask)
-            (generate-resource-code project)
-            (ib/record-timestamps timestamp-file-name subtask dependencies)))
-        "generate-build-constants"
-        (do
-          (when (ib/input-modified? timestamp-file-name subtask dependencies)
-            (info "Dependecies are modified since last recorded time. Re-doing" subtask)
-            (generate-build-constants project)
-            (ib/record-timestamps timestamp-file-name subtask dependencies)))
-        (println "Unregonized subtask: " subtask))))
+        "generate-manifest" (generate-manifest project)
+        "generate-resource-code" (generate-resource-code project)
+        "generate-build-constants" (generate-build-constants project)
+        (println "Unregonized subtask: " subtask))
+      (ib/record-timestamps timestamp-file-name subtask dependencies))))
 
 (defn conditional-code-gen
   "Initiate the conditional execution of metatask code-gen. We identify
