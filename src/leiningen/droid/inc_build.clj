@@ -6,14 +6,29 @@
             [clojure.edn :as edn]
             [leiningen.core.main :refer [info]]))
 
-(defn file-modified?
+(defn- walk
+  "Walk the given directory searching for files. For now we search all the files
+   irrespective of the type (extension i.e. java or clj or xml)."
+  [dirpath]
+  (doall (filter #(not (.isDirectory %)) (file-seq dirpath))))
+
+(defn- latest-timestamp-in-directory
+  "Find the timestamp of last modified file in a directory.
+   Recursively walk the directories and find timestamp of
+   file that was recently modified."
+  [dir]
+  (apply max (map #(.lastModified %) (walk dir))))
+
+(defn- file-modified?
   "Check if input file is modified, since the last time
    recorded. Return false iff recorded timestamp is same as the one
    that's read recently."
   [timestamp-file subtask input-file]
   (if (not (.exists timestamp-file))
     true
-    (let [input-file-time (.lastModified input-file)
+    (let [input-file-time (if (.isDirectory input-file)
+                            (latest-timestamp-in-directory input-file)
+                            (.lastModified input-file))
           input-file-name (str input-file)
           timestamps (edn/read-string (slurp timestamp-file))
           recorded-time (get-in timestamps [subtask input-file-name])]
@@ -27,12 +42,12 @@
   (partial file-modified? timestamp-file subtask))
 
 (defn input-modified?
-  "Check if some of the given input files are modified. Return true if
+  "Check if some of the given input files/files in dirs are modified. Return true if
    at least one file has been modified."
-  [timestamp-file-name subtask input-file-names]
-  (let [input-files (map io/file input-file-names)
+  [timestamp-file-name subtask input-path-names]
+  (let [input-paths (map io/file input-path-names)
         timestamp-file (io/file timestamp-file-name)]
-    (some (partial-file-modified? timestamp-file subtask) input-files)))
+    (some (partial-file-modified? timestamp-file subtask) input-paths)))
 
 (defn get-subtask-dependencies
   "Get the file dependencies for subtasks. This is a static class returning a map
@@ -48,16 +63,20 @@
   "First read the current timestamp (for files for subtasks) if exists and update
    the timestamps in."
   [timestamp-file-name subtask path]
-  (let [timestamp-file (io/file timestamp-file-name)]
+  (let [timestamp-file (io/file timestamp-file-name)
+        path-timestamp (if (.isDirectory path)
+                         (latest-timestamp-in-directory path)
+                         (.lastModified path))]
     (if (not (.exists timestamp-file))
-      (spit timestamp-file-name (prn-str {(str subtask) {(str path) (.lastModified path)}}))
+      (spit timestamp-file-name (prn-str {(str subtask) {(str path) path-timestamp}}))
       (let [timestamps (edn/read-string (slurp timestamp-file))
-            updated-timestamps (update-in timestamps [subtask] assoc (str path) (.lastModified path))]
+            updated-timestamps (update-in timestamps [subtask] assoc (str path) path-timestamp)]
         (spit timestamp-file-name (prn-str updated-timestamps))))))
 
 (defn record-timestamps
   "After execution of each subtask, record the timestamps of the files/directories,
-  that found modified."
+   that found modified. If it's a directory then record the timestamp of the recently
+   modified file. It recursively traverses directory structure to get the recent timestamp."
   [timestamp-file-name subtask path-names]
   (let [paths (map io/file path-names)]
     (info "Recording timestamps for" subtask paths)

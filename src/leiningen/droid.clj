@@ -72,11 +72,11 @@
 
 (defn conditional-execute-subtask
   "Conditionally execute the specified subtask."
-  [{{:keys [gen-path]} :android :as project, root :root} subtask]
+  [{:as project, :keys [root target-path]} subtask]
   (ensure-paths root)
   (let [dependencies (map #(str root java.io.File/separator %)
                           ((ib/get-subtask-dependencies) subtask))
-        timestamp-file-name (str gen-path "/timestamps.txt")]
+        timestamp-file-name (str target-path "/timestamps.txt")]
     (when (ib/input-modified? timestamp-file-name subtask dependencies)
       (info "Dependecies are modified since last recorded time. Re-doing" subtask)
       (case subtask

@@ -139,7 +139,7 @@
 
 (defn compile
   "Compiles both Java and Clojure source files."
-  [{{:keys [sdk-path gen-path lean-compile]} :android,
+  [{{:keys [sdk-path]} :android,
     java-only :java-only :as project}]
   (ensure-paths sdk-path)
   (let [project (-> project
