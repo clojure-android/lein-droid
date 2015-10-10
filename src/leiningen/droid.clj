@@ -104,11 +104,10 @@
   "Interactively build the components that are necessary to be built, i.e. build stale
    resources only. Do not build that's not updated since the last time."
   [project]
-  (info "dependencies for crete-dex" ((ib/get-subtask-dependencies project) "crete-dex"))
   (info "Running conditional build")
   (doto project
     (conditional-execute-subtask "compile")
-    (create-dex)))
+    (conditional-execute-subtask "create-dex")))
 
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."

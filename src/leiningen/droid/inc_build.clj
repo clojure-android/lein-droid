@@ -16,7 +16,7 @@
    "generate-resource-code" ["res", "target/debug/AndroidManifest.xml"]
    "generate-build-constants" ["project.clj"]
    "compile" (distinct (project :source-paths))
-   "create-dex" []})
+   "create-dex" ["target/debug/classes"]})
 
 (defn- walk
   "Walk the given directory searching for files. For now we search all the files
