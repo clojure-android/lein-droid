@@ -26,7 +26,7 @@
          [new :only [new init]]
          [test :only [local-test]]
          [utils :only [proj wrong-usage android-parameters ensure-paths
-                       dev-build? get-project-file absolutize]]]))
+                       dev-build? get-project-file absolutize append-suffix]]]))
 
 (defn help
   "Shows the list of possible `lein droid` subtasks."
@@ -87,12 +87,17 @@
         "generate-build-constants" (generate-build-constants project)
         "compile" (compile project)
         "create-dex" (create-dex project)
+        "crunch-resources" (crunch-resources project)
+        "package-resources" (package-resources project)
+        "create-apk" (create-apk project)
+        "sign-apk" (sign-apk project)
+        "zipalign-apk" (zipalign-apk project)
         (println "Unregonized subtask: " subtask))
       (ib/record-timestamps timestamp-file-name subtask dependencies))))
 
 (defn conditional-code-gen
   "Initiate the conditional execution of metatask code-gen. We identify
-   which subtasks in code-gen are required to be run."
+  which subtasks in code-gen are required to be run."
   [project]
   (info "Running conditional code generation")
     (doto project
@@ -102,12 +107,24 @@
 
 (defn conditional-build
   "Interactively build the components that are necessary to be built, i.e. build stale
-   resources only. Do not build that's not updated since the last time."
+  resources only. Do not build that's not updated since the last time."
   [project]
   (info "Running conditional build")
   (doto project
     (conditional-execute-subtask "compile")
     (conditional-execute-subtask "create-dex")))
+
+(defn conditional-apk
+  "Interavtively run the metatask apk. Crunches and packages resources, creates, signs
+  and aligns an APK."
+  [project]
+  (info "Running conditional apk")
+  (doto project
+    (conditional-execute-subtask "crunch-resources")
+    (conditional-execute-subtask "package-resources")
+    (conditional-execute-subtask "create-apk")
+    (conditional-execute-subtask "sign-apk")
+    (conditional-execute-subtask "zipalign-apk")))
 
 (defn execute-subtask
   "Executes a subtask defined by `name` on the given project."
@@ -138,7 +155,7 @@
     ;; Meta tasks
     "code-gen" (conditional-code-gen project)
     "build" (conditional-build project)
-    "apk" (apk project)
+    "apk" (conditional-apk project)
     "deploy" (apply deploy project args)
     "doall" (apply doall project args)
     "jar" (jar project)

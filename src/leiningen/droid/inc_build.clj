@@ -1,40 +1,55 @@
 (ns leiningen.droid.inc-build
   "Subtasks related to build process as a whole. Decides what to run and
-   what not to. It stores the subtasks and files dependencies as function."
+  what not to. It stores the subtasks and files dependencies as function."
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.edn :as edn]
-            [leiningen.core.main :refer [info debug]]))
+            [leiningen.core.main :refer [info debug]])
+  (:use [leiningen.droid.utils :only [append-suffix]]))
 
 (defn get-subtask-dependencies
   "Get the file dependencies for subtasks. This is a static class returning a map
-   of subtask names and corresponding file/directory dependency in a vector. The
-   key name has to be the exact subtask name. The dependency paths are relative
-   (to the project)."
+  of subtask names and corresponding file/directory dependency in a vector. The
+  key name has to be the exact subtask name. The dependency paths are relative
+  (to the project)."
   [project]
   {"generate-manifest" ["project.clj"]
    "generate-resource-code" ["res", "target/debug/AndroidManifest.xml"]
    "generate-build-constants" ["project.clj"]
-   "compile" (distinct (project :source-paths))
-   "create-dex" ["target/debug/classes"]})
+   "compile" (flatten (distinct (project :source-paths)))
+   "create-dex" ["target/debug/classes"]
+   "crunch-resources" ["res"]
+   "package-resources" (flatten ["res" "target/debug/AndroidManifest.xml"
+                        (get-in project [:android :out-res-path])
+                        (get-in project [:android :assets-paths])
+                        (get-in project [:android :assets-gen-path])])
+   "create-apk" (flatten ["target/debug/classes.dex"
+                 (get-in project [:android :out-res-pkg-path])])
+   "sign-apk" [(append-suffix (get-in project [:android :out-apk-path]) "unaligned")]
+   "zipalign-apk" [(append-suffix (get-in project [:android :out-apk-path]) "unaligned")]})
 
 (defn- walk
   "Walk the given directory searching for files. For now we search all the files
-   irrespective of the type (extension i.e. java or clj or xml)."
+  irrespective of the type (extension i.e. java or clj or xml)."
   [dirpath]
   (doall (filter #(not (.isDirectory %)) (file-seq dirpath))))
 
 (defn- latest-timestamp-in-directory
   "Find the timestamp of last modified file in a directory.
-   Recursively walk the directories and find timestamp of
-   file that was recently modified."
+  Recursively walk the directories and find timestamp of file
+  that was recently modified. If the directory is empty
+  then return the timestamp of the outermost directory as the placeholder."
   [dir]
-  (apply max (map #(.lastModified %) (walk dir))))
+  (let [timestamps (map #(.lastModified %) (walk dir))]
+    (debug "Timestamps in" dir "are" timestamps)
+    (if (empty timestamps)
+      (.lastModified dir)
+      (apply max timestamps))))
 
 (defn- file-modified?
   "Check if input file is modified, since the last time
-   recorded. Return false iff recorded timestamp is same as the one
-   that's read recently."
+  recorded. Return false iff recorded timestamp is same as the one
+  that's read recently."
   [timestamp-file subtask input-file]
   (if (not (.exists timestamp-file))
     true
@@ -55,7 +70,7 @@
 
 (defn input-modified?
   "Check if some of the given input files/files in dirs are modified. Return true if
-   at least one file has been modified."
+  at least one file has been modified."
   [timestamp-file-name subtask input-path-names]
   (let [input-paths (map io/file input-path-names)
         timestamp-file (io/file timestamp-file-name)]
@@ -63,7 +78,7 @@
 
 (defn- write-timestamp
   "First read the current timestamp (for files for subtasks) if exists and update
-   the timestamps in."
+  the timestamps in."
   [timestamp-file-name subtask path]
   (let [timestamp-file (io/file timestamp-file-name)
         path-timestamp (if (.isDirectory path)
@@ -78,8 +93,8 @@
 
 (defn record-timestamps
   "After execution of each subtask, record the timestamps of the files/directories,
-   that found modified. If it's a directory then record the timestamp of the recently
-   modified file. It recursively traverses directory structure to get the recent timestamp."
+  that found modified. If it's a directory then record the timestamp of the recently
+  modified file. It recursively traverses directory structure to get the recent timestamp."
   [timestamp-file-name subtask path-names]
   (let [paths (map io/file path-names)]
     (debug "Recording timestamps for" subtask paths)
