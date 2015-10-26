@@ -79,12 +79,22 @@
     url
     (str (subs base-url 0 (inc (.lastIndexOf base-url "/"))) url)))
 
+(defn- filter-tags
+  "Filter the nodes/children with given tags from the given sequence."
+  [tag child-vector]
+  (filter #(= (:tag %) tag) child-vector))
+
+(defn- fetch-first-tag
+  "From the given vector extract first children matching given keyword tag."
+  [tag child-vector]
+  (first (filter-tags tag child-vector)))
+
 (defn- fetch-content-for-nested-keyword
   "Walk down the hierarchy of one child, in order to collect given tag."
   [tag-keyword child]
   #_(info "fetch-content-for-nested-keyword: Keyword is" tag-keyword "child node is:" child)
   (let [content (:content child)
-        sdk-api-level-child (filter #(= (:tag %) tag-keyword) content)
+        sdk-api-level-child (filter-tags tag-keyword content)
         api-level (first (:content (first sdk-api-level-child)))]
     (read-string api-level)))
 
@@ -104,16 +114,16 @@
   xml. It should be generic enough to extract any leaf nodes."
   [xml base-url]
   (let [content-body (:content xml)
-        sdk-platforms (filter #(= (:tag %) :sdk:platform) content-body)
+        sdk-platforms (filter-tags :sdk:platform content-body)
         api-levels (map (partial fetch-content-for-nested-keyword :sdk:api-level) sdk-platforms)
         max-api (apply max api-levels)
         max-api-index (.indexOf api-levels max-api)
         sdk-platform-content (:content (get (vec sdk-platforms) max-api-index))
-        archives-content (:content (first (filter #(= (:tag %) :sdk:archives) sdk-platform-content)))
+        archives-content (:content (fetch-first-tag :sdk:archives sdk-platform-content))
         platform (platform)
         file-name (if (< 1 (count archives-content))
                     (extract-platform-dependent-zip archives-content platform)
-                    (:content (first (filter #(= (:tag %) :sdk:url) (:content (first archives-content))))))]
+                    (:content (fetch-first-tag :sdk:url (:content (first archives-content)))))]
     (debug "extract-platform-url: API levels are" api-levels)
     (debug "extract-platform-url: SDK platform content is" sdk-platform-content)
     (debug "extract-platform-url: Archives content is" archives-content)
@@ -126,19 +136,14 @@
   (let [ith-max (apply max (map #(get % i) matrix))]
     (filter #(= ith-max (get % i)) matrix)))
 
-(defn- fetch-revision
-  "From the given vector extract tags with given keyword tag."
-  [tag child-vector]
-  (first (filter #(= (:tag %) tag) child-vector)))
-
 (defn- extract-platform-tool-url
   "Given the xml map of the repository determine the download url for the :sdk-platform-tool. This will return the
   latest url. It will give the absolute URL of the resource."
   [xml base-url]
   (let [content-body (:content xml)
-        sdk-platform-tools (filter #(= (:tag %) :sdk:platform-tool) content-body)
+        sdk-platform-tools (filter-tags :sdk:platform-tool content-body)
         sdk-platform-tools-content (map #(:content %) sdk-platform-tools)
-        sdk-revisions (map (partial fetch-revision :sdk:revision) sdk-platform-tools-content)
+        sdk-revisions (map (partial fetch-first-tag :sdk:revision) sdk-platform-tools-content)
         major-api-levels (map (partial fetch-content-for-nested-keyword :sdk:major) sdk-revisions)
         minor-api-levels (map (partial fetch-content-for-nested-keyword :sdk:minor) sdk-revisions)
         micro-api-levels (map (partial fetch-content-for-nested-keyword :sdk:micro) sdk-revisions)
@@ -151,11 +156,11 @@
                                                                 (= (get max-revision 2) (get %2 2)))
                                                              %1) revisions))
         required-platform-tool-content (:content (nth sdk-platform-tools required-platform-tool-index))
-        archives-content (:content (fetch-revision :sdk:archives required-platform-tool-content))
+        archives-content (:content (fetch-first-tag :sdk:archives required-platform-tool-content))
         platform (platform)
         file-name (if (< 1 (count archives-content))
                     (extract-platform-dependent-zip archives-content platform)
-                    (:content (first (filter #(= (:tag %) :sdk:url) (:content (first archives-content))))))]
+                    (:content (fetch-first-tag :sdk:url (:content (first archives-content)))))]
     (debug "extract-platform-tool-url: SDK revisions" sdk-revisions)
     (debug "extract-platform-tool-url: Major API levels are" major-api-levels)
     (debug "extract-platform-tool-url: Minor API levels are" minor-api-levels)
