@@ -2,7 +2,8 @@
 ;;
 (ns leiningen.droid.utils
   (:require [leiningen.core.project :as pr]
-            [robert.hooke :refer [with-hooks-disabled]])
+            [robert.hooke :refer [with-hooks-disabled]]
+            [clojure.java.shell :as shell])
   (:use [clojure.java.io :only (file reader)]
         [leiningen.core.main :only (info debug abort *debug*)]
         [leiningen.core.classpath :only [resolve-dependencies]]
@@ -30,10 +31,24 @@
                  (and (string? ~p) (not (.exists (file ~p)))))
                 (abort "The path" ~p "doesn't exist. Abort execution.")))))
 
+(defn mac?
+  "Returns true if the machine is Darwin machine."
+  []
+  (= (:out (shell/sh "uname")) "Darwin\n"))
+
 (defn windows?
   "Returns true if we are running on Microsoft Windows"
   []
   (= java.io.File/separator "\\"))
+
+(defn platform
+  "Return the platform program running on."
+  []
+  (if (windows?)
+    "windows"
+    (if (mac?)
+      "macosx"
+      "linux")))
 
 (defn get-sdk-build-tools-path
   "Returns a path to the correct Android Build Tools directory."
