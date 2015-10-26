@@ -174,6 +174,82 @@
     (info "extract-platform-tool-url: File to download" (first file-name))
     (absolutize-url base-url (str (first file-name)))))
 
+(defn- extract-build-tool-url
+  "Given the xml map of the repository determine the download url for the :sdk:build-tool. This will return the
+  latest url. It will give the absolute URL of the resource."
+  [xml base-url]
+  (let [content-body (:content xml)
+        sdk-build-tools (filter-tags :sdk:build-tool content-body)
+        sdk-build-tools-content (map #(:content %) sdk-build-tools)
+        sdk-revisions (map (partial fetch-first-tag :sdk:revision) sdk-build-tools-content)
+        major-api-levels (map (partial fetch-content-for-nested-keyword :sdk:major) sdk-revisions)
+        minor-api-levels (map (partial fetch-content-for-nested-keyword :sdk:minor) sdk-revisions)
+        micro-api-levels (map (partial fetch-content-for-nested-keyword :sdk:micro) sdk-revisions)
+        revisions (map vector major-api-levels minor-api-levels micro-api-levels)
+        max-revision (first (filter-ith-max 2 (filter-ith-max 1 (filter-ith-max 0 revisions))))
+        required-build-tool-index (first (keep-indexed #(if (and
+                                                             (and
+                                                              (= (get max-revision 0) (get %2 0))
+                                                              (= (get max-revision 1) (get %2 1)))
+                                                             (= (get max-revision 2) (get %2 2)))
+                                                          %1) revisions))
+        required-build-tool-content (:content (nth sdk-build-tools required-build-tool-index))
+        archives-content (:content (fetch-first-tag :sdk:archives required-build-tool-content))
+        platform (platform)
+        file-name (if (< 1 (count archives-content))
+                    (extract-platform-dependent-zip archives-content platform)
+                    (:content (fetch-first-tag :sdk:url (:content (first archives-content)))))]
+    (debug "extract-build-tool-url: SDK revisions" sdk-revisions)
+    (debug "extract-build-tool-url: Major API levels are" major-api-levels)
+    (debug "extract-build-tool-url: Minor API levels are" minor-api-levels)
+    (debug "extract-build-tool-url: Micro API levels are" micro-api-levels)
+    (debug "extract-build-tool-url: Revisions" revisions)
+    (debug "extract-build-tool-url: Max revisions" max-revision)
+    (debug "extract-build-tool-url: build tools" sdk-build-tools)
+    (debug "extract-build-tool-url: Max required build tool" required-build-tool-content)
+    (debug "extract-build-tool-url: Required build tool index" required-build-tool-index)
+    (debug "extract-build-tool-url: Archives content" archives-content)
+    (info "extract-build-tool-url: File to download" (first file-name))
+    (absolutize-url base-url (str (first file-name)))))
+
+(defn- extract-tool-url
+  "Given the xml map of the repository determine the download url for the :sdk:tool. This will return the
+  latest url. It will give the absolute URL of the resource."
+  [xml base-url]
+  (let [content-body (:content xml)
+        sdk-tools (filter-tags :sdk:tool content-body)
+        sdk-tools-content (map #(:content %) sdk-tools)
+        sdk-revisions (map (partial fetch-first-tag :sdk:revision) sdk-tools-content)
+        major-api-levels (map (partial fetch-content-for-nested-keyword :sdk:major) sdk-revisions)
+        minor-api-levels (map (partial fetch-content-for-nested-keyword :sdk:minor) sdk-revisions)
+        micro-api-levels (map (partial fetch-content-for-nested-keyword :sdk:micro) sdk-revisions)
+        revisions (map vector major-api-levels minor-api-levels micro-api-levels)
+        max-revision (first (filter-ith-max 2 (filter-ith-max 1 (filter-ith-max 0 revisions))))
+        required-tool-index (first (keep-indexed #(if (and
+                                                       (and
+                                                        (= (get max-revision 0) (get %2 0))
+                                                        (= (get max-revision 1) (get %2 1)))
+                                                       (= (get max-revision 2) (get %2 2)))
+                                                    %1) revisions))
+        required-tool-content (:content (nth sdk-tools required-tool-index))
+        archives-content (:content (fetch-first-tag :sdk:archives required-tool-content))
+        platform (platform)
+        file-name (if (< 1 (count archives-content))
+                    (extract-platform-dependent-zip archives-content platform)
+                    (:content (fetch-first-tag :sdk:url (:content (first archives-content)))))]
+    (debug "extract-tool-url: SDK revisions" sdk-revisions)
+    (debug "extract-tool-url: Major API levels are" major-api-levels)
+    (debug "extract-tool-url: Minor API levels are" minor-api-levels)
+    (debug "extract-tool-url: Micro API levels are" micro-api-levels)
+    (debug "extract-tool-url: Revisions" revisions)
+    (debug "extract-tool-url: Max revisions" max-revision)
+    (debug "extract-tool-url: Tools" sdk-tools)
+    (debug "extract-tool-url: Max required tool" required-tool-content)
+    (debug "extract-tool-url: Required tool index" required-tool-index)
+    (debug "extract-tool-url: Archives content" archives-content)
+    (info "extract-build-tool-url: File to download" (first file-name))
+    (absolutize-url base-url (str (first file-name)))))
+
 (defn- get-latest-download-url
   "Traverse the given xml map for the latest download url of the given sdk. This function for now only
   returns the latest download urls. It should be flexible enough later to be able to download specific versions
@@ -182,6 +258,8 @@
   (case sdk
     :sdk:platform (extract-platform-url xml base-url)
     :sdk:platform-tool (extract-platform-tool-url xml base-url)
+    :sdk:build-tool (extract-build-tool-url xml base-url)
+    :sdk:tool (extract-tool-url xml base-url)
     "sdk not found."))
 
 (defn ensure-sdk
@@ -191,9 +269,13 @@
   [sdk-path]
   (let [url "https://dl.google.com/android/repository/repository-10.xml"
         platform-download-url (get-latest-download-url (download-xml url) :sdk:platform url)
-        platform-tool-download-url (get-latest-download-url (download-xml url) :sdk:platform-tool url)]
+        platform-tool-download-url (get-latest-download-url (download-xml url) :sdk:platform-tool url)
+        build-tool-download-url (get-latest-download-url (download-xml url) :sdk:build-tool url)
+        tool-download-url (get-latest-download-url (download-xml url) :sdk:tool url)]
     (info "Download url for platform is" platform-download-url)
-    (info "Download url for platform-tool" platform-tool-download-url)))
+    (info "Download url for platform-tool" platform-tool-download-url)
+    (info "Download url for build-tool" build-tool-download-url)
+    (info "Download url for tool" tool-download-url)))
 
 (defn get-subtask-dependencies
   "Get the file dependencies for subtasks. This is a static class returning a map
