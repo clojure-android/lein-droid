@@ -263,6 +263,27 @@
     :sdk:tool (extract-tool-url xml base-url)
     "sdk not found."))
 
+(defn- unzip
+  "Unzip the given file. By default this function simply unzips the file for now, in the same parent directory."
+  [fileName]
+  (with-open [fis (java.io.FileInputStream. fileName)
+              zis (java.util.zip.ZipInputStream. (java.io.BufferedInputStream. fis))]
+    (loop [entry (.getNextEntry zis)]
+      (if entry
+        (do
+          (if (not (.isDirectory entry))
+            (do
+              (io/make-parents (str op-folder (.getName entry)))
+              (with-open [fos (java.io.FileOutputStream. (str op-folder (.getName entry)))
+                          dest (java.io.BufferedOutputStream. fos 2048)]
+                (loop [data (byte-array 2048)
+                       c (.read zis data 0 2048)]
+                  (if (not= c -1)
+                    (do
+                      (.write dest data 0 c)
+                      (recur (byte-array 2048) (.read zis data 0 2048))))))))
+          (recur (.getNextEntry zis)))))))
+
 (defn ensure-sdk
   "Ensure if required libraries in the sdk are present or not. If not present
   then this function will download the sdk automatically from the Android official
