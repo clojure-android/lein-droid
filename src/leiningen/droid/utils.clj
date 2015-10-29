@@ -3,6 +3,7 @@
 (ns leiningen.droid.utils
   (:require [leiningen.core.project :as pr]
             [robert.hooke :refer [with-hooks-disabled]]
+            [clojure.java.io :as io]
             [clojure.java.shell :as shell])
   (:use [clojure.java.io :only (file reader)]
         [leiningen.core.main :only (info debug abort *debug*)]
@@ -30,6 +31,34 @@
                  (and (sequential? ~p) (not (.exists (file (nth ~p 2)))))
                  (and (string? ~p) (not (.exists (file ~p)))))
                 (abort "The path" ~p "doesn't exist. Abort execution.")))))
+
+(defn unzip-util
+  "Unzip the given files using the command line (or terminal) program and return the exit code."
+  [file-name destination]
+  (io/make-parents destination)
+  (:exit (shell/sh "unzip" (str file-name) "-d" (str destination))))
+
+(defn- unzip
+  "Unzip the given file. By default this function simply unzips the file for now, in the same parent directory."
+  [fileName op-folder]
+  (with-open [fis (java.io.FileInputStream. fileName)
+              zis (java.util.zip.ZipInputStream. (java.io.BufferedInputStream. fis))]
+    (loop [entry (.getNextEntry zis)]
+      (if entry
+        (do
+          (if (not (.isDirectory entry))
+            (do
+              (println (.getComment entry))
+              (io/make-parents (str op-folder (.getName entry)))
+              (with-open [fos (java.io.FileOutputStream. (str op-folder (.getName entry)))
+                          dest (java.io.BufferedOutputStream. fos 2048)]
+                (loop [data (byte-array 2048)
+                       c (.read zis data 0 2048)]
+                  (if (not= c -1)
+                    (do
+                      (.write dest data 0 c)
+                      (recur (byte-array 2048) (.read zis data 0 2048))))))))
+          (recur (.getNextEntry zis)))))))
 
 (defn mac?
   "Returns true if the machine is Darwin machine."

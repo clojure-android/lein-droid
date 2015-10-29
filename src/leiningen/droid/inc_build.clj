@@ -7,7 +7,7 @@
             [clj-http.client :as http]
             [clojure.xml :as xml]
             [leiningen.core.main :refer [info debug]])
-  (:use [leiningen.droid.utils :only [platform append-suffix absolutize]]))
+  (:use [leiningen.droid.utils :only [unzip-util platform append-suffix absolutize]]))
 
 (defn- download-zip
   "Connect to the internet and download given application/zip file. Once the file is downloaded
@@ -263,33 +263,13 @@
     :sdk:tool (extract-tool-url xml base-url)
     "sdk not found."))
 
-(defn- unzip
-  "Unzip the given file. By default this function simply unzips the file for now, in the same parent directory."
-  [fileName]
-  (with-open [fis (java.io.FileInputStream. fileName)
-              zis (java.util.zip.ZipInputStream. (java.io.BufferedInputStream. fis))]
-    (loop [entry (.getNextEntry zis)]
-      (if entry
-        (do
-          (if (not (.isDirectory entry))
-            (do
-              (io/make-parents (str op-folder (.getName entry)))
-              (with-open [fos (java.io.FileOutputStream. (str op-folder (.getName entry)))
-                          dest (java.io.BufferedOutputStream. fos 2048)]
-                (loop [data (byte-array 2048)
-                       c (.read zis data 0 2048)]
-                  (if (not= c -1)
-                    (do
-                      (.write dest data 0 c)
-                      (recur (byte-array 2048) (.read zis data 0 2048))))))))
-          (recur (.getNextEntry zis)))))))
-
 (defn ensure-sdk
   "Ensure if required libraries in the sdk are present or not. If not present
   then this function will download the sdk automatically from the Android official
   site and unzip the sdk in temp directory in :sdk-path."
   [{{:keys [sdk-path target-version]} :android :as project}]
-  (let [url "https://dl.google.com/android/repository/repository-10.xml"
+  #_(let [url "https://dl.google.com/android/repository/repository-10.xml"
+        op-folder "/Users/devangshah/Library/Android/sdk/temp/"
         xml (download-xml url)
         build-tool-major-version (first
                                   (:content (first
@@ -305,13 +285,13 @@
         build-tool-download-url (get-download-url xml :sdk:build-tool url build-tool-major-version)
         tool-download-url (get-download-url xml :sdk:tool url)]
     (info "Download url for platform is" platform-download-url)
-    (download-zip sdk-path platform-download-url)
+    (unzip-util (download-zip sdk-path platform-download-url) (str op-folder "platforms/"))
     (info "Download url for platform-tool" platform-tool-download-url)
-    (download-zip sdk-path platform-tool-download-url)
+    (unzip-util (download-zip sdk-path platform-tool-download-url) (str op-folder ""))
     (info "Download url for build-tool" build-tool-download-url)
-    (download-zip sdk-path build-tool-download-url)
+    (unzip-util (download-zip sdk-path build-tool-download-url) (str op-folder "build-tools/"))
     (info "Download url for tool" tool-download-url)
-    (download-zip sdk-path tool-download-url)))
+    (unzip-util (download-zip sdk-path tool-download-url) (str op-folder ""))))
 
 (defn get-subtask-dependencies
   "Get the file dependencies for subtasks. This is a static class returning a map
