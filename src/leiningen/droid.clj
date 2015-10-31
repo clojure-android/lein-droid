@@ -47,6 +47,7 @@
 (defn doall
   "Metatask. Performs all Android tasks from compilation to deployment."
   [{{:keys [library]} :android :as project} & device-args]
+  (ib/ensure-sdk project)
   (let [build-steps (if library ["build"] ["code-gen" "build" "apk" "deploy"])]
     (doseq [task build-steps]
       (execute-subtask project task device-args))))

@@ -79,6 +79,19 @@
       "macosx"
       "linux")))
 
+(defn rename-resource
+  "Rename a given folder. If the platform we're running is windows then we simply run rename and
+  if it's some flavor of Unix then we run mv. On windows machines, the destination path cannot contain
+  the absolute path, i.e. it cannot have drive letter. Hence, we need to just pass in the resource name
+  to change. Hence, extracting resource."
+  [old-name new-name]
+  (let [os (platform)]
+    (case os
+      "macosx" (:out (shell/sh "mv" old-name new-name))
+      "windows" (:out (shell/sh "ren" old-name (subs new-name (.lastIndexOf new-name "\\"))))
+      "linux" (:out (shell/sh "mv" old-name new-name))
+      (abort os "cannot be identified."))))
+
 (defn get-sdk-build-tools-path
   "Returns a path to the correct Android Build Tools directory."
   ([{{:keys [sdk-path build-tools-version]} :android}]
@@ -99,10 +112,46 @@
 (defn sdk-binary-paths
   "Returns a map of relative paths to different SDK binaries for both
   Unix and Windows platforms."
-  [sdk-path build-tools-version]
+  [sdk-path build-tools-version & target-sdk]
   (ensure-paths sdk-path)
   (let [build-tools (get-sdk-build-tools-path sdk-path build-tools-version)]
     {:dx {:unix (file build-tools "dx")
+          :win (file build-tools "dx.bat")}
+     :adb {:unix (file sdk-path "platform-tools" "adb")
+           :win (file sdk-path "platform-tools" "adb.exe")}
+     :aapt {:unix (file build-tools "aapt")
+            :win (file build-tools "aapt.exe")}
+     :zipalign {:unix (file build-tools "zipalign")
+                :win (file build-tools "zipalign.exe")}
+     :proguard {:unix (file sdk-path "tools" "proguard" "bin" "proguard.sh")
+                :win (file sdk-path "tools" "proguard" "bin" "proguard.bat")}}))
+
+(defn sdk-build-tools-path
+  "Returns a path to the correct Android Build Tools directory."
+  ([{{:keys [sdk-path build-tools-version]} :android}]
+   (get-sdk-build-tools-path sdk-path build-tools-version))
+  ([sdk-path build-tools-version]
+   (let [bt-root-dir (file sdk-path "build-tools")
+         ;; build-tools directory contains a subdir which name we don't
+         ;; know that has all the tools. Let's grab the last directory
+         ;; inside build-tools/ and hope it is the one we need. This function does not
+         ;; abort, rather it returns the default builds-tools path.
+         bt-dir (or build-tools-version
+                    (->> (.list bt-root-dir)
+                         (filter #(.isDirectory (file bt-root-dir %)))
+                         sort last)
+                    "")]
+     (file bt-root-dir bt-dir))))
+
+(defn get-sdk-paths-no-failure
+  "Returns a map of relative paths to different SDK binaries for both
+  Unix and Windows platforms."
+  [sdk-path build-tools-version & target-sdk]
+  (ensure-paths sdk-path)
+  (let [build-tools (sdk-build-tools-path sdk-path build-tools-version)]
+    {:android {:unix (file sdk-path "platforms" (str "android-" (first target-sdk)) "android.jar")
+               :win (file sdk-path "platforms" (str "android-" (first target-sdk)) "android.jar")}
+     :dx {:unix (file build-tools "dx")
           :win (file build-tools "dx.bat")}
      :adb {:unix (file sdk-path "platform-tools" "adb")
            :win (file sdk-path "platform-tools" "adb.exe")}

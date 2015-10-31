@@ -7,7 +7,8 @@
             [clj-http.client :as http]
             [clojure.xml :as xml]
             [leiningen.core.main :refer [info debug]])
-  (:use [leiningen.droid.utils :only [unzip-util platform append-suffix absolutize]]))
+  (:use [leiningen.droid.utils :only [unzip-util platform append-suffix absolutize
+                                      windows? get-sdk-paths-no-failure rename-resource]]))
 
 (defn- download-zip
   "Connect to the internet and download given application/zip file. Once the file is downloaded
@@ -19,9 +20,8 @@
     (debug "Content type is" type-of-contents)
     (when (= type-of-contents "application/zip")
       (let [relative-file-name (subs url (inc (.lastIndexOf url "/")))
-            dir (absolutize path "temp")
-            _ (.mkdir (java.io.File. dir))
-            file-name (absolutize dir relative-file-name)]
+            _ (.mkdir (java.io.File. path))
+            file-name (absolutize path relative-file-name)]
         (info "Downloading" file-name "from" url)
         (io/copy (:body (http/get url {:as :stream}))
                  (java.io.File. file-name))
@@ -44,7 +44,7 @@
           xml/parse))))
 
 (defn- repository
-  "Links to the repository metadata for the components."
+  "Links to the repository metadata for the different components (SDKs)."
   []
   {:sdk:platform "https://dl.google.com/android/repository/repository-10.xml"
    :sdk:platform-tool "https://dl.google.com/android/repository/repository-10.xml"
@@ -110,6 +110,14 @@
     (debug "extract-platform: Target API" max-api)
     (debug "extract-platform: Available API levels are" api-levels)
     (:content (get (vec sdk-platforms) max-api-index))))
+
+(defn- extract-platform-version
+  "Extract the platform that is (or will be downloaded) and extract the values for version and api-level
+  tags. Since, they are used to rename the folder it should be downloaded to."
+  [xml target-version]
+  (let [sdk-platform (extract-platform xml target-version)]
+    (debug "extract-platform-version: SDK platform is" sdk-platform)
+    {:version (first (:content (fetch-first-tag :sdk:version sdk-platform))) :api-level target-version}))
 
 (defn- extract-platform-url
   "Given the xml map of the repository determine the download url for the :sdk-platform. This function returns the
@@ -261,16 +269,39 @@
     :sdk:platform-tool (extract-platform-tool-url xml base-url)
     :sdk:build-tool (extract-build-tool-url xml base-url (first target-version))
     :sdk:tool (extract-tool-url xml base-url)
-    "sdk not found."))
+    (println "SDK" sdk "not found. Please download manually. And run again.")))
+
+(defn- sdks
+  "A map of file name vs the sdk it's part of. The SDK can be mandatory and optional."
+  []
+  {:mandatory {:android :sdk:platform, :dx :sdk:build-tool, :adb :sdk:platform-tool,
+               :aapt :sdk:build-tool, :zipalign :sdk:build-tool, :proguard :sdk:tool}})
+
+(defn- file-exists?
+  "Check if the given path exists on the file system."
+  [path]
+  (debug "file-exists?:" (str path) (.exists (io/as-file path)))
+  (.exists (io/as-file path)))
+
+(defn- missing-sdks
+  "Get the missing sdks that should be downloded later."
+  [sdk-path target-version]
+  (let [sdk-paths (get-sdk-paths-no-failure sdk-path nil target-version)
+        platform (if (windows?) :win :unix)]
+    (set (vals (select-keys (:mandatory (sdks)) (for [[k v] sdk-paths
+                                                      :when (not (file-exists? (platform v)))]
+                                                  k))))))
 
 (defn ensure-sdk
   "Ensure if required libraries in the sdk are present or not. If not present
   then this function will download the sdk automatically from the Android official
   site and unzip the sdk in temp directory in :sdk-path."
   [{{:keys [sdk-path target-version]} :android :as project}]
-  #_(let [url "https://dl.google.com/android/repository/repository-10.xml"
-        op-folder "/Users/devangshah/Library/Android/sdk/temp/"
+  (let [url "https://dl.google.com/android/repository/repository-10.xml"
         xml (download-xml url)
+        platform-version (extract-platform-version xml target-version)
+        platform-new-version (str "android-" (:api-level platform-version))
+        platform-version-to-rename (str "android-" (:version platform-version))
         build-tool-major-version (first
                                   (:content (first
                                              (filter-tags
@@ -283,15 +314,30 @@
         platform-download-url (get-download-url xml :sdk:platform url target-version)
         platform-tool-download-url (get-download-url xml :sdk:platform-tool url)
         build-tool-download-url (get-download-url xml :sdk:build-tool url build-tool-major-version)
-        tool-download-url (get-download-url xml :sdk:tool url)]
-    (info "Download url for platform is" platform-download-url)
-    (unzip-util (download-zip sdk-path platform-download-url) (str op-folder "platforms/"))
-    (info "Download url for platform-tool" platform-tool-download-url)
-    (unzip-util (download-zip sdk-path platform-tool-download-url) (str op-folder ""))
-    (info "Download url for build-tool" build-tool-download-url)
-    (unzip-util (download-zip sdk-path build-tool-download-url) (str op-folder "build-tools/"))
-    (info "Download url for tool" tool-download-url)
-    (unzip-util (download-zip sdk-path tool-download-url) (str op-folder ""))))
+        tool-download-url (get-download-url xml :sdk:tool url)
+        sdks-to-download (missing-sdks sdk-path target-version)]
+    (if (contains? sdks-to-download :sdk:platform)
+      (do
+        (info "Download url for platform is" platform-download-url)
+        (unzip-util (download-zip sdk-path platform-download-url) (io/file sdk-path "platforms"))
+        (rename-resource (str (io/file sdk-path "platforms" platform-version-to-rename))
+                         (str (io/file sdk-path "platforms" platform-new-version))))
+      (info "ensure-sdk: Valid SDK platforms found. Nothing to download."))
+    (if (contains? sdks-to-download :sdk:platform-tool)
+      (do
+        (info "Download url for platform-tool" platform-tool-download-url)
+        (unzip-util (download-zip sdk-path platform-tool-download-url) sdk-path))
+      (info "ensure-sdk: Valid SDK platform-tools found. Nothing to download."))
+    (if (contains? sdks-to-download :sdk:build-tool)
+      (do
+        (info "Download url for build-tool" build-tool-download-url)
+        (unzip-util (download-zip sdk-path build-tool-download-url) (io/file sdk-path "build-tools")))
+      (info "ensure-sdk: Valid SDK build-tools found. Nothing to download."))
+    (if (contains? sdks-to-download :sdk:tool)
+      (do
+        (info "Download url for tool" tool-download-url)
+        (unzip-util (download-zip sdk-path tool-download-url) sdk-path))
+      (info "ensure-sdk: Valid SDK tools found. Nothing to download."))))
 
 (defn get-subtask-dependencies
   "Get the file dependencies for subtasks. This is a static class returning a map
