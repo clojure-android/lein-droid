@@ -50,7 +50,7 @@
                   :all (stale-namespaces (assoc project :aot :all))
                   :all-with-unused all-nses
                   aot)
-        exclude aot-exclude-ns
+        exclude-nses aot-exclude-ns
 
         {include-nses false, include-regexps true}
         (group-by #(instance? Pattern %) include)
