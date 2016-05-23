@@ -45,7 +45,8 @@
   "Takes project and returns a set of namespaces that should be AOT-compiled."
   [{{:keys [aot aot-exclude-ns]} :android :as project}]
   (let [all-nses (bultitude/namespaces-on-classpath
-                  :classpath (map io/file (get-classpath project)))
+                  :classpath (map io/file (get-classpath project))
+                  :ignore-unreadable? false)
         include (case aot
                   :all (stale-namespaces (assoc project :aot :all))
                   :all-with-unused all-nses
