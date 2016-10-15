@@ -44,9 +44,9 @@
   "Takes the original `get-dependencies` function and arguments to it.
   Removes duplicate entries from the result when resolving project
   dependencies."
-  [f dependency-key project & rest]
-  (let [all-deps (apply f dependency-key project rest)]
-    (if (= dependency-key :dependencies)
+  [f dependencies-key managed-dependencies-key project & rest]
+  (let [all-deps (apply f dependencies-key managed-dependencies-key project rest)]
+    (if (= dependencies-key :dependencies)
       ;; aether/dependency-files expects a map but uses keys only,
       ;; so we transform a list into a map with nil values.
       (zipmap (remove-duplicate-dependencies (keys all-deps))

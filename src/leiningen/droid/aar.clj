@@ -10,7 +10,7 @@
 (defn- get-aar-dependencies
   "Returns a list of artifact dependencies that have `aar` extension."
   [project]
-  (let [deps (cp/get-dependencies :dependencies project)]
+  (let [deps (cp/get-dependencies :dependencies nil project)]
     (for [[[art-id ver & opts :as dep]] deps
           :let [opts (apply hash-map opts)]
           :when (= (:extension opts) "aar")]
