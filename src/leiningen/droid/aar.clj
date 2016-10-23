@@ -2,7 +2,7 @@
   "Utilities for manipulating Android package format (AAR)."
   (:require [clojure.java.io :as io]
             [clojure.edn :as edn]
-            [leiningen.core.classpath :as cp]
+            [leiningen.droid.utils :refer [get-dependencies]]
             [leiningen.core.main :refer [debug]])
   (:import java.io.File
            net.lingala.zip4j.core.ZipFile))
@@ -10,7 +10,7 @@
 (defn- get-aar-dependencies
   "Returns a list of artifact dependencies that have `aar` extension."
   [project]
-  (let [deps (cp/get-dependencies :dependencies project)]
+  (let [deps (get-dependencies project)]
     (for [[[art-id ver & opts :as dep]] deps
           :let [opts (apply hash-map opts)]
           :when (= (:extension opts) "aar")]

@@ -3,10 +3,10 @@
   support in an existing one."
   (:require [clojure.string :as string]
             [clojure.java.io :as io]
-            [leiningen.core.classpath :as cp]
             [leiningen.core.main :refer [info abort]]
             [leiningen.core.project :as project]
             [leiningen.droid.manifest :refer [get-target-sdk-version]]
+            [leiningen.droid.utils :refer [get-dependencies]]
             [leiningen.new.templates :refer [render-text slurp-resource
                                              sanitize ->files]]))
 
@@ -35,9 +35,9 @@
   "Downloads the latest version of the given artifact symbol, and returns the
   version string."
   [artifact default]
-  (let [version (try (->> {:dependencies [[artifact "RELEASE"]]
-                           :repositories project/default-repositories}
-                          (cp/get-dependencies :dependencies)
+  (let [version (try (->> (get-dependencies
+                           {:dependencies [[artifact "RELEASE"]]
+                            :repositories project/default-repositories})
                           keys
                           (some #(when (= (first %) artifact) %))
                           second)

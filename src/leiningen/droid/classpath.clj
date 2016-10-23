@@ -3,7 +3,8 @@
   manipulation."
   (:require [leiningen.droid.aar :refer [get-aar-classes]]
             [leiningen.droid.utils :refer [get-sdk-android-jar
-                                           get-sdk-annotations-jar]]
+                                           get-sdk-annotations-jar
+                                           leiningen-2-p-7-or-later?]]
             [robert.hooke :refer [add-hook]])
   (:import org.sonatype.aether.util.version.GenericVersionScheme))
 
@@ -44,8 +45,12 @@
   "Takes the original `get-dependencies` function and arguments to it.
   Removes duplicate entries from the result when resolving project
   dependencies."
-  [f dependency-key project & rest]
-  (let [all-deps (apply f dependency-key project rest)]
+  [f dependency-key & rest]
+  (let [[managed-deps project & rest] (if (leiningen-2-p-7-or-later?)
+                                        rest (cons nil rest))
+        all-deps (if (leiningen-2-p-7-or-later?)
+                   (apply f dependency-key managed-deps project rest)
+                   (apply f dependency-key project rest))]
     (if (= dependency-key :dependencies)
       ;; aether/dependency-files expects a map but uses keys only,
       ;; so we transform a list into a map with nil values.

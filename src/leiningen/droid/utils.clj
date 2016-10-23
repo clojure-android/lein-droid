@@ -2,10 +2,10 @@
 ;;
 (ns leiningen.droid.utils
   (:require [leiningen.core.project :as pr]
-            [robert.hooke :refer [with-hooks-disabled]])
+            [robert.hooke :refer [with-hooks-disabled]]
+            [leiningen.core.classpath :as cp :refer [resolve-dependencies]])
   (:use [clojure.java.io :only (file reader)]
         [leiningen.core.main :only (info debug abort *debug*)]
-        [leiningen.core.classpath :only [resolve-dependencies]]
         [clojure.string :only (join)])
   (:import [java.io File StringWriter]))
 
@@ -350,3 +350,24 @@ Please install it from your Android SDK manager.")))]
 (defn relativize-path [^File dir ^File to-relativize]
   (.getPath (.relativize (.toURI dir)
                          (.toURI to-relativize))))
+
+;; ### Compatibility
+
+(def leiningen-2-p-7-or-later?
+  "Returns true if Leiningen version is 2.7 or later."
+  (memoize
+   (fn []
+     (let [[_ major minor] (re-matches #"(\d+)\.(\d+)\..+"
+                                       (leiningen.core.main/leiningen-version))
+           major (Integer/parseInt major)
+           minor (Integer/parseInt minor)]
+       (or (> major 2)
+           (and (= major 2) (>= minor 7)))))))
+
+(defn get-dependencies
+  "Leiningen 2.7.0 introduced managed dependencies and broke
+  `cp/get-dependencies`. We must handle both versions of the function."
+  [project & args]
+  (if (leiningen-2-p-7-or-later?)
+    (apply cp/get-dependencies :dependencies :dummy project args)
+    (apply cp/get-dependencies :dependencies project args)))
