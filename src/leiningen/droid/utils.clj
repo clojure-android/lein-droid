@@ -170,7 +170,7 @@
 (defn proj
   ([] (proj "sample/project.clj"))
   ([project-clj]
-   (let [profiles (.split (or (System/getenv "LEIN_DROID_PROFILES") "") ",")
+   (let [profiles (.split (or (System/getenv "LEIN_DROID_PROFILES") "dev") ",")
          project (read-project project-clj)]
      (if (seq profiles)
        (pr/set-profiles project
