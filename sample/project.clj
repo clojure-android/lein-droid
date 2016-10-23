@@ -10,7 +10,7 @@
   :java-source-paths ["src/java"]
   :javac-options ["-target" "1.6" "-source" "1.6" "-Xlint:-options"]
 
-  :plugins [[lein-droid "0.4.5-SNAPSHOT"]]
+  :plugins [[lein-droid "0.4.5"]]
 
   :dependencies [[org.clojure-android/clojure "1.7.0-RC1" :use-resources true]
                  ;; [com.google.android.gms/play-services "7.0.0" :extension "aar"]
