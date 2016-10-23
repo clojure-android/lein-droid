@@ -67,6 +67,15 @@
       (concat deps (get-aar-classes project))
       deps)))
 
+(defn- resolve-managed-dependencies-hook
+  "Takes the original `resolve-managed-dependencies` function and arguments to
+  it. Appends jar files extracted from AAR dependencies."
+  [f dependency-key managed-dependency-key project & rest]
+  (let [deps (apply f dependency-key managed-dependency-key project rest)]
+    (if (= dependency-key :dependencies)
+      (concat deps (get-aar-classes project))
+      deps)))
+
 ;; We also have to manually attach Android SDK libraries to the
 ;; classpath. The reason for this is that Leiningen doesn't handle
 ;; external dependencies at the high level, and Android jars are not
@@ -88,4 +97,7 @@
 (defn init-hooks []
   (add-hook #'leiningen.core.classpath/get-dependencies #'dependencies-hook)
   (add-hook #'leiningen.core.classpath/resolve-dependencies #'resolve-dependencies-hook)
+  (when (leiningen-2-p-7-or-later?)
+    (add-hook (resolve 'leiningen.core.classpath/resolve-managed-dependencies)
+              #'resolve-managed-dependencies-hook))
   (add-hook #'leiningen.core.classpath/get-classpath #'classpath-hook))
