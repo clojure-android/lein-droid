@@ -3,13 +3,12 @@
   Android project."
   (:refer-clojure :exclude [compile])
   (:use [leiningen.core
-         [classpath :only [resolve-dependencies]]
          [main :only [debug info abort *debug*]]]
         [leiningen.droid
          [compile :only [compile]]
          [utils :only [get-sdk-android-jar sh dev-build?
                        ensure-paths with-process read-password append-suffix
-                       create-debug-keystore read-project
+                       create-debug-keystore read-project resolve-dependencies
                        sdk-binary relativize-path get-sdk-annotations-jar
                        get-resource-jars get-sdk-build-tools-path]]])
   (:require [clojure.string :as str]
@@ -41,7 +40,7 @@
   (let [proguard-bin (sdk-binary project :proguard)
         android-jar (get-sdk-android-jar project)
         annotations (get-sdk-annotations-jar project)
-        deps (resolve-dependencies :dependencies project)
+        deps (resolve-dependencies project)
         external-paths (or external-classes-paths [])
         proguard-opts (or proguard-opts [])]
     (sh proguard-bin (str "@" proguard-conf-path)
@@ -126,7 +125,7 @@
     (do
       (run-proguard-minifying project)
       (run-dx project [proguard-output-jar-path]))
-    (let [deps (resolve-dependencies :dependencies project)
+    (let [deps (resolve-dependencies project)
           external-classes-paths (or external-classes-paths [])]
       (run-dx project (concat [compile-path] deps external-classes-paths)))))
 

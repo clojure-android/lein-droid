@@ -73,7 +73,10 @@
   [f dependency-key managed-dependency-key project & rest]
   (let [deps (apply f dependency-key managed-dependency-key project rest)]
     (if (= dependency-key :dependencies)
-      (concat deps (get-aar-classes project))
+      (->> (concat deps (get-aar-classes project))
+           ;; resolve-managed-dependencies is called multiple times. We must
+           ;; dedupe already added dependencies.
+           (group-by str) vals (map first))
       deps)))
 
 ;; We also have to manually attach Android SDK libraries to the

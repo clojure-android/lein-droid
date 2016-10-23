@@ -2,8 +2,8 @@
 ;;
 (ns leiningen.droid.utils
   (:require [leiningen.core.project :as pr]
-            [robert.hooke :refer [with-hooks-disabled]]
-            [leiningen.core.classpath :as cp :refer [resolve-dependencies]])
+            [leiningen.core.classpath :as cp]
+            robert.hooke)
   (:use [clojure.java.io :only (file reader)]
         [leiningen.core.main :only (info debug abort *debug*)]
         [clojure.string :only (join)])
@@ -213,6 +213,9 @@
                    sdk-root-or-project)]
     (str (file sdk-root "tools" "support" "annotations.jar"))))
 
+(declare leiningen-2-p-7-or-later?)
+(declare resolve-dependencies)
+
 (defn get-resource-jars
   "Get the list of dependency libraries that has `:use-resources true`
   in their definition."
@@ -221,8 +224,13 @@
                            (:use-resources options))
                          (:dependencies project))
         mod-proj (assoc project :dependencies res-deps)]
-    (with-hooks-disabled resolve-dependencies
-      (resolve-dependencies :dependencies mod-proj))))
+    ;; Resolve dependencies with hooks disabled.
+    (let [resolve-var (if (leiningen-2-p-7-or-later?)
+                        (resolve 'leiningen.core.classpath/resolve-managed-dependencies)
+                        (resolve 'leiningen.core.classpath/resolve-dependencies))]
+      (with-redefs-fn {resolve-var (#'robert.hooke/original resolve-var)}
+        ;; Call our wrapper resolve-dependencies function
+        #(resolve-dependencies mod-proj)))))
 
 (defn sdk-sanity-check
   "Ensures that :sdk-path is present in the project, and necessary modules are
@@ -369,5 +377,15 @@ Please install it from your Android SDK manager.")))]
   `cp/get-dependencies`. We must handle both versions of the function."
   [project & args]
   (if (leiningen-2-p-7-or-later?)
-    (apply cp/get-dependencies :dependencies :dummy project args)
+    (apply cp/get-dependencies :dependencies :managed-dependencies project args)
     (apply cp/get-dependencies :dependencies project args)))
+
+(defn resolve-dependencies
+  "Leiningen 2.7.0 introduced managed dependencies and deprecated
+  `resolve-dependencies`."
+  [project & args]
+  (if (leiningen-2-p-7-or-later?)
+    (apply (resolve 'leiningen.core.classpath/resolve-managed-dependencies)
+           :dependencies :managed-dependencies project args)
+    (apply (resolve 'leiningen.core.classpath/resolve-dependencies)
+           :dependencies project args)))
