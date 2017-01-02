@@ -51,13 +51,13 @@
                   :all (stale-namespaces (assoc project :aot :all))
                   :all-with-unused all-nses
                   aot)
-        exclude aot-exclude-ns
+        exclude-nses aot-exclude-ns
 
         {include-nses false, include-regexps true}
         (group-by #(instance? Pattern %) include)
 
         {exclude-nses false, exclude-regexps true}
-        (group-by #(instance? Pattern %) exclude)]
+        (group-by #(instance? Pattern %) exclude-nses)]
     (->> (set/difference (set (map str (if (seq include-regexps)
                                          all-nses include-nses)))
                          (set exclude-nses))
