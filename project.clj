@@ -7,6 +7,7 @@
                  [org.clojure/data.zip "0.1.1"]
                  [net.lingala.zip4j/zip4j "1.3.2"]
                  [com.android.tools.build/manifest-merger "24.2.3"]
-                 [de.ubercode.clostache/clostache "1.4.0"]]
+                 [de.ubercode.clostache/clostache "1.4.0"]
+                 [reply "0.3.7"]]
   :resource-paths ["res"]
   :eval-in-leiningen true)
