@@ -93,7 +93,9 @@
         android-jar (get-sdk-android-jar sdk-path target-version)
         manifest-file (io/file manifest-path)
         library-specific (if library ["--non-constant-id"] [])
-        aar-resources (for [res (get-aar-files project "res")] ["-S" (str res)])
+        aar-resources (for [res (get-aar-files project "res")
+                            :when (.exists ^File res)]
+                        ["-S" (str res)])
         external-resources (for [res external-res-paths] ["-S" res])]
     (ensure-paths manifest-path res-path android-jar)
     (.mkdirs (io/file gen-path))

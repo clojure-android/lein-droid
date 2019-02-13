@@ -218,7 +218,9 @@
         assets (mapcat #(when (.exists (io/file %)) ["-A" (str %)])
                        (concat assets-paths [assets-gen-path]
                                (get-aar-files project "assets")))
-        aar-resources (for [res (get-aar-files project "res")] ["-S" res])
+        aar-resources (for [res (get-aar-files project "res")
+                            :when (.exists ^File res)]
+                        ["-S" res])
         aar-crunched-resources (for [res (get-aar-files project "out-res")
                                      :when (.exists ^File res)]
                                  ["-S" res])
